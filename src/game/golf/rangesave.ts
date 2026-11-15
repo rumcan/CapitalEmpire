@@ -81,9 +81,17 @@ export interface RangeBizSave { v: 1; owned: RangeUpgradeId[]; price: number; se
    *  with it when it is placed (golf/practicestarter.ts: the seed its layout grows from, and the ids of the pieces proper facilities have replaced); absent: none
    *  (a save from before it, or an area bought as land: those are as they were) */
   starter?: StarterSave;
+  /** #1302 (the owner, 2026-11-15: "drew a green on the range but the rocks stayed and i cant bulldoze them"): the desert start's outfield plants and rocks (the scene's
+   *  `desert<i>` and `oasis<i>` pieces, golf/rangebiz.ts rangeScene: laid from a fixed seed, so a key names the same piece on every load) taken away for good, by the
+   *  Texture Painter's stroke over them or the bulldozer; absent: none */
+  cleared?: string[];
   /** T386 (#1043): the range's balls (golf/rangeballs.ts): the ball room's clean stock, the balls lying on the outfield, your basket, the range's till
    *  and the counts. Absent in a save from before T386: its load gives it legacyBalls (a stock for its bays) and, with the T133 cart, night picking */
   balls?: BallSave }
+/** #1302: the scene keys of the outfield's natural pieces (the desert's plants and rocks, the oasis): the ones a stroke of paint or the bulldozer takes away */
+export const CLEARABLE_KEY = /^(desert|oasis)\d{1,4}$/;
+/** #1302: a save's cleared keys, the clearable ones only, each once, sorted */
+export function normalizeCleared(x: unknown): string[] { return Array.isArray(x) ? [...new Set(x.filter((k): k is string => typeof k === 'string' && CLEARABLE_KEY.test(k)))].sort() : []; }
 /** the extras that keep their own counts (T133): the coffee kiosk (coffees sold) and the academy (lessons given) */
 export type ExtraId = 'kiosk' | 'academy';
 export const EXTRA_IDS: readonly ExtraId[] = ['kiosk', 'academy'];
@@ -254,6 +262,8 @@ export function normalizeRangeBiz(x: unknown): RangeBizSave {
   // #1281: the practice area's starter set (its seed and the ids replaced), only on an area the save has placed
   const sv = o.starter as Partial<StarterSave> | undefined;
   if (sv && typeof sv === 'object' && typeof sv.seed === 'number' && Number.isFinite(sv.seed) && (out.practiceAt || o.practiceAt === undefined)) out.starter = { seed: Math.trunc(sv.seed) >>> 0, gone: Array.isArray(sv.gone) ? [...new Set(sv.gone.filter((n): n is number => Number.isInteger(n) && n >= 0 && n < 16))].sort((a, b) => a - b) : [] };
+  // #1302: the outfield's desert plants and rocks taken away (their scene keys)
+  const cl = normalizeCleared(o.cleared); if (cl.length) out.cleared = cl;
   // T386: the balls (a save from before the ball loop starts with a stock for its bays and a till of what it has taken, to a cap: legacyBalls)
   out.balls = normalizeBalls(o.balls) ?? legacyBalls(rangeStats(out).bays, out.total.takings);
   return out;

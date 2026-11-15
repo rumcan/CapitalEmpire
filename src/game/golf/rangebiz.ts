@@ -351,13 +351,15 @@ export function rangeScene(plot: Rect, facing: 0 | 1 | 2 | 3, s: RangeBizSave, o
   // and thicker down the range, never on a target green's ground (every green the range can buy, with room round it), the side markers' and
   // floodlights' strip or the tee's apron; a small oasis (a pool, two date palms, reeds) in the far corner. Grassing the outfield clears them
   if (!st.grass) {
+    // (#1302: less the ones taken away for good: painted over or bulldozed, s.cleared; the keys stay the same on every load, the scatter's seed being fixed)
+    const gone = new Set(s.cleared ?? []), keep = (key: string, id: string, u: number, v: number) => { if (!gone.has(key)) put(key, id, u, v); };
     const clear = (u: number, v: number) => u > 4.5 && u < 65.5 && v > TEE[3] + TEE_GAP + 5 && v < FAR_V - 2
       && TARGET_U.every((tu, i) => Math.hypot(u - tu, v - STAND_V - TARGET_D[i]!) > TARGET_R[i]! + 5)
       && !(u < 22 && v > FAR_V - 18);
     desertScatter(223289, [3, 67, TEE[3] + TEE_GAP + 4, FAR_V - 1], 5, 0.72, (u, v) => clear(u, v) && (v > 60 || (u * 7 + v * 13) % 10 < 5))
-      .forEach((d, i) => put(`desert${i}`, d.id, d.u, d.v));
+      .forEach((d, i) => keep(`desert${i}`, d.id, d.u, d.v));
     const oasis: [string, number, number][] = [['oasis-pool', 12.5, FAR_V - 9], ['date-palm-pair', 5.5, FAR_V - 11], ['slender-date-palm', 19.5, FAR_V - 12.5], ['tall-cattails', 15.5, FAR_V - 6], ['cattail-clump', 8.5, FAR_V - 6.5], ['sandstone-boulder', 18.5, FAR_V - 7.5]];
-    oasis.forEach(([slug, u, v], i) => { const id = `newprop:desert-${slug}`; if (DESERT_IDS.includes(id)) put(`oasis${i}`, id, u, v); });
+    oasis.forEach(([slug, u, v], i) => { const id = `newprop:desert-${slug}`; if (DESERT_IDS.includes(id)) keep(`oasis${i}`, id, u, v); });
   }
   // ---- J7 (#1225): the junk on an old jam range, each pile with its distance pill (numbers, low) like a yardage board: fun targets until cleared
   const junk: RangeJunkSpot[] = (s.junk ?? []).map((j, i) => { const p = P(j.u, j.v); return { i, id: j.id, name: JUNK_BY_ID.get(j.id)?.name ?? 'Junk', x: p.x, y: p.y, m: junkMetres(j.v) }; });

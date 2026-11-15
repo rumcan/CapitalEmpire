@@ -29,6 +29,9 @@ const size = 2048, pad = 16, pages = [[]]; let x = pad, y = pad, row = 0;
 const items = [], imports = [], thumbs = [], report = [];
 /** the width (px) a four-view id held in the atlas before this rule: no growth for them (the stadium's 900 px) */
 const HELD = { stadium: 900 };
+/** #1302: a picture whose ground point is not its middle (master px): the pins' pole stands at the left of the picture, its foot in the cup ring there (the
+ *  ring's middle, measured from the alpha: the pole x 29..43, the ring x 5..67 and rows 442..470), so a pin placed on a cup stands in it */
+const FOOT = { 'golf-pin-red': [36, 456], 'golf-pin-yellow': [36, 456] };
 for (const m of manifest.items) {
   const id = 'business:' + m.id;
   const small = /(?:golf-(?!clubhouse|pro-shop|cart-garage|halfway)|dock-|bass-boat)/.test(m.id);
@@ -44,7 +47,7 @@ for (const m of manifest.items) {
   if (y + h + pad > size) { pages.push([]); x = y = pad; row = 0; }
   pages.at(-1).push({ input: await sharp(file).resize(w, h).png().toBuffer(), left: x, top: y });
   items.push({ id, name: m.id.replaceAll('-', ' '), cat: 'Business artwork', kind: 'business', w: m.width, h: m.height,
-    ax: m.width / 2, ay: Math.max(m.height * 0.55, m.height - m.width / 4), boxes: [{ hx: 1, hy: 1, dx: 0, dy: 0 }],
+    ax: FOOT[m.id]?.[0] ?? m.width / 2, ay: FOOT[m.id]?.[1] ?? Math.max(m.height * 0.55, m.height - m.width / 4), boxes: [{ hx: 1, hy: 1, dx: 0, dy: 0 }],
     solid: 0, big: true, door: false, cost: 0, tex: [pages.length - 1, x / size, y / size, (x + w) / size, (y + h) / size], quad: [0, 0, m.width, m.height] });
   report.push({ id, w, h, owner: OWNER[id] ?? 0, holds: Math.min(w / m.width, h / m.height) / 0.6 });
   await sharp(file).resize({ width: 320, height: 210, fit: 'inside', withoutEnlargement: true }).webp({ quality: 86 }).toFile(path.join(out, m.id + '.webp'));

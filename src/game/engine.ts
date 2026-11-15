@@ -54,6 +54,7 @@ import { sizeKey, turned } from './lots/preset-art';
 import { FARMHOUSE_SUBJECTS, LOT_PLACES, clubScene, farmScene, lotPlaceOf, lotScene, placeHasArt, placeScene, rangeNews, rangeScene, rangeSceneKeys, rangeViewOfKey, sceneArt, townFortune, lotGood, propertyScene, objectScene, rangeGood, type RangeSceneFacts, type RangeSceneView, type SceneCardView, type SceneRef } from './scenes';
 import { homeStage, rangeScale } from './golf/rangesave';
 import { BALL_DRAW_MAX, BALL_POINT_FLOATS, RangeHost, type RangeCardView } from './golf/rangehost';
+import { FOOT_R, joinAside, laidAt, laidCells, scatterName } from './golf/rangeclear';
 import { mapSounds } from './sound/map-sounds'; // J11 (#1270)
 import { ambienceLevel, rangeAmbience } from './sound/range-ambience';
 import { PropsTool } from './golf/propstool';
@@ -1022,6 +1023,7 @@ export class Game {
       water: b => { for (let y = Math.floor(b[1]); y < Math.ceil(b[3]); y++) for (let x = Math.floor(b[0]); x < Math.ceil(b[2]); x++) { const c = this.terrain.cls[y * MAP + x]; if (c === TC.WATER || c === TC.CREEK || c === TC.BANK) return true; } const g = this.courseGrid; if (g) for (let y = b[1]; y <= b[3]; y += 0.5) for (let x = b[0]; x <= b[2]; x += 0.5) { const i = cellAt(g, x, y); if (i >= 0 && g.surf[i] === SURF.water) return true; } return false; },
       road: b => this.net.rectOcc(b[0] + 0.08, b[1] + 0.08, b[2] - 0.08, b[3] - 0.08) > 0 || this.parkDefs.some(d => b[0] < d.x + d.w && b[2] > d.x && b[1] < d.y + d.h && b[3] > d.y),
       course: (x, y) => { const g = this.courseGrid, i = g ? cellAt(g, x, y) : -1, v = i >= 0 ? g!.surf[i] : 0; return v === SURF.green ? 'green' : v === SURF.bunker ? 'bunker' : ''; },
+      rangePlot: (x, y) => this.onRangePlot(x, y), // (#1302: any ground of the range's plot takes a prop, its mats aside)
       // T187: a town prop keeps off the town's lots (its houses grow there)
       lot: b => lotTouches(this.traffic.lots.values(), b),
       // T231: the fountain jet stands only in water: the map's lakes and rivers, the course's water and painted ponds
@@ -1197,7 +1199,8 @@ export class Game {
     netJournal: this.netJ, // T396: a road step's changes to the network
     changed: pins => this.syncCourseMarkers(pins),
     grid: () => this.courseGrid, gridChanged: (d, flush) => { this.range.practiceCells(this.courseGrid, d); this.courseGridChanged(d, flush); }, gridAreas: () => this.gridAreaList(),
-    paintedOver: d => { const g = this.courseGrid; return g && this.golf?.start === 'range' ? this.range.paintedOver(g, d) : null; }, // (#1298: the starter pieces a stroke painted over go, with its undo)
+    // (#1298: the starter pieces a stroke painted over go, with its undo; #1302: and the range's desert plants and rocks, and the player's props on the range's plot)
+    paintedOver: d => { const g = this.courseGrid; return g && this.golf?.start === 'range' ? joinAside([this.range.paintedOver(g, d), this.range.scatterPaintedOver(d), this.propsPaintedOver(d)]) : null; },
     bunkerState: () => this.bunkers.serialize(), setBunkerState: state => this.bunkers.load(state, this.courseGrid),
     // the course keeps off the driving range's own plot (its hut, mats, car park and the field its golfers hit into), the rest of your land is
     // the course's; the brush's footprint and the wizard say which refusal it is
@@ -2978,6 +2981,24 @@ export class Game {
   private treeCut = new TreeCut();
   /** T381: every road tree the network made (an AutoProp of kind tree or rbtree) by key: what a tree taken away is given back from (undo) */
   private autoRecs = new Map<string, AutoProp>();
+  /** #1302 (the owner: "drawing texture on the range should auto bulldoze rocks and plants and props but you can still put props down"): the player's props (the Props
+   *  tool's, a brush's plants) on the range's plot whose foot stands on a cell the change d laid go as the bulldozer takes them (the Props tool's half price back), as a step
+   *  aside: its undo puts them back (new objects) and takes the money back, its redo takes them again; null: none stood there. A prop placed on the paint after stays */
+  private propsPaintedOver(d: GridDiff): { undo(): void; redo(): void } | null {
+    const laid = laidCells(d), b = laid ? diffBox(d) : null; if (!laid || !b) return null;
+    let hit = [...this.propGrid.query([b.x0 - FOOT_R, b.y0 - FOOT_R, b.x1 + FOOT_R, b.y1 + FOOT_R])].filter(p => this.props.has(p) && !p.auto && p.tk === undefined && this.onRangePlot(p.x, p.y) && laidAt(d, laid, p.x, p.y));
+    if (!hit.length) return null;
+    const back = hit.reduce((s, p) => s + this.sellValue(p), 0);
+    const take = () => { let lamp = false; for (const p of hit) { lamp ||= LIBRARY[p.item]!.kind === 'lamp'; this.removeProp(p); } if (lamp) this.syncLamps(); if (back) this.traffic.spend('construction', -back); this.scheduleSave(); };
+    const give = () => {
+      let lamp = false;
+      hit = hit.map(p => { const q = this.addProp(p.item, p.x, p.y, p.flip, p.scale, undefined, p.decor ? { own: true } : undefined); if (p.plant) q.plant = p.plant; if (p.decor) q.decor = p.decor; if (p.frame) q.frame = p.frame; lamp ||= LIBRARY[p.item]!.kind === 'lamp'; return q; });
+      if (lamp) this.syncLamps(); if (back) this.traffic.spend('construction', back); this.scheduleSave();
+    };
+    take();
+    this.toast(`The paint cleared ${hit.length} prop${hit.length === 1 ? '' : 's'}${back ? ` (+$${back.toLocaleString()})` : ''}`);
+    return { undo: give, redo: take };
+  }
   /** undo (back) or redo of a prop journal: the props it added go, the props it removed come back (new objects); returns the journal for the opposite step */
   private swapProps(j: PropLog, back: boolean): PropLog {
     const kill = back ? j.added : j.removed, revive = back ? j.removed : j.added;
@@ -6512,7 +6533,10 @@ export class Game {
         if (idx >= 0) { this.removeStructure(idx); return; }
       }
       if (p && !p.auto) { const it = LIBRARY[p.item], back = this.sellValue(p); this.removeProp(p); this.traffic.spend('construction', -back); if (it.kind === 'lamp') this.syncLamps(); this.scheduleSave(); this.toast(back ? `Removed ${it.name} (+$${back.toLocaleString()})` : `Removed ${it.name}`); return; }
-  
+      // #1302 (the owner: "the rocks stayed and i cant bulldoze them"): a desert plant or rock of the range's outfield is the range scene's own piece (an auto prop, which the line
+      // above leaves alone): it goes for good (RangeBizSave.cleared), free, as one undo step
+      if (p && this.golf?.start === 'range') { const k = this.range.scatterKeyOf(p.auto); if (k) { this.bulldozeScatter(p, k); return; } }
+
       if (this.golf && this.practice.removeAt(t.x, t.y)) return; // T206
       if (this.golf && this.estateBulldoze(t.x, t.y)) return; // T353: a lot still for sale comes off the market: a practice facility goes whole, half its price back
       const k = this.parkIndexAt(t);
@@ -6549,6 +6573,12 @@ export class Game {
       this.edit.removePiece(atA ? { seg: s, p0: s.a, p1: cut >= L ? s.b : add(s.a, mul(u, cut)) } : { seg: s, p0: cut >= L ? s.a : add(s.a, mul(u, L - cut)), p1: s.b });
       todo.push(cut >= L ? other : add(s.a, mul(u, atA ? cut : L - cut)));
     }
+  }
+  /** #1302: the bulldozer takes the range outfield's natural piece p (scene key k): gone for good, free, one undo step */
+  private bulldozeScatter(p: Prop, k: string) {
+    const name = scatterName(LIBRARY[p.item]!);
+    this.paint.gridEdit(`remove the ${name}`, () => { const aside = this.range.dropScatter([k]); return aside ? { diffs: [], spent: 0, aside } : null; });
+    this.puff(p.x, p.y, 6); this.toast(`Removed the ${name} (free)`);
   }
   /** the bulldozer on a town building (no road, no prop there): the built lot (BUILDING or more) under tile t is bought out for its compensation, if the
    *  treasury covers it. The worker clears the lot and holds it (see City.buyLot); its price is spent there */
@@ -14261,18 +14291,24 @@ export class Game {
   }
   /** T206: Facilities ▸ Practice in hand: the practice area's outline and the facility's ghost (green, sand and mat, see-through; red with the
    *  reason where it cannot go) with its label; the bulldozer over a practice facility: what a click removes and refunds */
-  private pracHover: { hx: number; hy: number; rev: number; gone: number; f: ReturnType<PracticeTool['facilityAt']>; s: ReturnType<PracticeTool['starterAt']> } | null = null;
+  private pracHover: { hx: number; hy: number; rev: number; gone: number; f: ReturnType<PracticeTool['facilityAt']>; s: ReturnType<PracticeTool['starterAt']>; /** #1302: a desert plant or rock of the range's outfield */ r: string | null } | null = null;
   /** #1298: the starter pieces gone as one number (no allocation: the bulldozer's hover asks every frame) */
-  private starterGoneKey(): number { const k = this.golf?.range?.starter; if (!k) return 0; let v = k.gone.length; for (const id of k.gone) v = v * 7 + id + 1; return v; }
+  private starterGoneKey(): number { const k = this.golf?.range?.starter, c = this.golf?.range?.cleared?.length ?? 0; if (!k) return c; let v = k.gone.length; for (const id of k.gone) v = v * 7 + id + 1; return v * 1009 + c; } // (#1302: and the outfield's pieces cleared)
   private drawPracticeGhost(ctx: CanvasRenderingContext2D) {
     const m = this.ghostMouse;
     if (this.tool === 'bulldoze' && !this.hoverPiece && this.hover && this.golf && this.courseGrid) {
       // (#1298: a starter piece of the practice area's set under the pointer: its outline in the bulldozer's red, "free" to remove; it is looked for again when the pointer moves to
       // another half tile, the grid changes or a piece goes)
       const h = this.hover, hx = Math.floor(h.x * 2), hy = Math.floor(h.y * 2), rev = this.courseGrid.rev, gone = this.starterGoneKey(), ph = this.pracHover;
-      if (!ph || ph.hx !== hx || ph.hy !== hy || ph.rev !== rev || ph.gone !== gone) { const f = this.practice.facilityAt(h.x, h.y); this.pracHover = { hx, hy, rev, gone, f, s: f ? null : this.practice.starterAt(h.x, h.y) }; }
-      const f = this.pracHover!.f, s = this.pracHover!.s;
+      if (!ph || ph.hx !== hx || ph.hy !== hy || ph.rev !== rev || ph.gone !== gone) {
+        const f = this.practice.facilityAt(h.x, h.y), s = f ? null : this.practice.starterAt(h.x, h.y);
+        // (#1302: the front-most picture under the pointer, when it is a desert plant or rock of the range's outfield)
+        const p = !f && !s && m && this.golf.start === 'range' ? this.propAt(m.mx, m.my) : null, r = p && this.range.scatterKeyOf(p.auto) ? scatterName(LIBRARY[p.item]!) : null;
+        this.pracHover = { hx, hy, rev, gone, f, s, r };
+      }
+      const f = this.pracHover!.f, s = this.pracHover!.s, r = this.pracHover!.r;
       if (f && m) this.hintAt(ctx, m.mx, m.my, `Click removes the ${f.name} (+$${f.refund.toLocaleString()})`, true);
+      else if (r && m) this.hintAt(ctx, m.mx, m.my, `Click removes the ${r} (free)`, true);
       else if (s) {
         this.setIso(ctx); ctx.beginPath(); ctx.moveTo(s.pts[0]!, s.pts[1]!); for (let k = 2; k + 1 < s.pts.length; k += 2) ctx.lineTo(s.pts[k]!, s.pts[k + 1]!); ctx.closePath(); ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.fillStyle = 'rgba(240,80,60,0.3)'; ctx.fill(); ctx.strokeStyle = '#f87171'; ctx.lineWidth = 1.5; ctx.stroke();

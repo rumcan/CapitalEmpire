@@ -1,7 +1,7 @@
 // The Props tool's catalogue and rules (plan P24 Phase 3, T131): the decor a player dresses the course and the range with (pot plants, shrubs and
 // grasses, flower beds, fountains, statues, pillars, an arch, benches, bins, lamp posts, flag poles), each a library picture with a price and
-// an appeal; where to put one (the player's land only: never a road or path, water, a green, a bunker, the range's mats and target greens, a
-// building or another prop); and the appeal the props near the range's shop and mats add to it (capped). Pure TS, no DOM: the engine's side
+// an appeal; where to put one (the player's land only: never a road or path, water, a green (a flag excepted), a bunker, the range's mats, a
+// building or another prop; #1302: on the range's plot any ground but its mats); and the appeal the props near the range's shop and mats add to it (capped). Pure TS, no DOM: the engine's side
 // is golf/propstool.ts. Prices are $; appeal a fraction (0.01 = +1% visitors, and +1% on the fair price).
 import type { Pt } from '../network';
 import { PROPS_APPEAL_CAP } from './rangesave';
@@ -379,6 +379,9 @@ export interface DecorSpot {
   course(x: number, y: number): 'green' | 'bunker' | '';
   /** what the range's own ground is at a tile: 'mats' (the hitting deck), 'target' (a target green) or '' */
   range(x: number, y: number): 'mats' | 'target' | '';
+  /** #1302 (the owner, 2026-11-15: "I should be able to place props on the range"): the tile is on the driving range's plot, where a prop stands on any ground
+   *  (a green or a bunker the player painted on the outfield, a target green): only the mats and what stands there (its buildings: overlaps) refuse it */
+  rangePlot?(x: number, y: number): boolean;
   /** the name of a building or prop the box overlaps, or '' */
   overlaps(b: Box): string;
   /** T187: whether the box touches a town lot (the town's own ground: its houses grow there) */
@@ -393,8 +396,13 @@ function samples(b: Box): Pt[] {
   for (let j = 0; j <= ny; j++) for (let i = 0; i <= nx; i++) out.push({ x: x0 + (x1 - x0) * i / nx, y: y0 + (y1 - y0) * j / ny });
   return out;
 }
-/** why a prop of footprint b cannot stand there ('' when it can), in the order a player fixes them: the land first, then what is in the way */
-export function decorSpotWhy(b: Box, s: DecorSpot, place: 'course' | 'town' = 'course', inWater = false): string {
+/** #1302: the flags among the props (the flag pole and the flag pin: a pin's picture): a flag stands wherever a prop may, a green too (the owner: "it says the
+ *  flag prop needs to be placed on a green, remove that rule. place it where you want") */
+export const FLAG_IDS: ReadonlySet<string> = new Set(['business:golf-pin-red', 'business:golf-pin-yellow', 'newprop:flag-pin']);
+export const isFlag = (d: { id: string }): boolean => FLAG_IDS.has(d.id);
+/** why a prop of footprint b cannot stand there ('' when it can), in the order a player fixes them: the land first, then what is in the way. flag: a flag
+ *  (isFlag), which a green takes too */
+export function decorSpotWhy(b: Box, s: DecorSpot, place: 'course' | 'town' = 'course', inWater = false, flag = false): string {
   const pts = samples(b);
   // T231: a fountain jet stands in water, every spot of it: on your land's water from the course, in the town's (off your land) from the town
   if (inWater) {
@@ -416,8 +424,10 @@ export function decorSpotWhy(b: Box, s: DecorSpot, place: 'course' | 'town' = 'c
   if (s.water(b)) return 'Not on water';
   if (s.road(b)) return 'Not on a road, path or car park';
   for (const p of pts) {
-    const c = s.course(p.x, p.y); if (c === 'green') return 'Not on a green'; if (c === 'bunker') return 'Not in a bunker';
-    const r = s.range(p.x, p.y); if (r === 'mats') return 'Not on the hitting mats'; if (r === 'target') return 'Not on a target green';
+    const r = s.range(p.x, p.y); if (r === 'mats') return 'Not on the hitting mats';
+    if (s.rangePlot?.(p.x, p.y)) continue; // (#1302: the range's ground takes a prop wherever the mats are not)
+    const c = s.course(p.x, p.y); if (c === 'green' && !flag) return 'Not on a green'; if (c === 'bunker') return 'Not in a bunker';
+    if (r === 'target' && !flag) return 'Not on a target green';
   }
   const o = s.overlaps(b); if (o) return `Overlaps ${o}`;
   return '';
