@@ -38,7 +38,7 @@ test('garage diagonals append after all old art without reinterpreting N or its 
   // (T329: the appends made after the diagonals follow them, as kit.test.ts lets them: T258's range art, T274's organic kit, the new props; T390: and T309's farm
   // animals (animal:*) and T375's eight-view art (object8:*), appended after those)
   const organic = new Set<string>([...KIT_GREY_GRANITE, ...KIT_WATER_EDGE_PLANTS].map(p => p.id));
-  const lib = LIBRARY.filter(it => !it.id.startsWith('range:') && !organic.has(it.id) && !NEW_IDS.has(it.id) && !it.id.startsWith('animal:') && !it.id.startsWith('object8:'));
+  const lib = LIBRARY.filter(it => !it.id.startsWith('range:') && !organic.has(it.id) && !NEW_IDS.has(it.id) && !it.id.startsWith('animal:') && !it.id.startsWith('object8:') && !it.id.startsWith('sports:'));
   const diagonal = new Set(Object.values(EXTRA_VIEW_SETS).flat()), old = lib.filter(it => !diagonal.has(it.id));
   assert.deepEqual(lib.slice(0, old.length).map(it => it.id), old.map(it => it.id));
   for (const [base, views] of Object.entries(EXTRA_VIEW_SETS)) {

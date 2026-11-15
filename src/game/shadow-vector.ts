@@ -47,6 +47,8 @@ export const VECTOR_FALLBACK: readonly { id: string; why: string }[] = [
   // T375: PR #976's eight-view object art (object-eight-library.ts, 520 pictures when this was written: building views, props, the clubhouses): no shape is drafted for them yet (not on purpose:
   // scripts/dev/draft-shadows.mjs over them, corrected by eye on the audit sheets, is owed), so T141's silhouette cast draws them, as it draws any picture with no entry
   { id: 'object8', why: 'the eight-view object art: no vector shadow drafted for it yet, T141 silhouette shadows until then' },
+  // #1369: the town's sports grounds (sports-library.ts): flat ground pictures, kind 'decal', their stands' and lights' shading painted in
+  { id: 'sports', why: 'the sports grounds: flat ground pictures (decals) whose shading is painted in: they cast no shadow, on purpose' },
 ];
 
 /** a built mesh: vertices (VERTEX_FLOATS each) and triangle indices, and each picture's range in the indices */
