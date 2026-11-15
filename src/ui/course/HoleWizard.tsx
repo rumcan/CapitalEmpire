@@ -66,7 +66,7 @@ export function HoleWizardPanel({ game }: { game: Game }) {
       </ol>
       {w.step === 'shape' && (
         <div className="mt-2 flex items-center gap-1.5">
-          <button className="pill-gold wiz-build" disabled={!c?.ok} title={c?.ok ? (w.base ? 'Move the tee markers and the flag to this layout: no grass is laid (Enter, or the gold pill by the green)' : 'Build the hole (Enter, or the gold pill by the green)') : c?.why} onClick={() => p.buildPlan()}>
+          <button className="pill-gold wiz-build" disabled={!c?.ok} title={c?.ok ? (w.base ? 'Move the tee markers and the flag to this layout: no grass is laid (Enter, or the gold pill by the green)' : 'Build the hole (Enter, or BUILD NOW beside the outline)') : c?.why} onClick={() => p.buildPlan()}>
             <span className="min-w-0 flex-1">{c?.ok && gh ? (w.base ? 'Move tees and flag' : `Build · ${money(total)}`) : 'Build'}</span><kbd>Enter</kbd>
           </button>
           <button className="chip" title="Drop this plan (Esc steps back one stage)" onClick={() => p.cancelPlan()}>Cancel</button>

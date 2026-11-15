@@ -73,6 +73,7 @@ import { SeasonCard } from './ui/golf/SeasonCard';
 import { seasonChip, seasonPhase } from './ui/golf/season';
 import { GuidePulse } from './ui/GuidePulse';
 import { Spotlight } from './ui/spotlight/Spotlight';
+import { MapBuildNow } from './ui/MapBuildNow';
 import { LEADS, keysToReveal } from './ui/spotlight/leads';
 import { showGuide, showHint, showPrep, showTip, showTour } from './ui/spotlight/shows';
 import { ClubTitleText } from './ui/ClubTitle';
@@ -613,6 +614,7 @@ export default function App() {
     <div className="ui-root fixed inset-0 overflow-hidden bg-[#1b2816] text-slate-100 select-none" style={{ fontFamily: 'ui-sans-serif, system-ui, sans-serif' }}>
       <TooltipLayer />
       {game && <GuidePulse anchor={game.guideAnchor} />}
+      {game && !picking && <MapBuildNow game={game} />}{/* #1325: BUILD NOW on the map, beside New hole's outline and the end of a road route of clicks */}
       {game && <Spotlight game={game} reveal={revealMenu} />}{/* J10 (#1269): every Show me's spotlight: the rest dimmed and blurred, its target cut out */}
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
       <canvas

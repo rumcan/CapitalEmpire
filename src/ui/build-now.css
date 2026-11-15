@@ -1,0 +1,19 @@
+/* The map's BUILD NOW button (#1325, MapBuildNow.tsx): in window px (.ui-unscaled), moved by one transform a frame; the button inside is zoomed with the Text size so it is
+   readable at the largest. Gold like the main pill (.pill-gold), the thing's picture at its left; greyed with the reason on it when it cannot be built. Above the cards
+   (z 20) and the flyouts, under the spotlight (z 50) and the tooltips (70). */
+.build-now-wrap { position: fixed; left: 0; top: 0; z-index: 35; will-change: transform; max-width: calc(100vw - 16px); }
+.build-now {
+  zoom: var(--ui-scale, 1); display: flex; align-items: center; gap: 0.6rem; max-width: 300px; cursor: pointer; text-align: left;
+  border-radius: 999px; border: 2px solid #7c5a06; background: linear-gradient(#ffd25a, #f0a91e); color: #1b1406;
+  padding: 0.3rem 1.1rem 0.3rem 0.35rem; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5), 0 0 0 3px rgba(255, 209, 102, 0.35);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+.build-now:hover { filter: brightness(1.07); }
+.build-now:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+.build-now-words { display: flex; flex-direction: column; min-width: 0; }
+.build-now-head { font-size: 17px; font-weight: 800; letter-spacing: 0.02em; white-space: nowrap; }
+.build-now-why { margin-top: 1px; font-size: 13px; font-weight: 600; line-height: 1.25; white-space: normal; }
+/* cannot be built: grey, the reason in dark red on it (still clickable: the click says the reason again as a toast, as the panel's Build does) */
+.build-now[data-ok="0"] { background: linear-gradient(#aeb4bd, #838a95); border-color: #3f4651; color: #1c2027; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5); }
+.build-now[data-ok="0"] .build-now-why { color: #5a1212; }
+.build-now[data-ok="0"] img { filter: grayscale(0.85); }

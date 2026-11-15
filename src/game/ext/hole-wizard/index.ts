@@ -781,12 +781,12 @@ export class HoleWizard {
       const pin = n > 1 ? this.host.pinOf?.(n - 1) : null, c = this.cursor;
       const no = c ? this.teeRefusal(snapPt(c)) : ''; if (no) return { text: `Hole ${n} · no tee here: ${no}`, bad: true }; // (T459 #1213)
       const walk = pin && c ? ` · ${Math.round(Math.hypot(c.x - pin.x, c.y - pin.y) * 2)} m walk from hole ${n - 1}` : '';
-      return { text: `Hole ${n} · click the tee${walk}`, bad: false };
+      return { text: `Click to place the tee · hole ${n}${walk}`, bad: false };
     }
-    if (this.step === 'green' && !this.plan) return { text: `Hole ${n} · click the green`, bad: false };
+    if (this.step === 'green' && !this.plan) return { text: `Click to place the green · hole ${n}`, bad: false };
     const gh = this.ghost(); if (!gh) return { text: `Hole ${n}`, bad: false };
     const head = `Hole ${n} · par ${gh.info.par} · ${gh.info.lengthM} m · $${gh.cost.toLocaleString()}`;
-    if (this.step === 'green') return { text: head, bad: !gh.teeOk || !gh.greenOk };
+    if (this.step === 'green') return { text: `Click to place the green · ${head}`, bad: !gh.teeOk || !gh.greenOk };
     const c = this.check();
     if (!c.ok && c.id !== 'same') return { text: `${head} · ${c.why}`, bad: true };
     return { text: gh.refused ? `${head} · ${gh.refused.toLocaleString()} m² left out` : head, bad: false };

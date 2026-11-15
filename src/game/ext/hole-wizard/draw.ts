@@ -262,7 +262,7 @@ export function drawWizard(v: WizardView, w: HoleWizard, mouse: { mx: number; my
       // a tee or a green Build waits on is ringed in red where it stands (P23 4.4)
       const c = w.check(), pl = w.plan;
       if (pl && c.at) { const ctx = v.ctx, d = v.dpr, p = v.screen(pl[c.at].x, pl[c.at].y); ctx.beginPath(); ctx.arc(p.x, p.y, 15 * d, 0, Math.PI * 2); ctx.lineWidth = 3 * d; ctx.strokeStyle = '#ef4444'; ctx.stroke(); }
-      if (gh) pill = drawPill(v, w, gh, mouse, extra);
+      if (gh && w.base) pill = drawPill(v, w, gh, mouse, extra); // #1325: New hole's Build is the DOM button beside the outline (MapBuildNow); Edit Hole Layout keeps this pill
     }
   }
   if (mouse && label) { const l = w.label(); v.hint(mouse.mx, mouse.my, l.text, l.bad); } // T252: none under Edit hole's height brush (its own label)
