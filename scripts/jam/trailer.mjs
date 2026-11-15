@@ -102,11 +102,12 @@ async function build() {
     // the town and the club run on at 20x (the town grows its lots along the county road by itself; the jam has no road tool)
     const t0 = Date.now(); await page.evaluate(() => window.__game.setSpeed(20));
     while (Date.now() - t0 < WORLD.grow * 1000) { await wait(15000); await page.evaluate(() => { const g = window.__game; if (g.speed !== 20) g.setSpeed(20); }); }
-    // then on to a spring month with no town event on (the Mayor's Cup is the town's October event: its cards are not filmed)
-    for (let k = 0; k < 40; k++) {
-      const s = await page.evaluate(() => ({ m: document.body.innerText.match(/\b([A-Z][a-z]{2}) 19\d\d\b/)?.[1] ?? '', ev: /Mayor's Cup|LEADERBOARD|Tournament prep/i.test(document.body.innerText) }));
-      if (!s.ev && ['Apr', 'May', 'Jun'].includes(s.m)) break;
-      await page.evaluate(() => { const g = window.__game; if (g.speed !== 20) g.setSpeed(20); }); await wait(3000);
+    // then on to a month with no town event on (an event's leaderboard stays up for months; the Mayor's Cup and the Club Championship are not filmed):
+    // until none has shown for a few checks running, in late winter or spring
+    for (let k = 0, clear = 0; k < 150 && clear < 4; k++) {
+      const s = await page.evaluate(() => ({ m: document.body.innerText.match(/\b([A-Z][a-z]{2}) 19\d\d\b/)?.[1] ?? '', ev: !!document.querySelector('[data-testid="leaderboard"]') || /Mayor's Cup|Tournament prep|Club Championship/i.test(document.body.innerText) }));
+      clear = !s.ev && ['Jan', 'Feb', 'Mar', 'Apr', 'May'].includes(s.m) ? clear + 1 : 0;
+      await page.evaluate(c => { const g = window.__game; g.setSpeed(c >= 4 ? 0 : 20); }, clear); await wait(2000);
     }
     await page.evaluate(() => window.__game.setSpeed(0));
     console.log('grown:', JSON.stringify(await page.evaluate(() => ({ built: window.__game.traffic.built, pop: window.__game.traffic.pop }))));

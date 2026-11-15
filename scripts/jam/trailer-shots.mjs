@@ -84,7 +84,10 @@ export async function record(env) {
     const nav = page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 120000 }).catch(e => e);
     await page.evaluate(b64 => { const s = atob(b64), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); void window.__game.loadSaveFile(new File([u], 'showcase.cesave')); }, readFileSync(SAVE).toString('base64'));
     await nav;
-    await ready(); await wait(4000); await closeCards(); await speed(1);
+    await ready(); await wait(4000); await closeCards();
+    // (a town event's leaderboard has no close: the club runs on until it is over, as it would for a player)
+    for (let k = 0; k < 45 && await G(() => !!document.querySelector('[data-testid="leaderboard"]')); k++) { await speed(20); await wait(2000); }
+    await closeCards(); await speed(1);
   }
   // ---------- the golf view
   const F = async js => { const f = page.frames().find(q => q.url().includes('cinderlinks')); return f ? f.evaluate(new Function(`return (async () => { ${js} })()`)) : null; };
@@ -111,7 +114,8 @@ export async function record(env) {
     await cursor(false); const t = await untilTurn(60000); await focusView(); return t;
   }
   const leave = async () => { await page.keyboard.press('Escape'); await wait(1500); await G(() => { const g = window.__game; if (g.view3pHole !== null) g.close3p(); }); await cursor(true); };
-  const ballRest = async (ms = 25000) => untilTurn(ms);
+  /** the ball at rest after a stroke: the next turn (its stroke count moved on from prev) */
+  const ballRest = async (prev = null, ms = 30000) => { await wait(1500); const t0 = Date.now(); while (Date.now() - t0 < ms) { const s = await turnNow().catch(() => null); if (s && (prev === null || s.stroke !== prev)) return s; await wait(250); } return null; };
 
   const C = WORLD.view ?? {};
   try {
@@ -161,7 +165,7 @@ export async function record(env) {
           await hold(); await wait(1600); await stop();
         };
         for (let k = 0; k < 9 && await G(() => (window.__game.golf.range.junk || []).length > 0); k++) await G(() => window.__game.clearJunk(0)); // (the junk: Clear the junk, pile by pile: the card's act)
-        for (const [id, name] of [['greens', 'greens'], ['grass', 'grass'], ['teeturf', 'tee'], ['targets', 'targets'], ['bays8', 'bays8'], ['bays12', 'bays12'], ['covered', 'covered'], ['dispenser', 'dispenser'], ['carpark', 'carpark'], ['carpark', 'carpark2']]) await stage(id, name);
+        for (const [id, name] of [['greens', 'greens'], ['teeturf', 'tee'], ['grass', 'grass'], ['targets', 'targets'], ['bays8', 'bays8'], ['bays12', 'bays12'], ['covered', 'covered'], ['dispenser', 'dispenser'], ['carpark', 'carpark'], ['carpark', 'carpark2']]) await stage(id, name);
         // the golfers come: a time-lapse at the top speed, the camera where it was
         await start('range-golfers'); await hold(); await speed(20); await wait(9000); await speed(1); await stop();
       });
@@ -227,7 +231,7 @@ export async function record(env) {
       for (let k = 0; k < takes; k++) {
         const t = await play(1, 'golden'); if (!t) throw new Error('no turn on hole 1');
         await wait(1500); await start(`golf-tee-${k}`); await wait(800);
-        await swing({ boost: 7, spin: { key: 'ArrowUp', n: 3, after: 1300 }, lead: 0 }); await ballRest(); await wait(1200); await stop();
+        await swing({ boost: +opt('boost', 0), spin: { key: 'ArrowUp', n: 3, after: 1300 }, lead: 0 }); await ballRest(t.stroke); // (no boost taps by default: #1368, the tap boost makes a 30-40 m duff) await wait(1200); await stop();
         await leave();
       }
     });
@@ -240,7 +244,7 @@ export async function record(env) {
         const t = await untilTurn(30000); if (!t) break;
         if (s > 0 && t.lie === 'tee' && t.stroke === 1) break; // (holed: the view is on the next tee)
         await wait(t.club === 'putter' ? 2200 : 1300);
-        await swing({ lead: t.club === 'putter' ? 0.0 : 0.03 }); strokes++; await wait(t.club === 'putter' ? 4500 : 3000);
+        await swing({ lead: t.club === 'putter' ? 0.0 : 0.03 }); strokes++; await ballRest(t.stroke); await wait(t.club === 'putter' ? 1500 : 500);
       }
       return strokes;
     };
@@ -252,7 +256,7 @@ export async function record(env) {
         const sb = await viewBox('Straight'); if (sb) { await clickAt(sb.x, sb.y, 500); await wait(800); }
         const c = { x: 1772, y: 820 };
         await glide(c.x, c.y, 500); await page.mouse.down(); await glide(c.x - 36, c.y + 2, 700); await page.mouse.up(); await wait(700);
-        await cursor(false); await swing({ lead: 0.02 }); await ballRest(); await wait(600);
+        await cursor(false); await swing({ lead: 0.02 }); await ballRest(t.stroke); await wait(600);
         const n = await playOut(); console.log(`   par-3 take ${k}: ${n + 1} strokes`);
         await wait(2500); await stop(); await leave();
       }
@@ -261,7 +265,7 @@ export async function record(env) {
       await G(() => window.__game.close3p?.()); await G(() => window.__game.openPractice3p('range')); await cursor(false);
       if (!(await untilTurn(60000))) throw new Error('no practice turn');
       await wait(1500); await start('range-practice');
-      for (let i = 0; i < 2; i++) { await swing({ lead: 0.0 }); await ballRest(); await wait(1500); }
+      for (let i = 0; i < 2; i++) { const t = await untilTurn(); await swing({ lead: 0.0 }); await ballRest(t?.stroke ?? null); await wait(2500); }
       await stop(); await leave();
     });
     await shot('times', async () => {
@@ -269,8 +273,8 @@ export async function record(env) {
     });
     await shot('night', async () => {
       for (let k = 0; k < takes; k++) {
-        if (!(await play(2, 'night'))) throw new Error('no night turn'); await wait(2000);
-        await start(`night-${k}`); await swing({ lead: 0.02 }); await ballRest(); await wait(1200); await stop(); await leave();
+        const t = await play(2, 'night'); if (!t) throw new Error('no night turn'); await wait(2000);
+        await start(`night-${k}`); await swing({ lead: 0.02 }); await ballRest(t.stroke); await wait(1200); await stop(); await leave();
       }
     });
     await shot('alive', async () => {

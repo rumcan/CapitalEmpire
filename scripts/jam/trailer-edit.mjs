@@ -24,8 +24,10 @@ export async function edit({ OUT, FPS, opt }) {
     const f = text(`cap${i}.txt`, txt), a = `if(lt(t,0.25),t/0.25,if(gt(t,${(d - 0.3).toFixed(2)}),max(0,(${d.toFixed(2)}-t)/0.3),1))`;
     return `drawbox=x=0:y=ih-230:w=iw:h=230:color=black@0.28:t=fill:enable='gte(t,0)',drawtext=fontfile=fonts/bahnschrift.ttf:textfile=${f}:fontsize=${size}:fontcolor=white:x=110:y=h-170:alpha='${a}':shadowcolor=black@0.6:shadowx=2:shadowy=3`;
   };
-  cut.parts.forEach((p, i) => {
+  cut.parts.forEach((p0, i) => { let p = p0;
     const src = join(OUT, 'shots', `${p.shot}.mp4`); if (!existsSync(src)) { console.log(`skip ${p.shot}: no clip`); return; }
+    // (a negative from or to counts back from the clip's end: a stage's result is its last seconds)
+    const D = probe(src); p = { ...p, from: p.from < 0 ? Math.max(0, D + p.from) : p.from, to: p.to <= 0 ? D + p.to : Math.min(p.to, D) };
     const sp = p.speed ?? 1, len = (p.to - p.from) / sp, out = `p${String(i).padStart(2, '0')}.mp4`;
     const vf = [`setpts=(PTS-STARTPTS)/${sp}`, `scale=${W}:${H}:flags=lanczos`, `fps=${FPS}`];
     let args;
