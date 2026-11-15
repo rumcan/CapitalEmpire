@@ -40,6 +40,11 @@ export function yoursDriver(view: CourseView, sk: ShotSkill, seed: number, h: Yo
       h.played?.(shot, r, after, up);
       return shot;
     },
+    peek(input) {   // (#1336: playYours is pure: the round it returns is dropped, nothing kept)
+      const r = h.get(); if (!r || r.over || r.holed || input.gim) return null;
+      const { holeIdx: _h, stroke: _s, ...inp } = input; void _h; void _s;
+      return playYours(view, r, sk, inp, seed).shot;
+    },
     shots: () => shots,
     hole: (i) => { const p = holeOf(view, i); if (!p) throw new Error(`yours3p: no hole ${i}`); return p; },
     strokes: (i) => h.get()?.card.find(c => c.i === i)?.strokes ?? 0,

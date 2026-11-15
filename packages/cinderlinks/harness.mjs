@@ -153,7 +153,8 @@ const HOST_PLAY = String.raw`
     hostMessage(turn(b0, 1, 16)); step(2, 1); info.ringTight = HP.ring && HP.ring.across;
     if (!(info.ringTight < r1)) errs.push('host play: a steadier club did not tighten the ring');
     // T446: the hold and release. A click on the course sets the aim and holds it (it never swings); the camera turned away, Space held lines it up
-    // behind the ball first, then the power fills; Shift three times (boost 0.03); let go: the strike at the power held, no timing (acc 0), version 3
+    // behind the ball first, then the power fills; #1336: Up tapped fast raises the boost bar, which falls when he stops; three taps just before he lets go are the boost
+    // played (the level after one step's fall, times the plain cap); let go: the strike at the power held, no timing (acc 0), version 3
     mouse.down = true; step(2, 0); mouse.down = false; step(2, 0);
     if (HP.sw || (hostLast && hostLast.t === 'input')) errs.push('host play: a click on the course started a swing');
     const aim0 = [aim.x, aim.y]; mouse.x = VW / 2 + 220; step(3, 0);
@@ -161,13 +162,23 @@ const HOST_PLAY = String.raw`
     camYaw += 1.2; aimCam();
     keys.Space = true; step(1, 0); const glide = !!(HP.sw && HP.sw.g), u0 = HP.sw ? HP.sw.u : -1; step(30, 0);
     const off = camYaw - Math.atan2(aim.dy, aim.dx) - 1.5708, lined = Math.abs(Math.atan2(Math.sin(off), Math.cos(off))) < 1e-6;
-    step(30, 0); if (HP.sw) HP.sw.presses += 3; const held = HP.sw ? HP.sw.u : -1; keys.Space = false;
-    info.swing = { glide, u0, lined, held: +held.toFixed(4) };
+    { const w = () => parseFloat(swingBoost.style.width) || 0;
+      step(4, 0); for (let k = 0; k < 6; k++) { hostBoostTap(); step(6, 0); } const up = w(), lv = HP.sw ? HP.sw.lv : 0, upCls = swingBoost.className;
+      if (snapAt) snapAt('host-boost');
+      { const t1 = performance.now(); for (let k = 0; k < 2000; k++) hostMeterShow(); info.meterHeldMs = +((performance.now() - t1) / 2000).toFixed(4); }   // (#1336: the bar's tick while held, with the boost bar in it)
+      step(72, 0); const down = w();
+      info.boostBar = { up, down, lv: +lv.toFixed(3), cls: upCls };
+      if (!(up > 40) || !/on/.test(upCls)) errs.push('host play: Up taps did not raise the boost bar (' + JSON.stringify(info.boostBar) + ')');
+      if (!(down < up / 2)) errs.push('host play: the boost bar did not fall when the taps stopped (' + JSON.stringify(info.boostBar) + ')');
+      if (!(info.meterHeldMs < 0.1)) errs.push('host play: the swing bar with the boost costs ' + info.meterHeldMs + ' ms a tick (budget 0.1 ms)'); }
+    if (HP.sw) HP.sw.t = 0.55 / HP.sw.spd;   // (the long hold above took the power past its peak: back to the middle of the fill)
+    step(1, 0); if (HP.sw) HP.sw.lv = 0; hostBoostTap(); hostBoostTap(); hostBoostTap(); const held = HP.sw ? HP.sw.u : -1, want = Math.round(Math.min(1, 3 * HMETER.tap) * HDRAIN * HMETER.plain * 1e4) / 1e4; keys.Space = false;
+    info.swing = { glide, u0, lined, held: +held.toFixed(4), want };
     if (!glide || u0 !== 0 || !lined) errs.push('host play: the camera did not line up behind the ball before the power filled');
     if (!(held > 0.2 && held <= 1)) errs.push('host play: the power did not fill while held (' + held + ')');
     let sent = null; for (let k = 0; k < 120 && !sent; k++) { step(1, 0); if (hostLast && hostLast.t === 'input') sent = hostLast.input; }
     info.input = sent;
-    { const w = sent && sent.swing; if (!w || Math.abs(w.power - held) > 1e-9 || w.acc !== 0 || Math.abs(w.boost - 0.03) > 1e-9 || w.v !== 3) errs.push('host play: the swing\'s outcome is not the power held (' + JSON.stringify(w) + ')'); }
+    { const w = sent && sent.swing; if (!w || Math.abs(w.power - held) > 0.02 || w.acc !== 0 || Math.abs(w.boost - want) > 2e-4 || w.v !== 3) errs.push('host play: the swing\'s outcome is not the power held (' + JSON.stringify(w) + ')'); }
     if (!sent || sent.club !== 'driver' || !(sent.power >= 0.3 && sent.power <= 1) || !Array.isArray(sent.aim) || !Number.isFinite(sent.aim[0]) || sent.holeIdx !== 0 || sent.stroke !== 1) errs.push('host play: no input, or a wrong one');
     const bw = [ball.x, ball.y]; step(60, 0);
     if (ball.state !== 0 || near([ball.x, ball.y], bw) > 1e-9 || !hostBusy()) errs.push('host play: the ball moved (or he could swing) before the host answered');
@@ -233,9 +244,9 @@ const HOST_PLAY = String.raw`
     const step = (n, every) => { for (let k = 0; k < n; k++) { tickGame(); if (every && k % every === 0) render(); } };
     for (const c of Object.keys(keys)) keys[c] = false; mouse.down = false; charging = false;
     step(70, 0); hostMessage(turn(2)); jumpToBall(); mouse.x = VW / 2; mouse.y = VH / 2 - 80; step(10, 0);
-    hostPickSet('draw'); hostSpinAt(0, -1); step(10, 0);
+    hostPickSet('draw'); step(10, 0);
     const ask = hostLast && hostLast.t === 'aim' ? hostLast : null; info.aim = ask && { key: ask.key, shape: ask.input.shape, spin: ask.input.spin };
-    if (!ask || !ask.input.shape || ask.input.shape.curve !== -1 || !ask.input.spin || ask.input.spin.y !== -1) errs.push('host craft: the picks did not go out in an aim');
+    if (!ask || !ask.input.shape || ask.input.shape.curve !== -1 || ask.input.spin) errs.push('host craft: the picks did not go out in an aim (or a spin went with them: #1336 spins in the air only)');
     else {   // the answer: a flight bending left onto a landing 140 m out and 12 m left, then a roll back of 2 m
       const L = [b0[0] + ux * 140 + uy * 12, b0[1] + uy * 140 - ux * 12], F = [];
       for (let k = 0; k <= 30; k++) { const u = k / 30, bend = 12 * u * u; F.push([b0[0] + ux * 140 * u + uy * bend, b0[1] + uy * 140 * u - ux * bend, 28 * 4 * u * (1 - u)]); }
@@ -247,7 +258,7 @@ const HOST_PLAY = String.raw`
     // J5f: the ribbon ends on the aim ring, and the aim's distance is read out above the club box. The preview is the model's shot at full power; before the swing it is drawn at the
     // aim's share of it (it used to run the club's whole carry past a nearer ring), and held at the gold mark it is the same. A straight pick is answered with a straight flight
     {
-      hostPickAmt('curve', 0); hostSpinAt(0, 0); step(12, 0);
+      hostPickAmt('curve', 0); step(12, 0);
       const ask2 = hostLast && hostLast.t === 'aim' ? hostLast : null;
       if (!ask2 || ask2.input.shape || ask2.input.spin) errs.push('host craft: a straight pick went out with a shape or a spin (' + JSON.stringify(ask2 && ask2.input) + ')');
       else {
@@ -263,7 +274,7 @@ const HOST_PLAY = String.raw`
         rEnd = null; step(3, 1); info.read = aimEl.innerHTML; onRing('before the swing');
         if (!/^Aim <b>60 m<\/b>$/.test(aimEl.innerHTML)) errs.push('host craft: the aim is not read out as 60 m (' + aimEl.innerHTML + ')');
         if (snapAt) snapAt('host-ribbon');
-        { const T = HP.target; rEnd = null; HP.sw = { t: 0, u: T.u, presses: 0, spd: 1, g: null, rel: false }; hostAim(); HP.sw = null; onRing('held at the gold mark'); }
+        { const T = HP.target; rEnd = null; HP.sw = { t: 0, u: T.u, lv: 0, spd: 1, g: null, rel: false }; hostAim(); HP.sw = null; onRing('held at the gold mark'); }
         ribbonO = rO; hostAimPin = false;
       }
       // the sliders: an amount goes out as it is; a side he has not earned is held at the middle and says what unlocks it; Z and X pass over a locked side
@@ -303,10 +314,54 @@ const HOST_PLAY = String.raw`
     msgText = ''; { const s = hostPickAmt('curve', -0.5); if (s !== 0 || !/Draw is locked/.test(msgText)) errs.push('host craft: a slider took a draw he has not earned'); }
     hostMessage(turn(2, Object.assign({}, none, { boost: true, charges: 1, why: {} }), 1)); jumpToBall(); step(4, 0);
     hostPickSet('boost'); const armed = HP.pick.armed;
-    keys.Space = true; step(60, 0); keys.Space = false; for (let k = 0; k < 120 && !(hostLast && hostLast.t === 'input'); k++) step(1, 0);   // (T446: Space held swings)
+    keys.Space = true; step(60, 0); for (let k = 0; k < 10; k++) hostBoostTap(); keys.Space = false; for (let k = 0; k < 120 && !(hostLast && hostLast.t === 'input'); k++) step(1, 0);   // (T446: Space held swings; #1336: Up tapped to the full)
     const sw = hostLast && hostLast.t === 'input' && hostLast.input.swing; info.boost = { armed, sent: sw && sw.boost, after: HP.pick.armed };
-    if (!armed || !sw || sw.boost !== 0.06 || HP.pick.armed) errs.push('host craft: the armed boost was not a full boost, or was not spent');
+    if (!armed || !sw || !(sw.boost > HMETER.plain && sw.boost <= HMETER.max) || HP.pick.armed) errs.push('host craft: the armed charge did not raise the boost cap, or was not spent (' + JSON.stringify(info.boost) + ')');
     if (aimEl.innerHTML !== '') errs.push('host craft: the aim is still read out after the strike (' + aimEl.innerHTML + ')');
+    return { errs, info };
+  }
+  // #1336: the spin tapped in the air. A full shot with the club's taps (turn.clubs[].air) goes with fly; the host's flight (air) is flown; Down three times is 3 taps of
+  // backspin on the readout's ball, Up takes one back, the count is held to the club's taps; at the landing the input goes again with the totals and no fly, the ball waits
+  // at the landing; the stroke that answers it plays on from there to its rest, and the readout goes
+  function hostAirRun(snapAt) {
+    const errs = [], info = {}, S = course.S, b0 = [ball.x / S, ball.y / S], p0 = [hole.pin.x / S, hole.pin.y / S], dl = Math.hypot(p0[0] - b0[0], p0[1] - b0[1]), ux = (p0[0] - b0[0]) / dl, uy = (p0[1] - b0[1]) / dl;
+    const kit = { club: 'iron7', carryM: 150, scatterM: 18, longM: 12, playsM: 147, sideM: 1, loftDeg: 34, speed: 0.9, sweet: 0.08, air: { side: 6, top: 5, back: 8 } };
+    const step = (n) => { for (let k = 0; k < n; k++) tickGame(); };
+    for (const c of Object.keys(keys)) keys[c] = false; mouse.down = false; charging = false; if (HP) { HP.sw = null; HP.play = null; HP.q.length = 0; } player.swing = -1; bcam = 0; step(70);
+    hostMessage({ v: 1, t: 'turn', golfer: 0, holeIdx: 0, hole: holeN, par: hole.par, stroke: 3, at: 600, lie: 'fairway', lieKind: 'fairway', ball: b0, pin: p0, distM: dl, wind: { mph: 0, from: 0 },
+      slope: { up: 0, across: 0 }, clubs: [kit], suggested: { club: 'iron7', aim: [b0[0] + ux * 140, b0[1] + uy * 140], power: 1 } });
+    jumpToBall(); step(4); hostLast = null;
+    keys.Space = true; step(70); keys.Space = false; let inp = null; for (let k = 0; k < 120 && !inp; k++) { step(1); if (hostLast && hostLast.t === 'input') inp = hostLast.input; }
+    if (!inp || inp.fly !== true || inp.spin) { errs.push('host air: the strike did not go with fly (' + JSON.stringify(inp) + ')'); return { errs, info }; }
+    const L = [b0[0] + ux * 140, b0[1] + uy * 140], F = [], FT = [];
+    for (let k = 0; k <= 40; k++) { const u = k / 40; F.push([b0[0] + (L[0] - b0[0]) * u, b0[1] + (L[1] - b0[1]) * u, 26 * 4 * u * (1 - u)]); FT.push(4 * u); }
+    const base = { v: 1, t: 'shot', golfer: 0, hole: holeN, stroke: 3, club: 'iron7', from: b0, flight: F, flightT: FT, landLie: 'fairway', at: 600 };
+    hostMessage(Object.assign({}, base, { bounces: [], roll: [], rest: L, restLie: 'fairway', holed: false, penalty: 0, air: true }));
+    step(40); const inAir = hostAirOn(), noneTxt = spinReadTx.textContent;
+    const tap = (d, n) => { let k = 0; for (let j = 0; j < n; j++) if (hostSpinTap(d)) k++; step(1); return k; };
+    tap('down', 3); const back3 = HP.air.ay, read3 = spinReadTx.textContent, cls3 = spinReadEl.className;
+    if (snapAt) snapAt('host-air-spin');
+    { const t1 = performance.now(); for (let k = 0; k < 2000; k++) hostSpinShow(); info.spinShowMs = +((performance.now() - t1) / 2000).toFixed(4); }   // (unchanged: no redraw)
+    tap('up', 1); const back2 = HP.air.ay;
+    tap('down', 20); const capped = HP.air.ay;
+    tap('up', 12); const top = HP.air.ay;
+    tap('left', 2); const left = HP.air.ax; tap('right', 3); const right = HP.air.ax;
+    info.air = { inAir, noneTxt, back3, read3, cls3, back2, capped, top, left, right };
+    if (!inAir || cls3 !== 'on' || noneTxt !== 'Tap the arrows for spin') errs.push('host air: the readout is not up in the flight (' + JSON.stringify(info.air) + ')');
+    if (back3 !== -3 || read3 !== 'Backspin 24%') errs.push('host air: three taps of Down are not three steps of backspin on the readout (' + JSON.stringify(info.air) + ')');
+    if (back2 !== -2) errs.push('host air: Up did not take a tap of backspin off');
+    if (capped !== -8 || top !== 4 || left !== -2 || right !== 1) errs.push('host air: the taps are not held to the club, or a way did not add (' + JSON.stringify(info.air) + ')');
+    let land = null; for (let k = 0; k < 600 && !land; k++) { step(1); if (hostLast && hostLast.t === 'input' && !hostLast.input.fly) land = hostLast.input; }
+    info.land = land && land.spin;
+    if (!land || !land.spin || land.spin.ax !== 1 || land.spin.ay !== 4 || land.swing.power !== inp.swing.power) errs.push('host air: the landing did not send the totals with the strike (' + JSON.stringify(land) + ')');
+    step(30); const held = [ball.x / S, ball.y / S], after = hostSpinTap('down');
+    if (Math.hypot(held[0] - L[0], held[1] - L[1]) > 1e-3 || !HP.play || !hostBusy() || after) errs.push('host air: the ball did not wait at the landing for the stroke (' + JSON.stringify({ held, after, L, play: !!HP.play, busy: hostBusy() }) + ')');
+    const R = [L[0] + ux * 9, L[1] + uy * 9], RL = [], RT = []; for (let k = 1; k <= 8; k++) { RL.push([L[0] + (R[0] - L[0]) * k / 8, L[1] + (R[1] - L[1]) * k / 8]); RT.push(4 + 2 * k / 8); }
+    hostMessage(Object.assign({}, base, { bounces: [L], roll: RL, rollT: RT, rest: R, restLie: 'fairway', holed: false, penalty: 0 }));
+    for (let k = 0; k < 900 && HP.play; k++) step(1);
+    info.rest = [+(ball.x / S).toFixed(2), +(ball.y / S).toFixed(2)];
+    if (HP.play || Math.hypot(ball.x / S - R[0], ball.y / S - R[1]) > 1e-6) errs.push('host air: the stroke did not play on to its rest (' + JSON.stringify(info.rest) + ')');
+    if (spinReadEl.className !== '') errs.push('host air: the readout stayed up after the flight');
     return { errs, info };
   }
   // T423: a putt on the host's green: the read is on the card; the putt aimed along the read's start line ends in the cup, aimed at the cup it ends off by
@@ -438,7 +493,7 @@ const HOST_PLAY = String.raw`
       if (Math.abs(top - Math.max(1.6, (D + 3) / D)) > 1e-9 || !(top >= 1.6) || !(top * D >= D + 3 - 1e-9 || top === 1.6)) errs.push('host green: the putt meter does not reach past the hole (' + top + ')');
       if (!T || Math.abs(T.pw - 1) > 0.02 || Math.abs(T.u - 1 / top) > 0.02) errs.push('host green: the aim at the cup is not a putt of the way to it (' + JSON.stringify(info.putt) + ')');
       if (parseFloat(swingHoleMk.style.left) < 40 || parseFloat(swingHoleMk.style.left) > 70 || Math.abs(parseFloat(swingAimMk.style.left) - 100 / top) > 2) errs.push('host green: the bar does not mark the hole and the aim (' + JSON.stringify(info.putt) + ')');
-      const hit = (pw) => { HP.sw = { t: 0, u: pw / top, presses: 0, spd: 1, g: null, rel: false }; render(); const t2 = HP.target; HP.sw = null; return t2; };
+      const hit = (pw) => { HP.sw = { t: 0, u: pw / top, lv: 0, spd: 1, g: null, rel: false }; render(); const t2 = HP.target; HP.sw = null; return t2; };
       const far = (() => { aim.x = b0[0] * S + (p0[0] - b0[0]) * S * 3; aim.y = b0[1] * S + (p0[1] - b0[1]) * S * 3; render(); return HP.target; })();
       info.puttFar = far && { d: +(far.d / S).toFixed(2), u: +far.u.toFixed(3) };
       if (!far || Math.abs(far.u - 1) > 1e-6 || Math.abs(far.d / S - top * D) > 1e-6) errs.push('host green: an aim past the meter is not held at its top (' + JSON.stringify(info.puttFar) + ')');
@@ -544,13 +599,22 @@ const HOST_SCRIPT = String.raw`
         if (!inp) { errs.push('script: no input from the view at turn ' + turn + ' ' + JSON.stringify({ wait: HP.wait, sw: !!HP.sw, swing: player.swing, near: nearBall(), busy: hostBusy(), bcam, cart: cart.on, club: hostClub() && hostClub().club, clubs: HP.clubs.length, sent: sent.map((m) => m.t), d: Math.hypot(player.x - ball.x, player.y - ball.y) })); break; }
         if (inp.input.club === 'putter') { const e = Math.abs(inp.input.swing.power - 1); info.puttErr = Math.max(info.puttErr || 0, +e.toFixed(3)); info.putts = (info.putts || 0) + 1; }
         seen = null; feed(S.input(inp.input));
-        for (let k = 0; k < 4000 && HP && HP.play; k++) { step(1); if (snapAt && turn === 0 && k === 120) snapAt('script-flight'); }
+        // (#1336: a full shot's input goes with fly and is answered with the flight; on the first one he taps two of backspin in the air; the view sends the input
+        // again at the landing, and that one is fed to the host for the stroke)
+        const fly = inp.input.fly === true; if (fly) info.flies = (info.flies || 0) + 1;
+        for (let k = 0, fed = !fly; k < 4000 && HP && HP.play; k++) {
+          step(1); if (snapAt && turn === 0 && k === 120) snapAt('script-flight');
+          if (fly && !info.tapped && hostAirOn() && k === 30) { info.tapped = (hostSpinTap('down') ? 1 : 0) + (hostSpinTap('down') ? 1 : 0); info.tapAt = st0.length; }
+          if (!fed) { const i2 = sent.filter((m) => m.t === 'input')[1]; if (i2) { fed = true; if (i2.input.fly) errs.push('script: the landing input went with fly'); feed(S.input(i2.input)); } }
+        }
         const st = S.strokes(), sh = st[st.length - 1]; if (!sh) { errs.push('script: the host played no stroke at turn ' + turn); break; }
         const at = seen || { x: ball.x, y: ball.y, state: ball.state }, d = sh.holed ? 0 : near([at.x / course.S, at.y / course.S], sh.rest); if (d > info.worstM) info.worstM = d;
         if (d > 0.05) errs.push('script: stroke ' + st.length + ' (hole ' + sh.hole + ') rests ' + d.toFixed(2) + ' m from the model');
         if (sh.holed && at.state !== 3) errs.push('script: stroke ' + st.length + ' went in for the model, not in the view');
       }
       for (let k = 0; k < 4000 && HP && (HP.play || HP.q.length); k++) step(1);
+      if (info.tapped) { const i0 = S.inputs()[info.tapAt]; info.tapSaved = i0 && i0.spin; if (!i0 || !i0.spin || i0.spin.ay !== -info.tapped) errs.push('script: the taps in the air are not in the saved input (' + JSON.stringify(i0 && i0.spin) + ')'); }
+      if (!info.flies) errs.push('script: no full shot went with fly');
       info.strokes = S.strokes().length; info.holes = ends; info.byHole = S.strokes().reduce((o, x) => { o[x.hole] = (o[x.hole] || 0) + 1; return o; }, {}); info.worstM = +info.worstM.toFixed(3);
       if (ends !== 3) errs.push('script: ' + ends + ' of 3 holes played out');
       if (snapAt) snapAt('script-end');
@@ -574,7 +638,7 @@ ${HOST_PLAY}
   const find = (test, cx, cy, rad) => { for (let r = 0; r < rad; r += 1.5) for (let a = 0; a < 6.283; a += 1.5 / Math.max(r, 1.5)) { const x = cx + Math.cos(a) * r, y = cy + Math.sin(a) * r; if (test(x, y)) return [x, y]; } return null; };
   const mid = pathAt(0.5);
   const SC = {
-    host: () => { hostMessage(hostMsg()); idle(); snap('host'); const r = hostPlayRun(snap); out.info.push({ hostPlay: r.info, errors: r.errs }); const c = hostCraftRun(snap); out.info.push({ hostCraft: c.info, errors: c.errs }); const gr = hostGreenRun(); out.info.push({ hostGreen: gr.info, errors: gr.errs }); snap('host-green'); const dn = hostDoneRun(); out.info.push({ hostDone: dn.info, errors: dn.errs }); const l = hostLieRun(); out.info.push({ hostLies: l.info, errors: l.errs }); snap('host-lies'); },   // (T418: then a turn, a strike and a canned shot)   // (T415: Woodhill handed over by message, hole 1 from its tee)
+    host: () => { hostMessage(hostMsg()); idle(); snap('host'); const r = hostPlayRun(snap); out.info.push({ hostPlay: r.info, errors: r.errs }); const c = hostCraftRun(snap); const a = hostAirRun(snap); out.info.push({ hostAir: a.info, errors: a.errs }); out.info.push({ hostCraft: c.info, errors: c.errs }); const gr = hostGreenRun(); out.info.push({ hostGreen: gr.info, errors: gr.errs }); snap('host-green'); const dn = hostDoneRun(); out.info.push({ hostDone: dn.info, errors: dn.errs }); const l = hostLieRun(); out.info.push({ hostLies: l.info, errors: l.errs }); snap('host-lies'); },   // (T418: then a turn, a strike and a canned shot)   // (T415: Woodhill handed over by message, hole 1 from its tee)
     tee() { idle(); frames(20); snap('tee'); },
     aim() { idle(); newHole(holeN, hole.tee.x, hole.tee.y); frames(20); player.x = ball.x - 0.3; player.y = ball.y + 0.6; mouse.x = VW / 2 + 60; mouse.y = VH / 2 - 150; frames(6); snap('aim'); mouse.down = true; frames(40); snap('aim-charge'); mouse.down = false; frames(60); snap('ballcam-a'); frames(70); snap('ballcam-b'); for (let k = 0; k < 900 && ball.state !== 0; k++) frames(1); frames(20); snap('ballcam-end'); frames(60); snap('aim-after'); },
     stuck() { // can the golfer be trapped? On every steep point found near the hole (and its flatter neighbours), count the points from which no step in any of 16 directions is allowed
@@ -1152,6 +1216,7 @@ try {
       res.golfArt.stand = st; if (st !== '118,148,118,118,118') res.errors.push('golfer art: a frame does not stand on its own soles (' + st + ', want 118,148,118,118,118: on his soles, not the club head; a frame painted 30 rows lower stands as low; none found or 45 rows off: the anchor of the clip)');
     }
     { const hc = hostCraftRun(); res.hostCraft = hc.info; res.errors.push(...hc.errs); }
+    { const ha = hostAirRun(); res.hostAir = ha.info; res.errors.push(...ha.errs); }   // (#1336)
     { const hq = hostPracRun(); res.hostPrac = hq.info; res.errors.push(...hq.errs); }
     { const hb = blobRun(); res.blob = hb.info; res.errors.push(...hb.errs); }
     { const hf = fenceRun(); res.fence = hf.info; res.errors.push(...hf.errs); }

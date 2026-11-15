@@ -169,10 +169,15 @@ body.host #minimap { top: 56px; }
 #swingBtn b.aimmk::after { content: ''; position: absolute; left: -4.5px; top: 0; border: 6px solid transparent; border-top-color: var(--gold-hi); }
 #swingBtn b.holemk { width: 2px; margin-left: -1px; background: #fff; opacity: 0.9; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.45); }
 #swingBtn span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 1.05em; font-weight: 700; white-space: nowrap; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85), 0 0 8px rgba(0, 0, 0, 0.5); }
-/* (room kept, 2026-11-15, for the follow-on job "Tap-to-boost while holding the swing": a thinner boost bar over the power, and a small spin-ball readout beside the
-   meter during the flight; nothing draws them yet) */
-#swingBtn u.boostbar { position: absolute; left: 0; right: 0; top: 0; height: 0.32em; display: none; text-decoration: none; background: rgba(255, 255, 255, 0.08); }
+/* #1336: the tapped boost, a thin bar over the power that rises with each tap of Up and falls when he stops (orange; red with the Power Mash charge armed), and the
+   spin readout beside the meter during his flight: a small ball with the spin's dot, its words above it */
+#swingBtn u.boostbar { position: absolute; left: 0; top: 0; width: 0; height: 0.32em; display: none; text-decoration: none; border-radius: 1em 0 0 0; background: linear-gradient(90deg, rgba(255, 196, 96, 0.75), #ff9b3d); box-shadow: 0 0 6px rgba(255, 155, 61, 0.6); }
+#swingBtn u.boostbar.on { display: block; }
+#swingBtn u.boostbar.armed { background: linear-gradient(90deg, #ff9b3d, #e8573c); box-shadow: 0 0 8px rgba(232, 87, 60, 0.75); }
 #spinRead { position: absolute; bottom: 2.2%; left: calc(50% - 11.5em - 4.2em); width: 3.6em; height: 3.6em; display: none; pointer-events: none; }
+#spinRead.on { display: block; }
+#spinRead canvas { display: block; width: 100%; height: 100%; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.6)); }
+#spinRead span { position: absolute; right: 0; bottom: calc(100% + 0.25em); padding: 0.1em 0.5em; border-radius: 999px; background: var(--panel); border: 1px solid var(--gold-line); font-size: 0.8em; font-weight: 700; white-space: nowrap; color: var(--ink); }
 #powerTxt { display: inline-block; margin-top: 0.4em; padding: 0.15em 0.7em; border-radius: 999px; background: var(--panel); font-size: 0.95em; font-weight: 700; color: var(--ink); }
 #powerTxt:empty { display: none; }
 .track { position: relative; height: 1.1em; background: var(--panel); border: 1px solid var(--gold-line); border-radius: 999px; box-shadow: var(--shadow); overflow: hidden; }
@@ -186,7 +191,7 @@ body.host #minimap { top: 56px; }
 /* 2026-11-15 (the owner: "Why not make the draw and fade like normal golf games where you just move the dot on the ball?"): the shot is shaped on a ball. A small
    button at the bottom right shows the ball with its dot and the shape picked; a click opens the panel above it (kept shut until asked, the choice kept): one big
    ball to drag the dot on (left draw, right fade, up high, down low), the painted draw, fade, high and low tiles round it, a gold ring for his limit, a small arrow
-   that previews the shape, Reset, and, folded under it, the spin ball, Tour spin and Go for it. It never runs off the picture: it scrolls up and down inside. */
+   that previews the shape, Reset, and, folded under it, how to boost and spin (#1336) and Go for it. It never runs off the picture: it scrolls up and down inside. */
 #shotBtn { display: none; align-items: center; gap: 0.4em; height: 2.6em; box-sizing: border-box; padding: 0 0.75em 0 0.25em; border-radius: 999px; background: var(--panel); border: 1px solid var(--gold-line); box-shadow: var(--shadow); color: var(--ink); font: 700 1em/1 var(--sans); cursor: pointer; }
 #shotBtn.on { display: inline-flex; } #shotBtn:hover { border-color: var(--gold); } #shotBtn.open { background: linear-gradient(var(--gold-wash), var(--gold-wash)), var(--panel); border-color: var(--gold); }
 #shotBtn canvas { width: 2.1em; height: 2.1em; pointer-events: none; }
@@ -210,7 +215,7 @@ body.host #minimap { top: 56px; }
 #shotc details { margin-top: 0.45em; padding-top: 0.35em; border-top: 1px solid var(--line); }
 #shotc summary { cursor: pointer; font-size: 0.88em; color: var(--muted); }
 #shotc summary:hover { color: var(--ink); }
-/* J8 (#1261), #1301: the painted tiles on Tour spin and Go for it: pictures only, never in the way of a click */
+/* J8 (#1261), #1301: the painted tile on Go for it: pictures only, never in the way of a click */
 #shotc b img { width: 2.6em; height: 2.6em; border-radius: 12%; pointer-events: none; display: block; }
 #shotc b { cursor: pointer; display: flex; align-items: center; gap: 0.6em; flex: 1; min-width: 0; padding: 0.25em 0.6em 0.25em 0.25em; border-radius: 0.7em; border: 1px solid var(--line); color: #d9d3c4; font-weight: 600; }
 #shotc b:hover { background: rgba(255, 255, 255, 0.06); }
@@ -218,9 +223,11 @@ body.host #minimap { top: 56px; }
 #shotc b.lock { opacity: 0.6; cursor: not-allowed; }
 #shotc b.boost.sel { background: linear-gradient(#ef6a4a, #c2410c); border-color: transparent; color: #fff; }
 #shotc b.sel .lw { color: inherit; }
-#shotc .sp { display: flex; align-items: center; gap: 0.7em; margin-top: 0.35em; }
-#shotc .sp canvas { flex: none; width: 4.6em; height: 4.6em; cursor: crosshair; touch-action: none; }
-#shotc .sp .st { display: flex; flex-direction: column; gap: 0.4em; flex: 1; min-width: 0; }
+#shotc .hw { display: flex; align-items: flex-start; gap: 0.6em; margin-top: 0.4em; font-size: 0.85em; line-height: 1.35; color: #d9d3c4; }
+#shotc .hw img { flex: none; width: 2.4em; height: 2.4em; border-radius: 12%; pointer-events: none; }
+#shotc .hw b.k { display: inline; padding: 0; border: 0; cursor: default; color: var(--gold-hi); font-weight: 700; }
+#shotc .hw b.k:hover { background: none; }
+#shotc .st { display: flex; flex-direction: column; gap: 0.4em; margin-top: 0.45em; }
 #shotc .tx { display: flex; flex-direction: column; min-width: 0; } #shotc b.lock .nm { text-decoration: line-through; } #shotc .lw { font-style: normal; font-size: 0.8em; font-weight: 500; color: var(--warn); text-decoration: none; white-space: normal; }
 #shotc i { font-style: normal; font-size: 0.85em; color: var(--muted); }
 

@@ -200,6 +200,13 @@ export class PracticeDriver implements RoundDriver {
     } else this.note = null;
     return shot;
   }
+  /** #1336: the next ball as play would strike it (the same stream), kept nowhere and judged by no drill */
+  peek(input: OwnerInput): Shot | null {
+    const t = this.turn(), h = this.holeNow(), { holeIdx: _h, stroke: _s, ...inp } = input; void _h; void _s;
+    const r = mulberry((this.seed ^ Math.imul(this.balls + 1, 2654435761)) | 0);
+    const o = shotOutcome(this.view, h, t.ball, t.lie, this.sk, { ...inp, v: inp.v ?? MODEL_V }, r, { last: false });
+    return { golfer: this.golfer, hole: t.holeIdx, stroke: t.stroke, t: 0, from: { ...t.ball }, to: o.to, club: input.club, lie: o.lie, penalty: o.penalty, holed: o.holed, ...(o.landing ? { landing: o.landing } : {}) };
+  }
   shots(): readonly Shot[] { return this.list; }
   /** hole index i as he plays it: the drill's pin on it */
   hole(i: number): PlayHole { const h = this.view.holes[i] ?? this.view.holes[0]!; return { ...h, pin: this.pin() }; }

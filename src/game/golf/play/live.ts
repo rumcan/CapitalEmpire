@@ -9,8 +9,8 @@ import { PUTT_V2, carryFor, puttEase, chooseShot, hitShot, luckyPutt, putt, rng,
 import { hasMech, kitOf, type ModCtx } from './mods';
 import { readShape, shapeEffect, type ShotShape } from './shape';
 import { holeFrom } from './courseview';
-import { BOOST, HOLD_PUTT_TOP, HOLD_V, METER, METER_ANG, MIN_SWING_POWER, readSwing, swingEffect, type SwingOutcome } from './swing';
-import { readSpin, spinEffect, type SpinInput } from './spin';
+import { BOOST, HOLD_PUTT_TOP, HOLD_V, METER, METER_ANG, MIN_SWING_POWER, TAP_BOOST, readSwing, swingEffect, type SwingOutcome } from './swing';
+import { AIR, isAir, readSpin, spinEffect, type SpinInput } from './spin';
 import { readEnv, type ShotEnv } from './conditions';
 import type { Club, CourseView, Landing, Lie, PlayHole, Pt, RoundPlan, Shot } from './types';
 
@@ -47,8 +47,11 @@ function backToFairway(view: CourseView, hole: PlayHole, p: Pt, reach: number): 
   return null;
 }
 /** the shot model's current version (OwnerInput.v): 2 since T334 (the putting), 3 since T346 (the club's own run after landing: a shot with conditions rolls on by CLUB_RUN), 4 since 2026-11-15 (short putts
- *  much easier to sink: shot.ts PUTT_EASY) */
-export const MODEL_V = 4;
+ *  much easier to sink: shot.ts PUTT_EASY), 5 since #1336 (the tapped boost for every golfer, capped at swing.ts TAP_BOOST.plain or BOOST.max with the Power Mash card,
+ *  none on a putt; the spin tapped in the air, spin.ts AIR). An input below 5 keeps the old rules: the boost only with the card, the taps in the air dropped */
+export const MODEL_V = 5;
+/** #1336: the first model version with the tapped boost and the spin tapped in the air */
+export const TAP_V = 5;
 /** the owner's turn: his golfer, the hole (index, number, par), the stroke he plays, the minute he strikes, his lie, his ball and the pin (tiles), the
  *  distance to the pin (metres), and the suggested shot: the model's club and aim, and the power that carries to the aim (1 on the green) */
 export interface OwnerTurn { golfer: number; holeIdx: number; hole: number; par: number; stroke: number; t: number; lie: Lie; ball: Pt; pin: Pt; distM: number;
@@ -112,6 +115,16 @@ export class LiveGroup {
     return s;
   }
 
+  /** #1336: the owner's shot at the turn advance() returned as play(input) would strike it, recorded nowhere and nothing else played: the same model, the same stream
+   *  (by his id, the hole and the stroke), so its flight and landing are play's. Null without a turn, for another hole or stroke, or for a gimme */
+  peek(input: OwnerInput): Shot | null {
+    const turn = this.turn, p = this.player, hr = this.due?.g.hole;
+    if (!turn || !p || !hr || this.field.caddied || input.holeIdx !== turn.holeIdx || input.stroke !== turn.stroke || input.gim) return null;
+    const r = rng(this.ctx.seed, p.id, hr.h * 32 + turn.stroke);
+    const o = shotOutcome(this.ctx.view, this.ctx.view.holes[hr.h]!, p.ball, p.lie, p.sk, input, r, { last: hr.h === this.ctx.view.holes.length - 1 });
+    return { golfer: p.id, hole: hr.h, stroke: turn.stroke, t: turn.t, from: { x: p.ball.x, y: p.ball.y }, to: o.to, club: input.club, lie: o.lie, penalty: o.penalty, holed: o.holed, ...(o.landing ? { landing: o.landing } : {}) };
+  }
+
   /** from now on the owner's golfer is played like the others: advance() runs him to the end (a turn pending now is played by the model) */
   caddie(): void { this.field.caddied = true; }
 
@@ -144,16 +157,24 @@ export function shotOutcome(view: CourseView, hole: PlayHole, from: Pt, plie: Li
   const putting = input.club === 'putter';
   let to: Pt, lie: Lie, penalty: 0 | 1 = 0, holed = false, landing: Landing | undefined;
   // T316: the swing meter's outcome (when he swung it): its power, its miss (radians off the aim, + right as he faces it) and spread
-  const spin0 = !putting && input.spin ? readSpin(input.spin) : null; // (T318: a putt takes no spin)
+  const tapV = (input.v ?? 1) >= TAP_V; // (#1336: the tapped boost and the spin tapped in the air are version 5's)
+  const spinR = !putting && input.spin ? readSpin(input.spin) : null; // (T318: a putt takes no spin)
+  // (#1336: an input from before version 5 never had taps in the air; any it carries are dropped, so it plays as it did)
+  const spin0 = spinR && !tapV && isAir(spinR) ? { x: spinR.x, y: spinR.y, pump: spinR.pump } : spinR;
   // T336 (#962): spin added in the air is a card's (Mid-Flight Whisper): without the mechanic the clicks count for none (a golfer whose skills list no mechanics has it, as before the cards)
-  const spin = spin0 && spin0.pump > 0 && !hasMech(sk, 'airspin') ? { ...spin0, pump: 0 } : spin0;
+  // (#1336: the taps in the air are every golfer's; the card lets on all the club and the lie allow, without it AIR.plain of it)
+  const spin = spin0 && spin0.pump > 0 && !hasMech(sk, 'airspin') ? { ...spin0, pump: 0 } : spin0, airShare = hasMech(sk, 'airspin') ? 1 : AIR.plain;
   const env = !putting && input.env ? readEnv(input.env) : null; // (T334: nor the wind, the lie's kind or the slope: a putt never leaves the ground)
   const shape = !putting && input.shape ? readShape(input.shape) : null; // (T334 part 2: a putt takes no shape)
   // (T337: the moment of the shot: a tee shot, the driver off the deck, the round's last hole, a shot played as the caddie said: the mods for it apply, and with none nothing is different)
   const mctx: ModCtx = { lie: plie, tee: plie === 'tee', deck: input.club === 'driver' && plie !== 'tee', last: sctx?.last === true, follow: input.cad === true && hasMech(sk, 'caddie') };
   const kit = kitOf(sk, input.club, mctx); // (his stats and mods for the club: the sweet spot, the scatter, the carry; neutral for a plain skill)
-  // (T336: and the Space power-spam is Power Mash's: without the mechanic the boost is none)
-  const sw0 = input.swing ? readSwing(input.swing) : null, sw = sw0 && sw0.boost > 0 && !hasMech(sk, 'boost') ? { ...sw0, boost: 0 } : sw0;
+  // (T336: and the Space power-spam is Power Mash's: without the mechanic the boost is none. #1336, version 5: the tapped boost is every golfer's up to TAP_BOOST.plain, the
+  // card's up to BOOST.max (the host spends its charge); a putt takes none)
+  const sw0 = input.swing ? readSwing(input.swing) : null;
+  const card = hasMech(sk, 'boost'), held = !!sw0 && (sw0.v ?? 1) >= HOLD_V; // (#1336: the taps are the hold-and-release swing's; the 3-click meter's Space spam stays the card's)
+  const bcap = !tapV ? (card ? BOOST.max : 0) : putting && held ? 0 : card ? BOOST.max : held ? TAP_BOOST.plain : 0;
+  const sw = sw0 && sw0.boost > bcap ? { ...sw0, boost: bcap } : sw0;
   const eff = sw ? swingEffect(sw, kit.skill, putting, kit.sweet, kit.miss, kit.speed) : null, miss = eff ? eff.deg * Math.PI / 180 : 0; // (the kit's skill is skillFor's, with the moment's mods; kit.miss: the Self-Correcting Ball's half; T345: kit.speed turns the sweet window in time into the arc's width)
   if (putting) {
     const pw = eff ? clamp(eff.power, MIN_SWING_POWER, (sw!.v === HOLD_V ? HOLD_PUTT_TOP : METER.top) + BOOST.max) : clamp(input.power, PUTT_POWER[0]!, PUTT_POWER[1]!);
@@ -197,7 +218,7 @@ export function shotOutcome(view: CourseView, hole: PlayHole, from: Pt, plie: Li
     // (T241: his part of the game's skill; T316: a meter shot may carry past the club's full carry, with its spread, and keeps METER_ANG of the
     // model's direction spread, the meter's miss taking over the rest; T446: a hold-and-release swing has no miss of its own and keeps all of it)
     // (T318: the spin, from the lie it is played from: the curve, the check, the release; none without it)
-    const sp = spin ? spinEffect(spin, input.club, lieP, envP?.lie, kit.spin) : null; // (T334: the lie's finer kind scales the spin; T335: his clubs' grooves)
+    const sp = spin ? spinEffect(spin, input.club, lieP, envP?.lie, kit.spin, airShare) : null; // (#1336: the taps in the air held to the card's share) // (T334: the lie's finer kind scales the spin; T335: his clubs' grooves)
     // (T346: the club's own run after landing is version 3's: an input saved before it keeps its conditions and rolls as it did)
     const mod = { ...(eff ? { maxF: Math.max(1, pw), spread: eff.spread, angF: sw!.v === HOLD_V ? 1 : METER_ANG, roll: eff.roll } : {}), ...(sp ? { spin: sp } : {}), ...(envP ? { env: envP } : {}), ...((input.v ?? 1) < 3 ? { run: false } : {}), ...(shape ? { shape: fx } : {}), ctx: mctx };
     let o = hitShot(r, sk, lieP, from, at, input.club, view, mod);

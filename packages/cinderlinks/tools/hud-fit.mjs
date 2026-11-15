@@ -1,6 +1,6 @@
 // npm run cinder:hudfit: the golf view's HUD in a real browser (Chrome, through playwright-core) at 1280x720, 1366x768, 1753x995 and 1920x1080, at 100% and
 // 125% (the device scale), in host mode on Woodhill's 2nd hole with a tee turn: every box (the hole pill and its facts opened, the club picker and the bag
-// opened, the shot panel opened, the help, the settings) must lie inside the picture, and the golfer must be in it, his feet in its lower part.
+// opened, the shot panel opened, the help, the settings; #1336: the boost bar while held, the spin readout in flight) must lie inside the picture, and the golfer must be in it, his feet in its lower part.
 // (2026-11-15, the owner: "Icons are sliced off at the sides .. I cant see the player".) Fails (exit 1) on the first size that does not fit.
 //   node packages/cinderlinks/tools/hud-fit.mjs [public/cinderlinks]
 import http from 'node:http'; import fs from 'node:fs'; import path from 'node:path';
@@ -48,6 +48,12 @@ try {
       const r = await page.evaluate(fits);
       if (r.off.length) errs.push(name + ': off the picture: ' + r.off.join(' | '));
       if (name === 'tee' && (!r.golfer || r.golfer[0] < 0 || r.golfer[1] > 1 || r.golfer[1] < 0.55)) errs.push('tee: the golfer is not whole in the lower part of the picture (' + JSON.stringify(r.golfer) + ')');
+    }
+    // #1336: the swing held with the boost bar up, and the spin readout of a flight (its ball and words): set, measured and put back in one go (no frame between)
+    for (const [name, setup] of [['boost', 'HP.sw = { t: 0.5, u: 0.6, lv: 0.7, spd: 0.9, g: null, rel: false }; hostMeterShow();'],
+      ['air', 'HP.air = { ax: -3, ay: -5, cap: { side: 8, top: 8, back: 8 }, inp: {}, sent: false, n: 0 }; const keep = HP.play; HP.play = { air: true, t: 0, tL: 9 }; hostSpinShow(); HP.play = keep;']]) {
+      const r = await page.evaluate('(() => { ' + setup + ' const on = (document.querySelector("#swingBtn u.boostbar.on") || document.querySelector("#spinRead.on")) ? 1 : 0, r = (' + fits.toString() + ')(); HP.sw = null; HP.air = null; hostMeterShow(); hostSpinShow(); return Object.assign(r, { on }); })()');
+      if (!r.on) errs.push(name + ': not shown'); if (r.off.length) errs.push(name + ': off the picture: ' + r.off.join(' | '));
     }
     console.log((errs.length ? 'FAIL ' : 'ok   ') + W + 'x' + H + ' @' + Math.round(k * 100) + '%' + (errs.length ? ': ' + errs.join(' ;; ') : ''));
     if (errs.length) bad++;

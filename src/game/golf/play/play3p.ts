@@ -15,6 +15,7 @@ import { LiveGroup, MODEL_V, shotOutcome, type OwnerInput, type OwnerTurn } from
 import { shapeEffect } from './shape';
 import { carryFor } from './shot';
 import { kitOf } from './mods';
+import { HOLD_V, TAP_BOOST } from './swing';
 import { ALL_EARNED, type Earned } from './unlocks';
 import { green3p, puttAim, type Green3p } from './green3p';
 import { playRound, standings } from './round';
@@ -24,7 +25,7 @@ import type { ShotSkill } from './shot';
 import type { HeightAt } from './roll';
 import type { WindNow } from './wind';
 import type { Frame3p } from './export3p';
-import { PROTOCOL_V, fromView, type Actor, type ActorsMsg, type BoardMsg, type HoleEndMsg, type Dress, type HostMsg, type PreviewMsg, type ShotMsg, type ViewInput } from './protocol3p';
+import { PROTOCOL_V, fromView, type Actor, type ActorsMsg, type BoardMsg, type HoleEndMsg, type Dress, type HostMsg, type PreviewMsg, type ShotMsg, type ViewInput, airOnly, withTaps } from './protocol3p';
 import { CartPlay, type CartPaths } from './carts';
 import type { WalkField } from '../walkfield';
 import { actorsMsg } from './actors3p';
@@ -97,6 +98,9 @@ export interface RoundDriver {
   over(): boolean;
   /** on to the next hole once the view has seen this one out (holeDone); absent: the next hole's turn comes by itself */
   nextHole?(): void;
+  /** #1336: his input's stroke as play would strike it now, recorded nowhere (the same model and stream), for the flight the view flies while he taps spin in; null:
+   *  none to peek. Absent: the input is played at once (no spin in the air) */
+  peek?(input: OwnerInput): Shot | null;
 }
 
 /** a driver over his live group in a round plan (T425: alone on a free hole, with company, or his real round attached): his turns from LiveGroup,
@@ -107,6 +111,7 @@ export function liveOn(plan: RoundPlan, view: CourseView, live: LiveGroup, me: n
     view, golfer: me, get inputs() { return live.inputs; },
     turn() { const t = live.advance(); done = !t; return t; },
     play: (input) => live.play(input),
+    peek: (input) => live.peek(input),
     shots: () => plan.shots,
     hole: (i) => view.holes[i]!,
     strokes: (i) => plan.strokes[me]?.[i] ?? plan.shots.filter(s => s.golfer === me && s.hole === i).reduce((a, s) => a + 1 + s.penalty, 0),
@@ -143,6 +148,8 @@ export class Play3p {
   readonly carts: CartPlay | null;
   /** T443: the boost charges used on each hole (by index) */
   private used = new Map<number, number>();
+  /** #1336: the input whose flight was sent (`fly`), waiting for the spin's totals at the landing (null: none) */
+  private pend: ViewInput | null = null;
   /** T423: the green sent with the turn in hand (null: not on the green) */
   private green: Green3p | null = null;
   private get earn(): Earned { return this.o.earned ?? ALL_EARNED; }
@@ -196,9 +203,13 @@ export class Play3p {
 
   /** plays the view's input for the turn in hand (the aim in the view's frame) and returns what the view is sent: every stroke since (his among them),
    *  holeEnd when his hole is over, and the next turn when one follows. An input for another turn gets the turn in hand again; with none, nothing */
-  input(vi: ViewInput): HostMsg[] {
+  input(vi0: ViewInput): HostMsg[] {
     const t = this.turn; if (!t || this.done) return [];
-    if (vi.holeIdx !== t.holeIdx || vi.stroke !== t.stroke) return [this.turnMsg(t)];
+    if (vi0.holeIdx !== t.holeIdx || vi0.stroke !== t.stroke) { this.pend = null; return [this.turnMsg(t)]; }
+    // #1336: a full shot struck with `fly`: its flight only, and the input kept for the landing; the input sent then plays the kept one with its taps in the air
+    if (vi0.fly) { const m = this.fly(vi0, t); if (m) return [m]; }
+    const pend = this.pend; this.pend = null;
+    const vi = pend && !vi0.fly ? withTaps(pend, vi0) : vi0;
     const input = this.owned(vi, t, true);
     const mine = this.drv.play(input);
     const out: HostMsg[] = [];
@@ -220,22 +231,38 @@ export class Play3p {
     return { v: 1, t: 'preview', key, shot: this.strokeMsg(shot, input), spread: fx.spread };
   }
 
+  /** #1336: the flight of the view's input with `fly`, as play will strike it (the driver's peek: nothing recorded, nobody else plays), with the input kept for the
+   *  landing; null when it is played at once instead (a putt, the Scramble's second ball, a driver that cannot peek) */
+  private fly(vi: ViewInput, t: OwnerTurn): ShotMsg | null {
+    if (vi.club === 'putter' || vi.scr || !this.drv.peek) return null;
+    const { fly: _f, ...v1 } = vi; void _f;
+    const input = this.owned(v1, t, false), shot = this.drv.peek(input);
+    if (!shot) return null;
+    this.pend = v1;
+    return airOnly(this.strokeMsg(shot, input));
+  }
+
   /** the view's input as the model plays it: the aim in tiles, the conditions and the model's version filled in, and what he has not earned taken out (a
-   *  shape's curve or flight, side spin, backspin, clicks in the air, a boost with no charge left on the hole); `spend`: a boost uses a charge */
-  private owned(vi: ViewInput, t: OwnerTurn, spend: boolean): OwnerInput {
+   *  shape's curve or flight, side spin, backspin, clicks in the air, a boost with no charge left on the hole); `spend`: a boost uses a charge. #1336: a boost past
+   *  TAP_BOOST.plain is the Power Mash charge's: without a charge left it is held to the plain cap */
+  private owned(vi0: ViewInput, t: OwnerTurn, spend: boolean): OwnerInput {
+    const { fly: _f, ...vi } = vi0; void _f;
     const e = this.earn, putting = vi.club === 'putter', aim0 = fromView(vi.aim, this.centre);
     const aim = putting && this.green ? puttAim(t.ball, aim0, this.green.startDeg) : aim0; // (T423: a putt is aimed along the read; the model judges it at the pin's line)
     const env = putting ? null : envOf(this.windNow(), this.view.kindAt, this.o.height ?? null, t.ball, t.lie, aim);
     const { shape: sh0, spin: sp0, swing: sw0, ...rest } = vi;
     const amt = (v: unknown, lo: number, hi: number) => { const n = Number(v); return Number.isFinite(n) ? Math.round(Math.max(lo, Math.min(hi, n)) * 100) / 100 : 0; };   // (J5f: a continuous amount, held to the side he has earned)
     const shape = sh0 ? { curve: amt(sh0.curve, e.draw ? -1 : 0, e.fade ? 1 : 0), flight: amt(sh0.flight, e.low ? -1 : 0, e.high ? 1 : 0) } : null;
-    const spin = sp0 ? { x: e.side ? sp0.x : 0, y: sp0.y < 0 && !e.back ? 0 : sp0.y, pump: e.tour ? sp0.pump : 0 } : null;
+    const tap = (n: unknown) => { const k = Number(n); return Number.isFinite(k) ? Math.round(k) : 0; }; // (#1336: the taps in the air, held to the sides he has earned)
+    const ax = sp0 && sp0.ax !== undefined ? (e.side ? tap(sp0.ax) : 0) : undefined, ay = sp0 && sp0.ay !== undefined ? (tap(sp0.ay) < 0 && !e.back ? 0 : tap(sp0.ay)) : undefined;
+    const spin = sp0 ? { x: e.side ? sp0.x : 0, y: sp0.y < 0 && !e.back ? 0 : sp0.y, pump: e.tour ? sp0.pump : 0, ...(ax !== undefined ? { ax } : {}), ...(ay !== undefined ? { ay } : {}) } : null;
     let swing = sw0;
-    if (swing && swing.boost > 0) {
+    const free = swing && (swing.v ?? 1) >= HOLD_V && !putting ? TAP_BOOST.plain : 0;   // (#1336: the hold swing's tapped boost is every golfer's up to the plain cap; above it, and any boost on the 3-click meter, is a charge's)
+    if (swing && swing.boost > free) {
       const used = this.used.get(t.holeIdx) ?? 0;
-      if (!e.boost || used >= e.charges) swing = { ...swing, boost: 0 }; else if (spend) this.used.set(t.holeIdx, used + 1);
+      if (!e.boost || used >= e.charges) swing = { ...swing, boost: free }; else if (spend) this.used.set(t.holeIdx, used + 1);
     }
-    return { ...rest, aim, v: MODEL_V, ...(env ? { env } : {}), ...(swing ? { swing } : {}), ...(shape && (shape.curve || shape.flight) ? { shape } : {}), ...(spin && (spin.x || spin.y || spin.pump) ? { spin } : {}) };
+    return { ...rest, aim, v: MODEL_V, ...(env ? { env } : {}), ...(swing ? { swing } : {}), ...(shape && (shape.curve || shape.flight) ? { shape } : {}), ...(spin && (spin.x || spin.y || spin.pump || spin.ax || spin.ay) ? { spin } : {}) };
   }
 
   /** T423: the view's gimme for the turn in hand: played as a conceded putt (LiveGroup's `gim`) when the ball lies on the green within the round's gimme;
