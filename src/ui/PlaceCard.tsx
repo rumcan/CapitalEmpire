@@ -24,7 +24,6 @@ export function PlaceCard({ view, onClose, right = 'right-3', onScene }: { view:
         <div className="rounded-lg border border-white/10 bg-white/5 p-1.5"><div className="text-[12px] uppercase text-slate-400">Grounds</div><div className="text-sm font-bold text-white">{view.w} x {view.d} m</div><div className="text-[12px] text-slate-400">town of {Math.round(view.town).toLocaleString()}</div></div>
       </div>
       <p className="text-xs text-slate-300">Every town gets one when it grows big enough. Visitors come later.</p>
-      {view.standIns.length > 0 && <p className="text-[12px] text-slate-400" data-testid="place-standins">Stand-ins until their art is drawn: {view.standIns.join(', ')}.</p>}
     </div>
   );
 }

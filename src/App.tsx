@@ -798,10 +798,6 @@ export default function App() {
                       Bottlenecks (B)
                     </label>
                     </>}
-                    <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="A small label over each building drawn as a stand-in (another building of its kind) until its own art arrives: Stand In for Church">
-                      <input type="checkbox" checked={game.showStandIns} onChange={e => { game.setShowStandIns(e.target.checked); bump(); }} />
-                      Show stand-in labels
-                    </label>
                     <label className="flex cursor-pointer items-center gap-2 px-2 py-2 text-sm" data-tip="Money floats up where it is made: green +$X when a customer pays, red -$X when money goes out at a place, and red -$X with a small 'lost' under it for a sale lost (a customer turned away or giving up a queue; the treasury is not charged). One per sale close up, a running total per place further out, none at the district zoom">
                       <input type="checkbox" checked={game.showMoneyFloats} onChange={e => { game.setShowMoneyFloats(e.target.checked); bump(); }} />
                       Money floats
@@ -2312,7 +2308,7 @@ function SelectPanel({ game }: { game: Game }) {
     <Panel title="Selected">
       <div className="flex items-center gap-2" data-testid="select-decor">
         <Thumb it={it} size={56} />
-        <div><div className="text-sm font-semibold">{d.name}</div><div className="text-[12px] text-slate-400">{d.group} · bought for {money(d.price)} · sells for {money(d.sell)}{d.standIn ? ` · Stand In for ${d.standIn}` : ''}</div></div>
+        <div><div className="text-sm font-semibold">{d.name}</div><div className="text-[12px] text-slate-400">{d.group} · bought for {money(d.price)} · sells for {money(d.sell)}</div></div>
       </div>
       <div className="mt-2 flex flex-wrap gap-1">
         <button className="chip bg-red-500/70 text-white" onClick={() => game.deleteSelected()}>{`Sell for ${money(d.sell)} (Del)`}</button>

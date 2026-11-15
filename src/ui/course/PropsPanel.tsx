@@ -99,7 +99,7 @@ function Card({ game, d }: { game: Game; d: DecorItem }) {
     <button className={`card gap-1 ${on ? 'card-on' : ''}`} data-card={`prop-${d.key}`} aria-pressed={on} onClick={() => t.pick(d.key)} title={`${d.desc}${tip}${t.scales(d) ? ' · [ ] size it' : ''}`}>
       <div className="grid h-14 w-full place-items-center overflow-hidden rounded-lg bg-black/30">{it && <Thumb it={it} size={50} />}</div>
       <div className="w-full truncate font-semibold leading-tight">{d.name}</div>
-      {d.standIn && <div className="w-full truncate rounded bg-amber-500/15 px-1 text-[12px] leading-tight text-amber-200" title="This picture stands in until the real art is drawn">Stand In for {d.standIn}</div>}
+      
       <div className="flex w-full items-baseline justify-between gap-1"><span className={poor ? 'text-rose-300' : 'text-amber-200'}>{poor ? `${statusIcon('fail')} ` : ''}{money(price)}{d.per ? <span className="sub-line"> {d.per}</span> : null}{on && Math.abs(size - 1) > 1e-9 ? <span className="sub-line"> {sizeText(size)}</span> : null}</span>{t.where === 'course' && <span className="sub-line">{appealText(d.appeal)}</span>}</div>
     </button>
   );

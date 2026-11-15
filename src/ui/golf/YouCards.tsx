@@ -60,7 +60,7 @@ export function WhoCard({ name, look, looks, hcp, onDone, desert, onTheme, cours
           <input className="mt-1 w-full rounded-lg border border-white/10 bg-slate-900 px-2 py-1.5 text-sm text-white" value={n} maxLength={40} placeholder="Your name" autoFocus onChange={e => setN(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') onDone(n, l); }} data-testid="who-name" />
         </label>
         <div>
-          <div className="mb-1 text-xs text-slate-400">Your look{!JAM && <span className="text-slate-500"> (stand-ins until the player looks are made)</span>}</div>
+          <div className="mb-1 text-xs text-slate-400">Your look</div>
           <div className="grid grid-cols-5 gap-1.5" data-testid="who-looks">
             {looks.map((o, i) => (
               <button key={o.id} className={`flex h-[72px] items-end justify-center rounded-lg border ${i === l ? 'border-amber-300 bg-amber-300/15' : 'border-white/10 bg-white/5 hover:bg-white/10'}`} onClick={() => setL(i)} title={o.sex === 'w' ? 'A woman' : 'A man'} data-testid={`who-look-${i}`}>

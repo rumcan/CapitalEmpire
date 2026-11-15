@@ -173,7 +173,7 @@ function FrameRow({ game, n }: { game: Game; n: number }) {
   const can = f.trees > 0 || f.stale > 0, usd = (v: number) => `$${Math.round(v).toLocaleString('en-US')}`;
   const label = f.trees ? `Frame with trees · ${f.trees} trees · ${usd(f.price)}` : f.stale ? `Take ${f.stale} out of play · +${usd(f.refund)}` : f.has ? 'Framed' : 'No room for a frame';
   const note = [f.has ? `${f.has} frame tree${f.has === 1 ? '' : 's'} now.` : "Clumps of spruce, pine, maple and birch along the rough's edge, with gaps; never in the line of play, on a path or on water.",
-    f.stale ? `${f.stale} stand in play since the hole changed: framing again takes them away (half back).` : '', f.has && !f.trees && !f.stale ? 'No room for more clumps: bulldoze one to open a view.' : ''].filter(Boolean).join(' ');
+    f.stale ? `${f.stale} are in play since the hole changed: framing again takes them away (half back).` : '', f.has && !f.trees && !f.stale ? 'No room for more clumps: bulldoze one to open a view.' : ''].filter(Boolean).join(' ');
   return (
     <div className="mt-2" data-testid="hole-frame">
       <div className="mb-1 text-[12px] text-[var(--muted)]">Trees</div>

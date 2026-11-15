@@ -130,6 +130,18 @@ const HOST_PLAY = String.raw`
       if (!T || !(T.R > 0) || Math.abs(parseFloat(swingAimMk.style.left) - T.u * 100) > 0.2) errs.push('host play: the bar does not mark the aim (' + JSON.stringify(info.target) + ')');
       info.read = aimEl.innerHTML;   // (J5f: the aim's distance above the club box: the ring's, from the ball)
       if (!/^Aim <b>50 m<\/b>$/.test(aimEl.innerHTML)) errs.push('host play: the aim is not read out as 50 m (' + aimEl.innerHTML + ')');
+      // #1327: the hole's map: the ball's dot is where the ball is and the aim's dot where HP.target is (read back through the map's own inverse), and both move with the aim and the ball
+      { const back = (P) => { const u = (P[0] - MG.cw / 2) / MG.s, v = -(P[1] - MG.ch / 2) / MG.s; return [MG.cx + MG.rx * u + MG.fx * v, MG.cy + MG.ry * u + MG.fy * v]; }, off = (P, W) => !P || Math.hypot(back(P)[0] - W[0], back(P)[1] - W[1]) > 1e-6, inside = (P) => P && P[0] >= 0 && P[1] >= 0 && P[0] < MG.cw && P[1] < MG.ch;
+        updateHud(); const m1 = { ball: MD.ball, aim: MD.aim, n: MD.n }; info.mini = { cw: MG.cw, ch: MG.ch, s: +MG.s.toFixed(3), ball: m1.ball && m1.ball.map((v) => +v.toFixed(1)), aim: m1.aim && m1.aim.map((v) => +v.toFixed(1)), pin: MD.pin && MD.pin.map((v) => +v.toFixed(1)) };
+        if (!miniImg || miniFold || /fold/.test(miniBox.className)) errs.push('host play: the hole map is not up');
+        if (off(m1.ball, [ball.x, ball.y]) || !inside(m1.ball)) errs.push('host play: the map ball dot is not at the ball (' + JSON.stringify(m1.ball) + ')');
+        if (off(m1.aim, [T.x, T.y]) || !inside(m1.aim)) errs.push('host play: the map aim dot is not at HP.target (' + JSON.stringify(m1.aim) + ')');
+        if (off(MD.pin, [hole.pin.x, hole.pin.y]) || !inside(MD.pin)) errs.push('host play: the map pin is not at the pin');
+        { const ax = aim.x, ay = aim.y; aim.x = ball.x + aim.dx * 100 * S * 0.2; aim.y = ball.y + aim.dy * 100 * S * 0.2; step(3, 1); updateHud();   // (the aim moves: the aim's dot with it, the ball's does not)
+          if (!HP.target || off(MD.aim, [HP.target.x, HP.target.y]) || Math.hypot(MD.aim[0] - m1.aim[0], MD.aim[1] - m1.aim[1]) < 1 || off(MD.ball, [ball.x, ball.y]) || MD.n === m1.n) errs.push('host play: the map aim dot did not move with the aim (' + JSON.stringify(MD.aim) + ' from ' + JSON.stringify(m1.aim) + ')');
+          const n1 = MD.n; updateHud(); updateHud(); if (MD.n !== n1) errs.push('host play: the map was redrawn with nothing moved');   // (only when a dot moves)
+          aim.x = ax; aim.y = ay; step(3, 1); }
+        info.miniBall = m1.ball; info.miniN = MD.n; }
       { const t1 = performance.now(); for (let k = 0; k < 2000; k++) hostMeterShow(); info.meterMs = +((performance.now() - t1) / 2000).toFixed(4);   // (J5f: the swing bar's tick with the read-out in it: a budget of 0.1 ms)
         if (!(info.meterMs < 0.1)) errs.push('host play: the swing bar and the aim read-out cost ' + info.meterMs + ' ms a tick (budget 0.1 ms)'); }
       { const T2 = hostTarget(), C2 = hostClub(), t0 = performance.now(); for (let k = 0; k < 50; k++) hostTargetRing(T2, C2); info.ringMs = +((performance.now() - t0) / 50).toFixed(3);   // (the ring's cost a frame: a budget of 1 ms)
@@ -173,6 +185,7 @@ const HOST_PLAY = String.raw`
     if (strokes !== 1) errs.push('host play: the stroke was not counted');
     hostMessage(turn(R, 2, 40));
     if (near([ball.x / S, ball.y / S], R) > 1e-6 || strokes !== 1 || hostBusy()) errs.push('host play: the next turn is not from the rest');
+    { updateHud(); const mb = info.miniBall; if (!MD.ball || !mb || Math.hypot(MD.ball[0] - mb[0], MD.ball[1] - mb[1]) < 1) errs.push('host play: the map ball dot did not move with the ball (' + JSON.stringify(MD.ball) + ' from ' + JSON.stringify(mb) + ')'); }   // (#1327)
     // J5e: a press made while he could not swing yet (the host still busy) is kept: held on, it starts the swing the moment he can; and let go before the
     // meter has moved, no stroke is spent
     { step(60, 0); jumpToBall(); for (const c of Object.keys(keys)) keys[c] = false; step(5, 0);   // (the ball camera lets go first: the jump waits for it)

@@ -122,7 +122,6 @@ export function CardsCard({ view, onClose, onEquip, onUnequip, onMachine, right 
           </div>
         </div>
         <p className="text-[11px] text-slate-400">Win a title, finish in the top places or win a money match to earn a pull, then open it at the vending machine. Click a card for what it does. Cards swap between rounds, never in one.</p>
-        <p className="text-[9px] text-slate-500">Stand In for card art (TrickOrTreat’s paintings where there are some)</p>
       </div>
     </div>
   );

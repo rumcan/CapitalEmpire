@@ -25,7 +25,7 @@ test('bag card: 14 tiles in woods, irons, wedges and putter, each with its short
   assert.ok(!h.includes('data-testid="bag-club-hybrid"'), 'the hybrid is not in a bag with the 5-wood');
   assert.ok(/>Dr</.test(h) && />3W</.test(h) && />5W</.test(h) && />PW</.test(h) && />LW</.test(h) && />Putter</.test(h), 'short names');
   assert.ok(/0 of 42 upgrades/.test(h) && /14 clubs/.test(h), 'the count'); assert.ok(/Pro shop open/.test(h) && /\$5,000/.test(h), 'the shop and the money');
-  assert.ok(/Stand In for club icons/.test(h), 'the icons are labelled stand-ins');
+  assert.ok(!/stand[- ]?in/i.test(h), 'no stand-in text (the owner, 2026-11-15)');
   assert.ok(!/overflow-x-(auto|scroll)/.test(h) && /overflow-x-hidden/.test(h), 'never a sideways scrollbar');
   assert.ok(/grid-cols-6/.test(h) && /col-span-2[^"]*[^>]*data-testid="bag-club-putter"/.test(h), 'six tiles across: the six irons in one row, the putter’s tile two wide');
   const none = html(null, null, { shop: false, money: 5000 }); assert.ok(/No pro shop yet/.test(none));
