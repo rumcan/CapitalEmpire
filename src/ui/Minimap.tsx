@@ -139,7 +139,7 @@ export function Minimap({ game }: { game: Game }) {
   const named = near >= 0 ? game.townName(near) : null;
   // (T459, the jam build: the club's name, as the top bar's title says it, never "New town / Not named yet")
   const club = JAM ? game.titleName()?.name ?? null : null;
-  const line1 = club ?? (near >= 0 ? named ?? 'New town' : 'Maple Falls');
+  const line1 = club ?? (near >= 0 ? named ?? 'New town' : 'Pine Falls');
   const line2 = club ? 'Your club' : near >= 0 ? (named ? 'Town' : 'Not named yet') : 'Overview';
 
   return (

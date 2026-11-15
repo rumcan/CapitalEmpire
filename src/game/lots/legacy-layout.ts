@@ -43,7 +43,7 @@ const BARN = withVariations(['world:barn', 'ref:building-barn']);
 const SCRAP = names(['expansion:scrap-engine', 'expansion:tyre-stack', 'expansion:yard-workbench', 'expansion:air-compressor']);
 const CLUTTER = names(['expansion:pallet-stack', 'expansion:cable-spool', 'expansion:cement-bags', 'expansion:concrete-rubble', 'expansion:tyre-stack', 'expansion:scrap-metal', 'expansion:oil-drums', 'expansion:lumber-bundle', 'expansion:appliance-pile']);
 const TRAILERS = names(['expansion:camper', 'expansion:boxcar', 'expansion:boat-trailer', 'expansion:utility-trailer', 'expansion:lean-to-shed']);
-/** flower beds (the soft plants), porch pumpkins, and the bigger Halloween yard pieces (Maple Falls in October) */
+/** flower beds (the soft plants), porch pumpkins, and the bigger Halloween yard pieces (Pine Falls in October) */
 const FLOWERS = names(['town:hydrangea', 'town:fern', 'town:ornamental_grass', 'ref:halloween-mums']);
 const PUMPKINS = names(['world:pumpkin_0', 'world:pumpkin_1']);
 const SPOOKY = names(['ref:halloween-hay-bales', 'ref:halloween-pumpkin-cluster', 'gen:inflatable-pumpkin', 'ref:halloween-sheet-ghost', 'world:scarecrow', 'expansion:blowmold-ghost', 'expansion:yard-spider', 'expansion:yard-coffin', 'ref:halloween-witch-sign', 'ref:halloween-lantern', 'world:grave_0', 'world:grave_1', 'world:grave_2']);

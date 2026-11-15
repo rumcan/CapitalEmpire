@@ -61,7 +61,7 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
         <div className="flex shrink-0 items-center gap-1.5">
           {/* Build: straight to painting this hole (the Course tool, this hole in hand, its brushes) */}
           {/* (T459, the jam MVP: no Build-by-brush, no top-down practice Play: Play this hole below is the way to play) */}
-          {!JAM && <button className="chip" onClick={() => game.buildHole(c.n)} title={`Build on hole ${c.n}: the Course tool opens with hole ${c.n} in hand, ready to paint its surfaces`} data-testid="hole-build"><Icon name="trophy" size={14} />Build</button>}
+          {<button className="chip" onClick={() => game.buildHole(c.n)} title={`Build on hole ${c.n}: the Course tool opens with hole ${c.n} in hand, ready to paint its surfaces`} data-testid="hole-build"><Icon name="trophy" size={14} />Build</button>}
           {/* T349 (#992): Play: asks for just this hole or all of the course, then your own practice round (free, not recorded) */}
           {!JAM && <button className="chip disabled:opacity-40" disabled={!!playWhy} onClick={() => setPick(p => !p)} title={playWhy ?? `Play hole ${c.n} yourself: a practice round on this hole or on the whole course, free and not recorded`} data-testid="hole-play"><Icon name="play" size={14} />Play</button>}
           <button className="btn-icon" onClick={() => game.closeHoleCard()} title="Close (Esc)" aria-label="Close the hole card"><Icon name="close" size={18} /></button>

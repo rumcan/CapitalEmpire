@@ -84,7 +84,7 @@ import { BEND_45 } from './game/route-legs';
 import { bendWords } from './game/route-input';
 import { COST_GROUPS, INCOME_LINES } from './game/golf/reports';
 import { debtOf } from './game/golf/finance';
-import { TitleCard } from './ui/jam/TitleCard';
+import { LOGO, TITLE, TitleCard } from './ui/jam/TitleCard';
 import { MenuScene, posterOf } from './ui/jam/MenuScene';
 import { CHOICE_STORE_KEY, SHOW_STOPS, choiceFromStore, choiceHash, choiceOf, pickStart, poseAt, sceneOff, showBoot, showWanted, weakMachine, type StartChoice } from './game/showcase';
 import { ShowDirector } from './game/showcase-director';
@@ -169,7 +169,7 @@ function menuCtx(game: Game): MenuCtx {
     practice: [{ id: 'putting', name: 'Putting green' }, { id: 'chipping', name: 'Chipping green and bunker' }].map(f => ({ ...f, why: game.range.scene ? null : 'Comes with a driving range (its practice area)' })),
     newHoleWhy: ui?.newHoleLock ?? null,
     // T356: Course > Place a real course: the shipped map-data courses, then the player's downloaded ones (T358: kept in this browser)
-    real: JAM ? [] : [
+    real: [   // (the owner, 2026-11-15: the real courses are in the jam build too: the trailer features importing them)
       ...OSM_COURSES.map(c => ({ id: c.id, name: c.name, place: c.place, holes: c.holes, par: c.par })),
       ...keptCourses().map(r => ({ id: r.id, name: r.name, place: r.place || 'Downloaded', holes: r.holes ?? 0, par: r.par ?? 0, kept: true })),
     ],
@@ -211,7 +211,7 @@ export default function App() {
   const [titleOpen, setTitleOpen] = useState(JAM && !choice);
   const [hasSave, setHasSave] = useState(false);
   const saveSeen = useRef<Promise<boolean> | null>(null);
-  useEffect(() => { if (JAM) { document.title = 'Fairway Fortune'; const p = readSave().then(r => r.status === 'ok'); saveSeen.current = p; void p.then(setHasSave); } }, []);
+  useEffect(() => { if (JAM) { document.title = TITLE; const p = readSave().then(r => r.status === 'ok'); saveSeen.current = p; void p.then(setHasSave); } }, []);
   // the choice is read once: the address is cleared at once, so a reload of the game (F5) never starts a new one
   useEffect(() => { if (choice) { try { history.replaceState(null, '', location.pathname + location.search); } catch { /* the address stays */ } try { sessionStorage.removeItem(CHOICE_STORE_KEY); } catch { /* no storage */ } } }, [choice]);
   const titlePaused = useRef(false);
@@ -633,12 +633,12 @@ export default function App() {
       {fatal && <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#15200f] p-8 text-center text-red-200">This game needs WebGL2 and OffscreenCanvas. {fatal}</div>}
       {game && !game.ready && !onTitle && (
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#15200f]">
-          <div className="text-3xl font-bold tracking-tight text-amber-200" style={JAM ? { fontFamily: 'Georgia, serif' } : undefined}>{JAM ? 'Fairway Fortune' : 'Maple Falls'}</div>
-          <div className="mt-1 text-sm uppercase tracking-[0.3em] text-amber-400/80">{JAM ? 'A golf club money game' : 'Town Builder'}</div>
+          <img src={LOGO} alt={TITLE} className="block h-auto w-[min(420px,80vw)] drop-shadow-2xl" data-testid="loading-logo" />
+          <div className="mt-1 text-sm uppercase tracking-[0.3em] text-amber-400/80">Build · Play · Run the club</div>
           <div className="mt-6 h-2 w-64 overflow-hidden rounded-full bg-white/10">
             <div className="h-full bg-amber-400 transition-all" style={{ width: `${Math.round(game.loadProgress * 100)}%` }} />
           </div>
-          <div className="mt-2 text-xs text-slate-400">{JAM ? 'Mowing the fairways and filling the ball buckets…' : 'Painting ground textures and unpacking sprites…'}</div>
+          <div className="mt-2 text-xs text-slate-400">Mowing the fairways and filling the ball buckets…</div>
         </div>
       )}
 
@@ -662,7 +662,7 @@ export default function App() {
                   <div className="max-[1899px]:hidden">{/* the golf bar's title from 1900 px (T135: one row) */}<ClubTitleText title={title} /></div>
                 ) : (
                   <div className="max-[1599px]:hidden">
-                    <div className="max-w-[12rem] truncate whitespace-nowrap font-display text-2xl font-bold leading-tight text-[var(--gold-hi)]" data-testid="title-name">Maple Falls</div>
+                    <div className="max-w-[12rem] truncate whitespace-nowrap font-display text-2xl font-bold leading-tight text-[var(--gold-hi)]" data-testid="title-name">{TITLE}</div>
                     <div className="label-caps max-w-[12rem] truncate whitespace-nowrap">Town Builder</div>
                   </div>
                 )}
@@ -2380,7 +2380,7 @@ function Help({ onClose, tab, onTab, keys, lab, onTour, cards }: { onClose: () =
           <span className="ml-auto text-[12px] text-slate-400"><span className="keycap">?</span> or <span className="keycap">F1</span> opens this · <span className="keycap">Esc</span> closes</span>
         </div>
         {tab === 'keys' ? <KeysSheet sections={keys} /> : tab === 'cards' && cards ? <CardsHelp owned={cards} /> : <>
-        <div className="mt-3 text-lg font-bold text-amber-200">How Maple Falls works</div>
+        <div className="mt-3 text-lg font-bold text-amber-200">How {TITLE} works</div>
         <ul className="mt-3 list-disc space-y-1.5 pl-5 text-slate-300">
           <li><b>Roads</b> are drawn as connected routes, exactly like the town builder: click points, finish with Enter or a double-click. Everything on the ground — asphalt, kerbs, sidewalk slabs, rounded corners, crossings, centre lines, manholes and drains — is generated geometry, so a new road appears instantly, no ground rebuild.</li>
           <li>The surfaces are <b>lit relief</b>, like the builder's bake: the asphalt is a cracked mosaic of facets and the sidewalk is slabs, each with a height-field; a cold key light from the upper-left shades them and puts specular glints on the facets that face it, markings are painted into the relief, kerbs get a bright top edge and a gutter shadow, and fallen leaves pile up against every kerb.</li>

@@ -241,7 +241,7 @@ export async function exportSaveBytes(): Promise<ArrayBuffer | null> {
 export async function importSaveBytes(buf: ArrayBuffer): Promise<{ ok: boolean; why?: string; version?: number }> {
   let d: any;
   try { d = JSON.parse(await gunzip(buf)); } catch { d = undefined; }
-  if (!d || typeof d !== 'object') return { ok: false, why: 'Not a Capital Empire save' };
+  if (!d || typeof d !== 'object') return { ok: false, why: 'Not a Golf Manager 2026 save' };
   const v: number | undefined = typeof d.version === 'number' ? d.version : undefined;
   if (v !== undefined && v > SAVE_VERSION) return { ok: false, why: `This save is from a newer build (v${v})`, version: v };
   if (d.map !== MAP) return { ok: false, why: 'This save is for another map size', version: v };

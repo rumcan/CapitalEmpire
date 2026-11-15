@@ -107,7 +107,7 @@ export const JAM_BUILD_ITEM: RailItem = { id: 'build', label: 'Build', icon: 'bu
 export function jamRail(full: readonly RailItem[]): readonly RailItem[] {
   const kept = full.filter(r => !JAM_RAIL_CUT.includes(r.id)), at = kept.findIndex(r => r.id === 'select') + 1;
   return [...kept.slice(0, at), JAM_BUILD_ITEM, ...kept.slice(at)].map((r): RailItem => {
-    if (r.id === 'course') return { ...r, extras: [], tools: r.tools.filter(t => !t.within), tile: 'golf-hole' }; // (#1272: no Facilities tile: Practice opens from the Build menu)
+    if (r.id === 'course') return { ...r, extras: [], tools: r.tools.filter(t => !t.within || t.id === 'paint' || t.id === 'props'), tile: 'golf-hole' }; // (2026-11-15: Plants and Props are in the jam build: the owner wants them shown) // (#1272: no Facilities tile: Practice opens from the Build menu)
     if (r.id === 'range') return { ...r, tile: 'range-bays' };
     if (r.id === 'paths') return { ...r, tools: r.tools.filter(t => t.id === 'path') };
     if (r.id === 'traffic') return { ...r, label: 'Car park', tools: r.tools.filter(t => t.id === 'park').map(({ sub: _sub, ...t }) => ({ ...t, label: 'Car park' })) };

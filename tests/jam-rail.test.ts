@@ -10,5 +10,5 @@ test('the MVP rail (T459, J7): Select, Build, Range, Course (holes and buildings
   assert.deepEqual(j.map(r => r.id), ['select', 'build', 'range', 'course', 'bulldoze']);
   assert.equal(j.find(r => r.id === 'build')!.action, 'build');
   assert.deepEqual(j.find(r => r.id === 'course')!.extras, []);
-  assert.deepEqual(j.find(r => r.id === 'course')!.tools.map(t => t.id), ['course', 'buildings']);
+  assert.deepEqual(j.find(r => r.id === 'course')!.tools.map(t => t.id), ['course', 'buildings', 'paint', 'props']);   // (2026-11-15: Plants and Props are in the jam build)
 });

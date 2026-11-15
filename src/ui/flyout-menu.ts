@@ -135,7 +135,7 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
     }
     // T256: the Texture Painter, gold, last: the holes' painting tools on the range, the practice area and the rest of your land
     // (T459, the jam MVP: no free painting of the property: holes come from New hole)
-    if (!JAM && c.golf && c.range.length) { const b = leaf(BUILD_TOOL, TEXTURE_PAINTER, { k: 'build' }, 'terrain'); if (b) rows.push({ ...b, gold: true, note: 'Paint your property, apart from the holes' }); }
+    if (c.golf && c.range.length) { const b = leaf(BUILD_TOOL, TEXTURE_PAINTER, { k: 'build' }, 'terrain'); if (b) rows.push({ ...b, gold: true, note: 'Paint your property, apart from the holes' }); }
     return rows.filter((r): r is MenuRow => !!r);
   }
   switch (item.id) {
@@ -155,7 +155,7 @@ export function menuOf(item: RailItem, c: MenuCtx): MenuRow[] {
         tiled({ ...leaf(h, 'New hole', { k: 'newHole' }, 'trophy')!, why: toolLock(c.ui, h.id) ?? c.newHoleWhy, guide: 'new-hole' }, ROW_TILE.newHole),
         leaf(h, 'Your holes', { k: 'holes' }, 'pin'),
         // (T459, the jam MVP: holes come from New hole; Shape by hand, the surface brushes, is hidden)
-        ...(JAM ? [] : [tiled(group('shape', 'Shape by hand', 'terrain', c.surfaces.map(s => tiled({ ...leaf(h, s.name, { k: 'surface', id: s.id })!, mark: s.id }, SURFACE_TILE[s.id]))), ROW_TILE.shape)]),
+        ...([tiled(group('shape', 'Shape by hand', 'terrain', c.surfaces.map(s => tiled({ ...leaf(h, s.name, { k: 'surface', id: s.id })!, mark: s.id }, SURFACE_TILE[s.id]))), ROW_TILE.shape)]),
       ] : [], h), 'course-holes'), ROW_TILE.holes));
       const b = byId('buildings');
       // (T459, the jam MVP: the clubhouse alone)

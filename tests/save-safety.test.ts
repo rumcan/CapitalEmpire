@@ -198,7 +198,7 @@ test('importSaveBytes refuses garbage, a newer build and another map size, and w
   s.m.set('town', kept);
   const keysBefore = [...s.m.keys()].sort();
   const garbage = await importSaveBytes(new Uint8Array([9, 8, 7, 6]).buffer);
-  assert.deepEqual(garbage, { ok: false, why: 'Not a Capital Empire save' });
+  assert.deepEqual(garbage, { ok: false, why: 'Not a Golf Manager 2026 save' });
   const newer = await importSaveBytes(await gzip(JSON.stringify({ ...v5, version: 99 })));
   assert.equal(newer.ok, false);
   assert.equal(newer.why, 'This save is from a newer build (v99)');

@@ -8,7 +8,7 @@ export interface SettingData {
   towns: string[];
   /** town-name first parts for generated towns past the curated list (first + townSuffix) */
   townFirst: string[];
-  /** town-name endings, glued straight on ('ton' -> Mapleton) or spaced (' Falls' -> Maple Falls) */
+  /** town-name endings, glued straight on ('ton' -> Mapleton) or spaced (' Falls' -> Pine Falls) */
   townSuffix: string[];
   /** trees and other plants: street stems */
   trees: string[];
@@ -35,7 +35,7 @@ const p = (s: string): string[] => s.split('|');
 
 /** the maple-wooded valley setting (the game's current art and theme) */
 export const MAPLE_VALLEY: SettingData = {
-  towns: p('Maple Falls|Riverton|Cedar Grove|Bass Lake|Elk Creek|Maplewood|Miller Crossing|Stonebridge|Fairview|Clearwater|Oakdale|Riverside|Mill Creek|Trout Run|Bear Hollow|Granite Falls|Birchwood|Hickory Flats|Union Mills|Spring Valley|Lakeview|Elkton|Mapleton|Copper Creek|Iron Falls|Walnut Grove|Pine Ridge|Deerfield|Brookfield|Fern Hollow|Harper|Booneville|Clayton|Hartfield|Lowell Junction|Summit Valley|Tamarack|Heron Lake|Moose Creek|Otter Creek|Loon Lake|Rockford|Millerton|Alden|Bramwell|Freeport|Greenville|New Bethlehem|Pine Grove|Sugar Creek|Laurel Ridge|Chestnut Hill|Quarryville|Forge Creek|Timberline|Briar Patch|Heron Landing|Kings Crossing|Widow Creek|Panther Gap|Stony Ford|Meadowbrook|Sunset Valley|Grandview|Ridgewood|Valley Forge|Canal Fulton|Depot Town|Gristmill|Hog Hollow|Possum Run|Raccoon Creek|Turkey Foot|Wolf Gap|Bald Knob|Big Run|Little Valley|Long Hollow|Dry Fork|Muddy Creek|Slippery Rock|Standing Stone|Tumbledown|Waterfall|Yellow Creek'),
+  towns: p('Pine Falls|Riverton|Cedar Grove|Bass Lake|Elk Creek|Maplewood|Miller Crossing|Stonebridge|Fairview|Clearwater|Oakdale|Riverside|Mill Creek|Trout Run|Bear Hollow|Granite Falls|Birchwood|Hickory Flats|Union Mills|Spring Valley|Lakeview|Elkton|Mapleton|Copper Creek|Iron Falls|Walnut Grove|Pine Ridge|Deerfield|Brookfield|Fern Hollow|Harper|Booneville|Clayton|Hartfield|Lowell Junction|Summit Valley|Tamarack|Heron Lake|Moose Creek|Otter Creek|Loon Lake|Rockford|Millerton|Alden|Bramwell|Freeport|Greenville|New Bethlehem|Pine Grove|Sugar Creek|Laurel Ridge|Chestnut Hill|Quarryville|Forge Creek|Timberline|Briar Patch|Heron Landing|Kings Crossing|Widow Creek|Panther Gap|Stony Ford|Meadowbrook|Sunset Valley|Grandview|Ridgewood|Valley Forge|Canal Fulton|Depot Town|Gristmill|Hog Hollow|Possum Run|Raccoon Creek|Turkey Foot|Wolf Gap|Bald Knob|Big Run|Little Valley|Long Hollow|Dry Fork|Muddy Creek|Slippery Rock|Standing Stone|Tumbledown|Waterfall|Yellow Creek'),
   townFirst: w('Maple Cedar Oak Pine Elm Birch Walnut Hickory River Lake Stone Mill Iron Copper Granite Elk Bear Deer Eagle Heron Otter Bass Trout Spring Summit Sugar Fern Briar Timber Quarry Forge Harper Boone Miller Hartley Alden Clayton Lowell Mercer Vernon Warren'),
   townSuffix: p('ton|ville|burg|ford|field|wood| Falls| Creek| Grove| Junction| Landing| Lake| Rapids| Hollow| Ridge| Center| Corners| Mills'),
   trees: w('Maple Oak Elm Pine Cedar Birch Walnut Hickory Ash Aspen Poplar Willow Chestnut Spruce Fir Hemlock Beech Cherry Apple Pear Plum Magnolia Dogwood Sycamore Linden Juniper Cottonwood Hawthorn Alder Buckeye Catalpa Tamarack Balsam Laurel Myrtle Holly Basswood Butternut Sassafras Mulberry'),

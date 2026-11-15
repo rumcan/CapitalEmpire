@@ -1,10 +1,12 @@
 // The jam build's title card (docs/JAM.md, J1): "Fairway Fortune", one line, New game / Continue / How to play. Shown over the game when JAM
 // (src/game/features.ts) until the player chooses; pure view, App.tsx owns the choice. Same look as the game's other cards (glass, gold display type).
 import { useState } from 'react';
-import { ActionTile, TILE_ROW } from '../ActionTile'; // J8 (#1261): each button of the title card wears a painted tile
+import { ActionTile, TILE_ROW } from '../ActionTile';
+import LOGO from '../../assets/ui/brand/logo.webp';   // the game's logo (the owner, 2026-11-15: "generate a nice game logo"; ChatGPT, transparent)
+export { LOGO }; // J8 (#1261): each button of the title card wears a painted tile
 
-export const TITLE = 'Fairway Fortune';
-export const TAGLINE = 'Build a golf club from a driving range. Borrow wisely.';
+export const TITLE = 'Golf Manager 2026';   // (the owner, 2026-11-15: the game's name; it was Fairway Fortune)
+export const TAGLINE = 'Build your golf club from a driving range, design every hole, and play it.';
 /** the four things to know before the first click */
 export const HOW_TO_PLAY: readonly string[] = [
   'The driving range earns your first money: golfers hit buckets of balls, and you pick the balls up again.',
@@ -25,8 +27,8 @@ export function TitleCard({ canContinue, onNew, onContinue, starting = false }: 
       <div className="relative w-full max-w-md">
       <div className="pointer-events-none absolute -inset-x-24 -inset-y-20" style={{ background: CARD_POOL }} aria-hidden="true" data-testid="title-pool" />
       <div className="glass relative w-full rounded-2xl border border-white/10 p-6 text-center shadow-2xl">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-400/80">A golf club money game</div>
-        <h1 className="font-display mt-1 text-4xl font-bold leading-tight text-[var(--gold-hi)]">{TITLE}</h1>
+        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-400/80">Build · Play · Run the club</div>
+        <h1 className="mt-1"><img src={LOGO} alt={TITLE} className="mx-auto block h-auto w-full max-w-[320px] drop-shadow-xl" data-testid="title-logo" /></h1>
         <p className="mt-2 text-sm text-slate-300">{TAGLINE}</p>
         {how ? (
           <ol className="mt-4 list-decimal space-y-1.5 pl-5 text-left text-sm text-slate-200" data-testid="how-to-play">

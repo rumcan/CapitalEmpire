@@ -283,7 +283,7 @@ function jamCut(): Plugin {
 
 /** J7c (#1230): the jam build's page is Fairway Fortune from the first moment (index.html's own title is the town builder's) */
 function jamTitle(): Plugin {
-  return { name: "capitalempire-jam-title", transformIndexHtml: (html) => (JAM_BUILD ? html.replace(/<title>[^<]*<\/title>/, "<title>Fairway Fortune</title>") : html) };
+  return { name: "capitalempire-jam-title", transformIndexHtml: (html) => (JAM_BUILD ? html.replace(/<title>[^<]*<\/title>/, "<title>Golf Manager 2026</title>") : html) };
 }
 
 // https://vite.dev/config/

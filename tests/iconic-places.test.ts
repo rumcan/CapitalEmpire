@@ -49,8 +49,8 @@ describe('the place file', () => {
     }
   });
   it('names a place after its town, or alone before the town has a name', () => {
-    assert.equal(placeName(drive, 'Maple Falls'), 'Maple Falls Drive-In');
-    assert.equal(placeName(school, 'Maple Falls'), 'Maple Falls High');
+    assert.equal(placeName(drive, 'Pine Falls'), 'Pine Falls Drive-In');
+    assert.equal(placeName(school, 'Pine Falls'), 'Pine Falls High');
     assert.equal(placeName(drive, null), 'The Drive-In');
   });
   it('drops a bad place and keeps the rest', () => {
