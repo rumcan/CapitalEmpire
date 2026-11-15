@@ -12,7 +12,9 @@ import { HALF_SOFT, HALF_WIDTH, RING_PASSES, bandAt, crosscutLegs, fairwayStripe
 import { clampSurfaces, mowPatternSurfaces, oldMowSurfaces, oldTeeSurfaces } from '../src/game/painted-surfaces';
 import { COURSE_PATCH_REACH } from '../src/game/ext/course-grid/patch';
 
-const FIN = DEFAULT_COURSE_FINISH, BASE = fairwayStripeLook(), F = clampSurfaces(file);
+// (#1326: the fairway's default is the golf view's criss-cross and the green's a diagonal checker now, tests/mow-plaid.test.ts; these tests keep guarding T365's
+// looks, wide stripes and the green's fine stripes, which stay a setting: the finish with those patterns)
+const FIN = { ...DEFAULT_COURSE_FINISH, pattern: 'wide' as const, greenPattern: 'along' as const }, BASE = fairwayStripeLook(), F = clampSurfaces(file);
 const ALONG = { ...FIN, pattern: 'along' as const };
 const P = (id: string) => MOW_PATTERNS.findIndex(q => q.id === id);
 /** the angle between two undirected lines, degrees 0..90 */
@@ -20,7 +22,7 @@ const between = (a: { x: number; y: number }, b: { x: number; y: number }) => (M
 
 test('the patterns: the owner\'s four in the list, named, each a pattern a look can name and the worker can carry by index', () => {
   const ids = MOW_PATTERNS.map(p => p.id);
-  assert.deepEqual(ids, ['along', 'wide', 'crosscut', 'halves', 'collar', 'straight', 'check', 'diamond']);
+  assert.deepEqual(ids, ['along', 'wide', 'crosscut', 'halves', 'collar', 'straight', 'check', 'diamond', 'plaid']);
   assert.deepEqual(MOW_PATTERNS.filter(p => ['wide', 'crosscut', 'halves', 'collar'].includes(p.id)).map(p => p.name), ['Wide stripes', 'Crosscut', 'Two-tone halves', 'Collar ring']);
   for (const p of MOW_PATTERNS) { assert.ok(p.note.length > 20, p.id); assert.deepEqual(clampMow({ pattern: p.id }), { pattern: p.id }); assert.equal(patternOf(mowRecOf({ pattern: p.id })), p.id, `${p.id} by its index`); }
   assert.equal(clampMow({ pattern: 'zigzag' }), undefined);
@@ -32,7 +34,7 @@ test('the patterns: the owner\'s four in the list, named, each a pattern a look 
 });
 
 test('the default: the strongest look is the fairway\'s, wide stripes; the old look is one pattern away and the other surfaces are as they were', () => {
-  assert.equal(DEFAULT_FAIRWAY_PATTERN, 'wide'); assert.equal(FIN.pattern, 'wide'); assert.equal(finishOf(F).pattern, 'wide');
+  assert.equal(DEFAULT_FAIRWAY_PATTERN, 'plaid'); assert.equal(DEFAULT_COURSE_FINISH.pattern, 'plaid'); assert.equal(finishOf(F).pattern, 'plaid'); assert.equal(finishOf(mowPatternSurfaces(F, 'wide')).pattern, 'wide'); // (#1326)
   const wide = mowSpec('fairway', undefined, FIN, BASE)!;
   assert.equal(wide.pattern, 'wide'); assert.equal(wide.textured, true); assert.equal(wide.angle, 0);
   // bold: 5 tiles (10 m), inside the owner's 8 to 12 m, at the full lift and multiply (the finish's strength is 0.8), a crisper edge, never a tint
@@ -62,10 +64,10 @@ test('the default: the strongest look is the fairway\'s, wide stripes; the old l
 
 test('the finish\'s pattern is a setting: clamped, kept in the file, off with the dev flag\'s old look, and the tees\' old look is a different flag', () => {
   assert.equal(clampCourseFinish({ pattern: 'crosscut' }).pattern, 'crosscut'); assert.equal(clampCourseFinish({ pattern: 'along' }).pattern, 'along');
-  for (const bad of ['zigzag', 3, null, undefined, {}]) assert.equal(clampCourseFinish({ pattern: bad }).pattern, 'wide', `${String(bad)}: the default`);
-  assert.equal(FINISH_OFF.pattern, 'wide', 'the finish being off does not change the knob (the fairway ignores it then)');
+  for (const bad of ['zigzag', 3, null, undefined, {}]) assert.equal(clampCourseFinish({ pattern: bad }).pattern, 'plaid', `${String(bad)}: the default (#1326)`);
+  assert.equal(FINISH_OFF.pattern, 'plaid', 'the finish being off does not change the knob (the fairway ignores it then)');
   const old = oldMowSurfaces(F);
-  assert.equal(finishOf(old).pattern, 'along'); assert.deepEqual({ ...finishOf(old), pattern: 'wide' }, finishOf(F), 'only the pattern changes'); assert.deepEqual(old.surfaces, F.surfaces);
+  assert.equal(finishOf(old).pattern, 'along'); assert.deepEqual({ ...finishOf(old), pattern: 'plaid' }, finishOf(F), 'only the pattern changes'); assert.deepEqual(old.surfaces, F.surfaces);
   assert.deepEqual(clampSurfaces(JSON.parse(JSON.stringify(old))), old, 'saved and loaded again, the same file');
   // any pattern can be the fairway's default (the dev server's ?mow=<pattern>: the bench's A/B of each pattern's cost)
   for (const q of MOW_PATTERNS) assert.equal(finishOf(mowPatternSurfaces(F, q.id)).pattern, q.id);
@@ -142,7 +144,7 @@ test('a collar ring: two passes round the fairway\'s edge inside the wide stripe
 });
 
 test("the grounds crew mows the bands the ground draws: the default wide stripes, a hole's own width, a collar ring's inside; the other patterns keep the finish's", () => {
-  assert.deepEqual([...BAND_PATTERNS], ['along', 'wide', 'collar']);
+  assert.deepEqual([...BAND_PATTERNS], ['along', 'wide', 'collar', 'plaid']); // (#1326: the criss-cross's main stripes are mown pass by pass)
   const fl = finishStripeLook(FIN, BASE)!;
   // a hole with no mowing look of its own: the fairway's default pattern, wide stripes, 5 tiles a pass (it was the finish's 3 before T365)
   assert.equal(crewBandLook(mowSpec('fairway', undefined, FIN, BASE), fl).w, 5);

@@ -1,5 +1,5 @@
 import file from './painted-surfaces.json';
-import { clampSurfaces, lookOfTex, mowPatternSurfaces, oldTeeSurfaces, teeWallSurfaces, type SurfacesFile } from './painted-surfaces';
+import { clampSurfaces, greenPatternSurfaces, lookOfTex, mowPatternSurfaces, oldTeeSurfaces, teeWallSurfaces, type SurfacesFile } from './painted-surfaces';
 import { MOW_PATTERNS, type MowPattern } from './mow-lines';
 import { lookColour, resolveFamily } from './painted-families';
 import { paintedUrl } from './painted-grass-art';
@@ -15,9 +15,13 @@ const teeDev = (): string => { try { return import.meta.env?.DEV ? new URLSearch
 export const teeOldDev = (): boolean => teeDev() === 'old';
 /** T365 (dev server, ?mow=<pattern>, e.g. ?mow=along): the fairway's mowing lines with that pattern where a look names none (along: as they were before T365,
  *  the bands along the hole at the finish's own width and strength; the default is wide): the A/B of the shots and the bench */
-export const mowDev = (): MowPattern | '' => { try { const v = import.meta.env?.DEV ? new URLSearchParams(location.search).get('mow') : null; return MOW_PATTERNS.find(p => p.id === v)?.id ?? ''; } catch { return ''; } };
+const patternDev = (key: string): MowPattern | '' => { try { const v = import.meta.env?.DEV ? new URLSearchParams(location.search).get(key) : null; return MOW_PATTERNS.find(p => p.id === v)?.id ?? ''; } catch { return ''; } };
+export const mowDev = (): MowPattern | '' => patternDev('mow');
+/** #1326 (dev server, ?gmow=<pattern>, e.g. ?gmow=along): the greens' lines with that pattern where a look names none (along: the fine stripes before
+ *  #1326; the default is the golf view's diagonal checker) */
+export const gmowDev = (): MowPattern | '' => patternDev('gmow');
 /** the file as the ground lays it: the dev flags' tees and fairway pattern over it */
-const laid = (f: SurfacesFile): SurfacesFile => { const t = teeDev(), g = t === 'old' ? oldTeeSurfaces(f) : t === 'sand' ? teeWallSurfaces(f, 'sand') : f, m = mowDev(); return m ? mowPatternSurfaces(g, m) : g; };
+const laid = (f: SurfacesFile): SurfacesFile => { const t = teeDev(), g = t === 'old' ? oldTeeSurfaces(f) : t === 'sand' ? teeWallSurfaces(f, 'sand') : f, m = mowDev(), gm = gmowDev(), h = m ? mowPatternSurfaces(g, m) : g; return gm ? greenPatternSurfaces(h, gm) : h; };
 let base: SurfacesFile = clampSurfaces(file), desert = false, current: SurfacesFile = laid(base);
 const subs = new Set<(f: SurfacesFile) => void>();
 /** the file the ground is laid with: the owner's, through the desert theme when it is on (T341, desert-theme.ts) */
