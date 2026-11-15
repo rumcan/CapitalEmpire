@@ -12,7 +12,7 @@ const URLS: Record<string, string> = (() => { try { return import.meta.glob('../
 /** a scene picture's URL by its manifest file (undefined under node) */
 export const sceneUrl = (file: string): string | undefined => URLS[`../assets/scenes/${file}`];
 
-const STATE_WORD: Record<string, string> = { rundown: 'Run-down', upgraded: 'Upgraded', one: '' };
+const STATE_WORD: Record<string, string> = { rundown: 'Run-down', 'second-hand': 'Second-hand', upgraded: 'Upgraded', one: '' };
 const stateWord = (s: string) => STATE_WORD[s] ?? (/^tier(\d)$/.test(s) ? `Tier ${s.slice(4)}` : s);
 
 export function SceneCard({ view, onView, onClose, padRight = '1rem' }: { view: SceneCardView; onView: (id: string) => void; onClose: () => void; /** room kept on the right for the card there (a CSS length) */ padRight?: string }) {

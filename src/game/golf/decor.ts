@@ -8,6 +8,7 @@ import { PROPS_APPEAL_CAP } from './rangesave';
 import { LIBRARY } from '../library';
 import { isPerson, isPersonId } from '../person';
 import { OBJECT_EIGHT_SETS } from '../object-eight-library';
+import { SECOND_HAND_ITEMS, isShackProp, secondHandPrice, secondHandViews, tierOfCat } from './second-hand';
 import { FRAME_TREE_KEY, FRAME_TREE_PRICE } from './holeframe';
 import { DESERT, type DesertType } from '../desert-props';
 import { KIT_BOULDERS, KIT_FLOWERS, KIT_FOUNTAIN, KIT_GREY_GRANITE, KIT_HEDGE, KIT_LAMPS, KIT_PALMS, KIT_POND_EDGE, KIT_SHRUBS, KIT_WATER_EDGE_PLANTS, type RunKit } from '../kit';
@@ -160,9 +161,17 @@ const CATALOGUE: readonly DecorItem[] = [
 // (T401: an eight-view set of a person is never a card: the registry row's person tag, or a person's name)
 const EIGHT_ACTIVE = new Map(OBJECT_EIGHT_SETS.filter(s => !s.person && !isPersonId(s.subject)).map(s => [s.subject, s]));
 const EIGHT_FIRST = new Map([...EIGHT_ACTIVE.values()].map(s => [s.views.normalNE.id, s]));
-const NEW_PROP_ITEMS: DecorItem[] = LIBRARY.filter(i => i.cat.startsWith('New: ') && !isPerson(i) && (!i.id.startsWith('object8:') || EIGHT_FIRST.has(i.id)) && (i.kind !== 'tree' || i.id.endsWith(':ne'))).map((i): DecorItem => i.kind === 'tree'
+// (#1300: the shack props are never a card: golf/second-hand.ts; an old save's load as their replacement)
+const NEW_PROP_ITEMS: DecorItem[] = LIBRARY.filter(i => i.cat.startsWith('New: ') && !isPerson(i) && !isShackProp(i.id) && (!i.id.startsWith('object8:') || EIGHT_FIRST.has(i.id)) && (i.kind !== 'tree' || i.id.endsWith(':ne'))).map((i): DecorItem => i.kind === 'tree'
   ? { key: `newprop-${i.id.slice('gen:tree-'.length, -':ne'.length)}`, name: i.name.replace(/ \(NE\)$/, ''), group: `new:${i.cat.slice(5)}` as DecorGroup, kind: 'plant', id: i.id, price: i.cost, appeal: 0, desc: 'A tree: plant it in the grounds (no appeal yet)' }
-  : { key: EIGHT_FIRST.has(i.id) ? `object8-${EIGHT_FIRST.get(i.id)!.subject}` : `newprop-${i.id.slice('newprop:'.length)}`, name: EIGHT_FIRST.get(i.id)?.name ?? i.name, group: `new:${i.cat.slice(5)}` as DecorGroup, kind: 'small', id: i.id, price: i.cost, appeal: 0, ...(EIGHT_FIRST.has(i.id) ? { scale: EIGHT_FIRST.get(i.id)!.baselineScale } : {}), desc: `${i.cat.slice(5)}: a new prop to place (no appeal yet)` });
+  : { key: EIGHT_FIRST.has(i.id) ? `object8-${EIGHT_FIRST.get(i.id)!.subject}` : `newprop-${i.id.slice('newprop:'.length)}`, name: EIGHT_FIRST.get(i.id)?.name ?? i.name, group: `new:${i.cat.slice(5)}` as DecorGroup, kind: 'small', id: i.id, price: i.cost, appeal: 0, ...(EIGHT_FIRST.has(i.id) ? { scale: EIGHT_FIRST.get(i.id)!.baselineScale } : {}), desc: tierOfCat(i.cat) === 'second-hand' ? `${i.cat.slice(5)}: bought used, cheaper and a little older in style (no appeal yet)` : `${i.cat.slice(5)}: a new prop to place (no appeal yet)` });
+/** #1300: each second-hand painting that has landed (golf/second-hand.ts SECOND_HAND_ITEMS, packed by prep-range-art.mjs): a card beside its new counterpart,
+ *  in the same group, at SECOND_HAND_FACTOR of its price. None until the pictures land */
+const secondHandCards = (): DecorItem[] => SECOND_HAND_ITEMS.flatMap((s): DecorItem[] => {
+  const v = secondHandViews(s.slug), nu = NEW_PROP_ITEMS.find(d => d.id === s.newId);
+  if (!v || !nu || !LIBRARY.some(i => i.id === v[0])) return [];
+  return [{ key: `secondhand-${s.slug}`, name: `${nu.name} (second-hand)`, group: nu.group, kind: 'small', id: v[0]!, price: secondHandPrice(nu.price), appeal: 0, desc: `${nu.name}, bought used: cheaper and a little older in style (no appeal yet)` }];
+});
 /** T289: the desert and oasis props (desert-props.ts, the owner's desert sheets): a card a type, R stepping through its pictures (never mirrored),
  *  and a mixed brush of the dry desert's scrub, cacti and rocks. Each one picture, its own size */
 const DESERT_CARDS: { t: DesertType; name: string; kind: DecorKind; price: number; appeal: number; desc: string }[] = [
@@ -188,7 +197,7 @@ const TOURNAMENT_DRESSING = new Set(['rope-barrier', 'rope-barrier-corner', 'rop
 for (const it of NEW_PROP_ITEMS) if (TOURNAMENT_DRESSING.has(it.key)) it.group = 'tournament';
 // T401 (#1079): never a person, whatever put the card here (isPerson: the picture's tag, category or id)
 const LIB_ITEM = new Map(LIBRARY.map(i => [i.id, i]));
-export const DECOR: readonly DecorItem[] = [...CATALOGUE, ...DESERT_ITEMS, ...NEW_PROP_ITEMS].filter(d => { const it = LIB_ITEM.get(d.id); return !isPersonId(d.id) && !(it && isPerson(it)); });
+export const DECOR: readonly DecorItem[] = [...CATALOGUE, ...DESERT_ITEMS, ...NEW_PROP_ITEMS, ...secondHandCards()].filter(d => { const it = LIB_ITEM.get(d.id); return !isPersonId(d.id) && !(it && isPerson(it)); });
 export const DECOR_BY_KEY: ReadonlyMap<string, DecorItem> = new Map(DECOR.map(d => [d.key, d]));
 
 // ---------------------------------------------------------------- T257: size, mirror, families and the mixed brushes
@@ -233,7 +242,7 @@ export type DecorPlace = 'course' | 'town' | 'both';
 export const CAT_PLACE: Readonly<Record<string, DecorPlace>> = {
   'Street furniture': 'both', 'Trees & plants': 'both', 'Landscaping': 'both', 'Arcade': 'both', 'Yard': 'both', 'Landmarks': 'both',
   'Business artwork': 'course', 'Golf tournament': 'course', 'Odds & ends': 'course', 'Halloween': 'course',
-  'New: Course props': 'course', 'New: Event structures': 'course', 'New: Event structures (shabby)': 'course', 'New: Stalls': 'course', 'New: Stalls (shabby)': 'course',
+  'New: Course props': 'course', 'New: Event structures': 'course', 'New: Event structures (second-hand)': 'course', 'New: Stalls': 'course', 'New: Stalls (second-hand)': 'course',
   'New: Seating': 'course', 'New: Media': 'course', 'New: Range': 'course', 'New: Vehicles': 'course', 'New: People': 'course',
   'New: Buildings': 'town', 'New: Eight-view objects': 'town',
 };
@@ -270,7 +279,7 @@ export const PROP_KINDS: readonly { id: Exclude<PropKind, 'general'>; name: stri
 ];
 /** the golf groups' kind (a group not listed is 'general') */
 const GROUP_KIND: Readonly<Record<string, PropKind>> = {
-  'new:Event structures': 'structures', 'new:Event structures (shabby)': 'structures', 'new:Stalls': 'structures', 'new:Stalls (shabby)': 'structures', 'new:Seating': 'structures', 'new:Media': 'structures',
+  'new:Event structures': 'structures', 'new:Event structures (second-hand)': 'structures', 'new:Stalls': 'structures', 'new:Stalls (second-hand)': 'structures', 'new:Seating': 'structures', 'new:Media': 'structures',
   'new:Buildings': 'structures', // (its clubhouses and gate pillars for the course; its storefronts are the town's: Town decoration lists the group with them alone)
   tournament: 'coursefurniture', 'new:Course props': 'coursefurniture',
   'new:Range': 'rangeprops', 'new:Vehicles': 'vehicles',
@@ -278,7 +287,7 @@ const GROUP_KIND: Readonly<Record<string, PropKind>> = {
 /** a group's kind */
 export const kindOfGroup = (g: string): PropKind => GROUP_KIND[g] ?? 'general';
 /** the order of a kind's groups in its flyout: the structures (the event ones, the stalls, the seating, the media, the clubhouses), then the furniture */
-const KIND_ORDER: readonly string[] = ['new:Event structures', 'new:Event structures (shabby)', 'new:Stalls', 'new:Stalls (shabby)', 'new:Seating', 'new:Media', 'new:Buildings', 'tournament', 'new:Course props', 'new:Range', 'new:Vehicles'];
+const KIND_ORDER: readonly string[] = ['new:Event structures', 'new:Event structures (second-hand)', 'new:Stalls', 'new:Stalls (second-hand)', 'new:Seating', 'new:Media', 'new:Buildings', 'tournament', 'new:Course props', 'new:Range', 'new:Vehicles'];
 
 /** the panel's view of the catalogue: where it was opened from (Decoration the course, Town decoration the town), its group (Town decoration
  *  › Buildings), the "All props" box, and what a flyout opened (Props ▸ Plants: that group alone; T400: a golf kind, Tournament structures: its groups) */

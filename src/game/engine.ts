@@ -62,6 +62,7 @@ import { PracticeTool } from './golf/practicetool';
 import { starterSeed } from './golf/practicestarter';
 import { DECOR_BY_KEY, inPoly, lotTouches, propTuple, sellBack, tupleMarks } from './golf/decor';
 import { dropPeople } from './person';
+import { shackTuple } from './golf/second-hand';
 import { CELL as POND_CELL, discOutline, lilyPads, normalizePondMarks, pieceKey, pondAt, pondId, shorePieces, type Pond, type PondPiece } from './golf/ponds';
 import { fountainAt, fountainFrame } from './kit';
 import { HALFWAY_COST, halfwaySpotWhy, halfwayTakings } from './golf/halfway';
@@ -4869,7 +4870,7 @@ export class Game {
         const subject = look ? this.sceneSubject(look.item) : r.subject;
         const place = lotPlaceOf(subject) ?? undefined;
         return propertyScene({ key: r.key, subject, name: place?.name ?? (look ? LIBRARY[look.item]!.name : r.name), slug: r.home ? 'town-home' : place?.slug ?? 'town-business', good: lotGood(l), home: r.home, lines: place?.lines, tiles: [
-          { label: 'Condition', value: l.decline > 0 ? ['In good repair', 'Shabby', 'Boarded up', 'Derelict'][Math.min(3, l.decline)]! : lotGood(l) ? 'Upgraded' : 'Getting by' },
+          { label: 'Condition', value: l.decline > 0 ? ['In good repair', 'Worn', 'Boarded up', 'Derelict'][Math.min(3, l.decline)]! : lotGood(l) ? 'Upgraded' : 'Getting by' },
           { label: r.home ? 'Residents' : 'Staff', value: `${r.home ? lotResidents(l) : lotJobs(l)}` },
           { label: 'Town', value: town },
         ] }, r.view);
@@ -4879,7 +4880,7 @@ export class Game {
         const s = this.golf?.structures?.find(q => q.id === r.id), def = s && STRUCTURE[s.typeId]; if (!s || !def) return null;
         const prop = this.golfStructureProps.get(s.id), visualTier = (s as typeof s & { visualTier?: string }).visualTier;
         return propertyScene({ key: `event:${s.id}`, subject: prop ? this.sceneSubject(lookOf(prop).item) : `event:${s.typeId}`, name: def.name, slug: `event-${s.typeId}`, good: visualTier === 'upgraded', tiles: [
-          { label: 'Condition', value: visualTier === 'upgraded' ? 'Upgraded' : 'Budget / worn' },
+          { label: 'Condition', value: visualTier === 'upgraded' ? 'New' : 'Second-hand' } /* #1300: second-hand or new, never shabby */,
           { label: 'Capacity', value: def.capacity > 0 ? `${def.capacity.toLocaleString('en-US')} ${def.unit}` : '—' },
           { label: 'Footprint', value: `${def.footprint.w * 2} × ${def.footprint.h * 2} m` },
           { label: 'Ownership', value: s.mode === 'buy' ? 'Owned' : 'Rented' },
@@ -9093,7 +9094,8 @@ export class Game {
       const index = new Map(LIBRARY.map((it, i) => [it.id, i]));
       // (T257: a Props tool prop keeps its saved flip, a tree's too: as the player turned it)
       // (T401, #1079: a person placed from the Props tool by an old save is dropped, nothing refunded or charged: person.ts dropPeople)
-      for (const t of dropPeople(d.props, id => LIBRARY[index.get(id) ?? -1])) { const [id, x, y, flip, scale] = t, i = index.get(id), m = tupleMarks(t); if (i !== undefined) Object.assign(this.addProp(i, x, y, !!flip, scale, undefined, m.decor ? { own: true } : undefined), m); }
+      // (#1300: a shack prop of an old save loads as its replacement, the second-hand painting or the new prop: golf/second-hand.ts)
+      for (const t of dropPeople(d.props.map(t => shackTuple(t, id => index.has(id))), id => LIBRARY[index.get(id) ?? -1])) { const [id, x, y, flip, scale] = t, i = index.get(id), m = tupleMarks(t); if (i !== undefined) Object.assign(this.addProp(i, x, y, !!flip, scale, undefined, m.decor ? { own: true } : undefined), m); }
       if (d.parks) this.parkDefs = d.parks.map(([x, y, w, h], k) => ({ id: k + 1, x, y, w, h }));
       this.places = placesFromTuples(d.places);
       if (d.tolls) this.tollDefs = d.tolls.map(([ax, ay, bx, by, booths], k) => ({ id: k + 1, ax, ay, bx, by, booths }));

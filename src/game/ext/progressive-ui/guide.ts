@@ -151,7 +151,7 @@ export const RANGE_GUIDE: readonly GuideStep[] = Object.freeze([
     tile: 'gravel-car-park',
     n: 2,
     title: 'Place its car park',
-    body: 'Range › Place the car park: a packed-dirt lot beside the road, near the shack. Golfers drive on without one.',
+    body: 'Range › Place the car park: a packed-dirt lot beside the road, near the hut. Golfers drive on without one.',
     done: 'auto',
     target: { ui: 'place-carpark' },
     reward: 500,
@@ -162,7 +162,7 @@ export const RANGE_GUIDE: readonly GuideStep[] = Object.freeze([
     n: 3,
     title: 'Sell your first buckets, then fetch the balls',
     // (T459 #1211: the ball room's 200 balls are gone in a month; a player never told to pick them up took $1,200 in a whole season)
-    body: 'Drivers on the county road stop to hit a bucket at your shack, and their balls stay out on the range: when the ball room runs dry, golfers drive on. Take Walk, go out onto the range, hold F over the balls (or click a pile) and empty your basket at the ball room.',
+    body: 'Drivers on the county road stop to hit a bucket at your hut, and their balls stay out on the range: when the ball room runs dry, golfers drive on. Take Walk, go out onto the range, hold F over the balls (or click a pile) and empty your basket at the ball room.',
     done: 'auto',
     target: { ui: 'rail-walk' },
     reward: 500,

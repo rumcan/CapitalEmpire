@@ -107,7 +107,7 @@ export function buildCards(s: BuildSource): BuildCard[] {
   if (v) {
     // the car park: placed with the range (J7); its card enlarges it (gravel, then paving: room for more cars), or places it when there is none
     const lotP = place('carpark'), lot = !lotP || lotP.done, next = LOT_STEPS.find(id => !v.biz.owned.includes(id)), u = next ? v.upgrades.find(q => q.id === next) : undefined;
-    if (!lot && lotP) out.push({ id: 'carpark', group: 'range', name: 'Car park', pic: upTile('gravel'), line: 'A packed-dirt lot beside the road, near the shack: golfers drive on without one.',
+    if (!lot && lotP) out.push({ id: 'carpark', group: 'range', name: 'Car park', pic: upTile('gravel'), line: 'A packed-dirt lot beside the road, near the hut: golfers drive on without one.',
       cost: lotP.cost, upkeep: 0, payback: null, why: lotP.why || shortWhy(lotP.cost, s.money), done: null, act: { k: 'place', id: 'carpark' } });
     else out.push({
       id: 'carpark', group: 'range', name: u ? `Car park: ${u.name.replace(/ the car park$/, '').toLowerCase()} it` : 'Car park', pic: upTile(next ?? 'pave'),

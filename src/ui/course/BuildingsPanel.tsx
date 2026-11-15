@@ -6,6 +6,7 @@ import { HALFWAY_COST, HALFWAY_TEE_REACH } from '../../game/golf/halfway';
 import { LAY_COST, LEVY } from '../../game/golf/estate';
 import { HUT_COST, HUT_MAX, HUT_REACH, HUT_UPKEEP, OFFICE_CLUB_REACH, OFFICE_COST, OFFICE_UPKEEP } from '../../game/golf/pros';
 import { LIBRARY } from '../../game/library';
+import { FIRST_CLUBHOUSE } from '../../game/business/art';
 import { Thumb } from '../Thumb';
 import { PaybackLine } from '../golf/Decisions';
 import { money } from '../golf/money';
@@ -14,8 +15,8 @@ import { greenFeesMonth, halfwayMonth, payback } from '../../game/golf/payback';
 import { ToolHead } from '../ToolHead';
 import { ActionTile, TILE_SMALL } from '../ActionTile'; // J8 (#1261): Draw a drive wears its painted tile
 
-/** the starting clubhouse's picture (the tin-and-tarp shack the game places: business/art.ts) */
-const CLUB_ART = LIBRARY.find(it => it.id === 'golf:clubhouse-shanty');
+/** the starting clubhouse's picture (the one the game places: business/art.ts FIRST_CLUBHOUSE) */
+const CLUB_ART = LIBRARY.find(it => it.id === FIRST_CLUBHOUSE); // #1300: the second-hand 1950s clubhouse, never the old shack
 /** the halfway house's picture (T187: the pavilion) */
 const HALFWAY_ART = LIBRARY.find(it => it.id === 'business:golf-halfway-pavilion');
 /** T214: the pro's office's and the teaching hut's stand-ins (business/art.ts) */

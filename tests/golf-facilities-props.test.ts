@@ -33,11 +33,11 @@ const tool = () => new PropsTool({ golf: () => true, item: (id: string) => LIB.g
 const html = (t: PropsTool) => renderToStaticMarkup(createElement(PropsPanel, { game: { decor: t, golf: { start: 'course' }, money: 1e9, emit: () => {} } as unknown as Game }));
 
 test('the golf props are the course\'s: the owner\'s new golf categories are in the place table, the town\'s own pictures are not', () => {
-  for (const cat of ['New: Course props', 'New: Event structures', 'New: Event structures (shabby)', 'New: Stalls', 'New: Stalls (shabby)', 'New: Seating', 'New: Media', 'New: Range', 'New: Vehicles'])
+  for (const cat of ['New: Course props', 'New: Event structures', 'New: Event structures (second-hand)', 'New: Stalls', 'New: Stalls (second-hand)', 'New: Seating', 'New: Media', 'New: Range', 'New: Vehicles'])
     assert.equal(CAT_PLACE[cat], 'course', cat);
   assert.equal(CAT_PLACE['New: Eight-view objects'], 'town'); assert.equal(CAT_PLACE['New: Buildings'], 'town');
   // a few of each kind, by their cards
-  for (const k of ['newprop-green-food-kiosk', 'newprop-pro-shop-kiosk', 'newprop-tarp-seating', 'newprop-camera-tower', 'newprop-rope-barrier', 'newprop-ride-mower', 'newprop-shuttle-bus', 'newprop-practice-net', 'object8-golf:range-practice-net', 'newprop-clubhouse-manor', 'newprop-gate-pillars'])
+  for (const k of ['newprop-green-food-kiosk', 'newprop-pro-shop-kiosk', 'newprop-picnic-table', 'newprop-camera-tower', 'newprop-rope-barrier', 'newprop-ride-mower', 'newprop-shuttle-bus', 'newprop-practice-net', 'object8-golf:range-practice-net', 'newprop-clubhouse-manor', 'newprop-gate-pillars'])
     assert.equal(placeOf(by(k)), 'course', k), assert.ok(isGolfItem(by(k)), `${k} is a golf prop`), assert.equal(standsIn(by(k), 'town'), 'course', `${k} placed from the town stands on the course's land`);
   // the town's own: the storefronts and the street and park things
   for (const k of ['newprop-neon-storefront-row', 'newprop-brick-storefront']) assert.equal(placeOf(by(k)), 'town', k);
@@ -45,14 +45,14 @@ test('the golf props are the course\'s: the owner\'s new golf categories are in 
   // every item of every golf category is golf (the catalogue's picture categories, not a hand list)
   const cat = new Map(LIBRARY.map(i => [i.id, i.cat]));
   for (const d of DECOR) if (CAT_PLACE[cat.get(d.id) ?? ''] === 'course' && d.group !== 'buildings') assert.ok(isGolfItem(d), `${d.key} (${cat.get(d.id)})`);
-  assert.ok(golf().length > 150, `${golf().length} golf props`);
+  assert.ok(golf().length > 130, `${golf().length} golf props`); // (#1300: the 29 shack props are no card)
 });
 
 test('Facilities lists the golf props by kind: a row each after Decoration, every golf prop reachable by a group row, none listed under two kinds or two groups', () => {
   const kinds = propMenuLists().propKinds;
   assert.deepEqual(kinds.map(k => k.id), PROP_KINDS.map(k => k.id), 'every kind has a card');
   for (const k of PROP_KINDS) assert.ok(!DECOR_GROUPS.some(g => (g.id as string) === k.id), `${k.id}: a kind's id is no group's (a flyout's focus is one or the other)`);
-  assert.deepEqual(kinds.find(k => k.id === 'structures')!.groups.map(g => g.id).slice(0, 2), ['new:Event structures', 'new:Event structures (shabby)'], 'the structures, the event ones first');
+  assert.deepEqual(kinds.find(k => k.id === 'structures')!.groups.map(g => g.id).slice(0, 2), ['new:Event structures', 'new:Event structures (second-hand)'], 'the structures, the event ones first');
   assert.deepEqual(fac().map(r => r.label), ['Practice', 'Plants', 'Decoration', ...PROP_KINDS.map(k => k.name), 'Texture Painter'], 'a row a kind, after Decoration');
   const rows = fac();
   for (const k of kinds) {
