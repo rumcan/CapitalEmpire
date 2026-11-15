@@ -1,0 +1,151 @@
+{
+  "_": "The trailer's showcase club (scripts/jam/trailer.mjs build, docs/jam/VIDEO.md): the menu scene's map (seed 11, scripts/jam/menu-scene-world.json) with its range, clubhouse and four holes, a fifth hole, Woodhill laid north of the club from the real courses list, then the town and the club run on at 20x for `grow` seconds. Tiles of 2 m on the 2048 map. stageHole: the hole the trailer builds on camera (its plan checks out on this map; nothing is built there in the save). Holes off the club's land (the jam has no land sale) are refused: (880,1012)->(800,1040) and (790,1050)->(760,940) were.",
+  "seed": 11,
+  "grow": 150,
+  "clubTry": [
+    [
+      948,
+      1012
+    ],
+    [
+      946,
+      1016
+    ],
+    [
+      944,
+      1010
+    ],
+    [
+      950,
+      1014
+    ],
+    [
+      942,
+      1014
+    ]
+  ],
+  "holes": [
+    {
+      "n": 1,
+      "tee": {
+        "x": 925,
+        "y": 990
+      },
+      "green": {
+        "x": 905,
+        "y": 850
+      },
+      "bends": [
+        {
+          "x": 922,
+          "y": 925
+        }
+      ]
+    },
+    {
+      "n": 2,
+      "tee": {
+        "x": 895,
+        "y": 842
+      },
+      "green": {
+        "x": 800,
+        "y": 850
+      }
+    },
+    {
+      "n": 3,
+      "tee": {
+        "x": 790,
+        "y": 858
+      },
+      "green": {
+        "x": 800,
+        "y": 985
+      }
+    },
+    {
+      "n": 4,
+      "tee": {
+        "x": 812,
+        "y": 993
+      },
+      "green": {
+        "x": 890,
+        "y": 1000
+      }
+    },
+    {
+      "n": 5,
+      "tee": {
+        "x": 870,
+        "y": 830
+      },
+      "green": {
+        "x": 880,
+        "y": 720
+      }
+    }
+  ],
+  "stageHole": {
+    "tee": {
+      "x": 960,
+      "y": 860
+    },
+    "green": {
+      "x": 1000,
+      "y": 760
+    }
+  },
+  "realNote": "Not laid in the save: laying a real course replaces the club's own holes (its holes become the course), so the trailer imports Magnolia National on camera instead (trailer-shots.mjs import), as the last thing done in that session. Woodhill laid here at (900,350) was clear of the club.",
+  "realOff": [
+    {
+      "id": "woodhill",
+      "at": [
+        900,
+        350
+      ],
+      "turns": 0,
+      "_": "north of the club: no houses, no public road, clear of the holes (a scan of every pose on a 50-tile grid at 8 turns)"
+    }
+  ],
+  "view": {
+    "_": "camera stops for the shots: [tile x, tile y, zoom]",
+    "townA": [
+      1000,
+      1090,
+      0.09
+    ],
+    "townB": [
+      930,
+      990,
+      0.13
+    ],
+    "townC": [
+      880,
+      900,
+      0.2
+    ],
+    "alive": [
+      [
+        945,
+        1020,
+        0.36
+      ],
+      [
+        925,
+        1000,
+        0.3
+      ]
+    ],
+    "importCam": [
+      1150,
+      700,
+      0.05
+    ],
+    "importAt": [
+      1450,
+      800
+    ]
+  }
+}
