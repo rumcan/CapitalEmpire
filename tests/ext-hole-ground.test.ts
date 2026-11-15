@@ -168,6 +168,12 @@ function game(money = 5_000_000) {
   return { g, f, st, tool, down, plan, host };
 }
 const diffs = (a: Float32Array, b: Float32Array) => { let n = 0; for (let k = 0; k < a.length; k++) if (a[k] !== b[k]) n++; return n; };
+/** #1338: the samples that moved off level, all of them the green's contours (free, laid with every Build): within its reach of the pin (tiles) */
+const greenOnly = (f: CourseHeightField, plans: unknown[]) => {
+  const pl = decodePlans(plans)[0]! as HolePlan, reach = planGeom(pl).greenR / 2 + 18; let n = 0;
+  for (let k = 0; k < f.data.length; k++) if (f.data[k] !== 0) { n++; assert.ok(Math.hypot(((k % CH_SIZE) + 0.5) * CH_STEP - pl.green.x, (Math.floor(k / CH_SIZE) + 0.5) * CH_STEP - pl.green.y) <= reach, `sample ${k} is the green's`); }
+  return n;
+};
 
 test("New hole's Build shapes the ground in its own undo step, priced with the grass; Undo puts every height back exactly, Redo lays it again", () => {
   const { f, st, tool, plan } = game();
@@ -205,7 +211,7 @@ test('Shape the ground off: the Build lays the hole on the ground as it is; the 
     assert.equal(tool.groundCost(), null, 'no earthworks');
     const gh = tool.wizard.ghost()!, money = st.money;
     assert.ok(tool.buildPlan());
-    assert.equal(diffs(createCourseHeightField().data, f.data), 0, 'level as it was'); assert.equal(money - st.money, gh.cost, 'the grass alone');
+    assert.ok(greenOnly(f, st.plans) > 0, `level as it was but for the green's contours`); assert.equal(money - st.money, gh.cost, 'the grass alone: the contours are free');
     tool.setShapeGround(true); assert.equal(new PaintTool(host).shapeGround, true);
   } finally { if (had === undefined) delete g0.localStorage; else g0.localStorage = had; }
 });
@@ -216,7 +222,7 @@ test('not enough money for the earthworks too: the Build lays the hole on the gr
   const gh = tool.wizard.ghost()!, e = tool.groundCost()!;
   st.money = gh.cost + Math.floor(e.cost / 2);
   assert.ok(tool.buildPlan());
-  assert.equal(diffs(createCourseHeightField().data, f.data), 0, 'no height changed'); assert.equal(st.money, Math.floor(e.cost / 2), 'the grass paid for');
+  assert.ok(greenOnly(f, st.plans) > 0, `no height changed but the green's contours (free)`); assert.equal(st.money, Math.floor(e.cost / 2), 'the grass paid for');
   assert.match(st.toasts.at(-1)!, /not enough money to shape the ground/);
 });
 

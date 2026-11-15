@@ -150,7 +150,7 @@ function crossKnots(seed: number, lengthM: number, grade: number): Knots {
 }
 
 /** the distance (in grid steps, 1 and √2) from every cell of a W × H grid to the nearest set cell (two-pass chamfer; none set: 1e9) */
-function chamfer(set: Uint8Array, W: number, H: number): Float32Array {
+export function chamfer(set: Uint8Array, W: number, H: number): Float32Array {
   const out = new Float32Array(W * H), D2 = Math.SQRT2, INF = 1e9;
   for (let k = 0; k < out.length; k++) out[k] = set[k] ? 0 : INF;
   for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
