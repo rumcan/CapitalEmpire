@@ -11154,9 +11154,12 @@ export class Game {
   /** the view's input for the turn in hand: played through the one model (LiveGroup); what the view is sent back (his stroke, anyone else's, the
    *  hole's end, the next turn) */
   input3p(input: ViewInput): HostMsg[] {
-    if (this.match3p) return this.match3pSync(this.match3p.input(input));   // (T428: a money match)
-    if (this.prac3p) { const ms = this.play3p ? this.play3p.input(input) : []; return this.prac3p.drv ? [...ms, this.practiceMsg3p(), this.rangeActors3p()] : ms; }   // (J6: a practice ball, and the drills after it)
+    // (#1336: a strike with `fly` is answered with its flight only: nothing was played, so nothing after it either; the stroke comes with the input sent at the landing)
+    const flying = (ms: HostMsg[]) => ms.length === 1 && ms[0]!.t === 'shot' && ms[0]!.air === true;
+    if (this.match3p) { const ms = this.match3p.input(input); return flying(ms) ? ms : this.match3pSync(ms); }   // (T428: a money match)
+    if (this.prac3p) { const ms = this.play3p ? this.play3p.input(input) : []; return this.prac3p.drv && !flying(ms) ? [...ms, this.practiceMsg3p(), this.rangeActors3p()] : ms; }   // (J6: a practice ball, and the drills after it)
     const ms = this.play3p ? this.play3p.input(input) : [], pl = this.play, own = pl?.own;
+    if (flying(ms)) return ms;
     if (pl && own && this.play3p?.me === own.id && this.play3p.plan === pl.plan) { own.turn = own.live.advance(); this.saveOwner(); if (!own.turn) this.ownerDone(pl); this.emit(); }   // (T425: his real round moved on: kept as the manager game's)
     return ms;
   }

@@ -110,6 +110,9 @@ export interface ClubChoice { club: Club; carryM: number; scatterM: number; kit:
    *  and whether he may pick a shape (shape.ts) or a spin with this club */
   playsM?: number; longM?: number; mishitP?: number; sweet?: number; speed?: number; loftDeg?: number; launch?: string; run?: number;
   backspin?: number; topspin?: number; shapes?: boolean; spin?: boolean;
+  /** #1336 (turn3p.ts; optional): the most net taps in the air that still add spin each way with this club from this lie (spin.ts airTaps, the Mid-Flight Whisper's
+   *  share in it); the view holds its counts to them. Absent: an older host */
+  air?: { side: number; top: number; back: number };
   /** T420: where the full shot lands off the aim's line along the suggested line (m, + right as he faces it: the wind's drift and the slope's pull;
    *  conditions.ts previewShot sideM) */
   sideM?: number;
@@ -150,7 +153,10 @@ export interface ShotMsg { v: 1; t: 'shot'; golfer: number; hole: number; stroke
    *  (rest is where the ball itself stopped: in the water, or out of bounds) */
   flightT?: number[]; landLie?: Lie; bounceLies?: Lie[]; rollT?: number[]; rollZ?: number[]; check?: ViewPt; drop?: ViewPt; dropLie?: Lie ;
   /** T433: a ghost round's stroke (ghost3p.ts): played back see-through, beside the play, never in its way */
-  ghost?: true }
+  ghost?: true;
+  /** #1336: the flight of the owner's stroke only, answering an input with `fly`: no bounces or roll, the rest at the landing, holed and penalty not told. The view flies it,
+   *  takes the spin taps, and at the landing sends the input again with their totals; the stroke itself (the same flight, then its bounce and roll) follows */
+  air?: true }
 
 /** T427: the leaderboard at game minute `at` (board.ts boardRows: the leaders, then the owner's row when he is below them) and the owner's group's wait
  *  on the group ahead in words (board.ts waitText; null: none) */
@@ -210,8 +216,26 @@ export interface ErrorMsg { v: 1; t: 'error'; why: string }
 
 /** the owner's input for a turn (live.ts OwnerInput) as the view sends it: the aim in the view's frame. The host fills in what the view does not
  *  decide: the conditions (env) and the model version (v), so those two never cross the bridge */
-export type ViewInput = Omit<OwnerInput, 'aim' | 'env' | 'v'> & { aim: ViewPt };
+export type ViewInput = Omit<OwnerInput, 'aim' | 'env' | 'v'> & { aim: ViewPt;
+  /** #1336: sent at the strike of a full shot: the view will tap spin in while the ball is in the air. The host answers with the flight only (a `shot` with `air`, from
+   *  the very model and stream the stroke is played with, nothing recorded) and plays the stroke when the view sends this input again at the landing, without `fly` and
+   *  with the spin's totals (spin.ax, spin.ay). Of that second input only the taps are read: the rest is the first's, so the flight cannot change. Absent: played at once */
+  fly?: true };
 export interface InputMsg { v: 1; t: 'input'; input: ViewInput }
+/** #1336: the input kept at the strike (`fly`) with the taps in the air of the one sent at the landing: only spin.ax and spin.ay are taken from it, so the flight
+ *  played is the one flown */
+export function withTaps(kept: ViewInput, landed: ViewInput): ViewInput {
+  const s = landed.spin, ax = s && Number.isFinite(Number(s.ax)) ? Math.round(Number(s.ax)) : 0, ay = s && Number.isFinite(Number(s.ay)) ? Math.round(Number(s.ay)) : 0;
+  const base = kept.spin ?? { x: 0, y: 0, pump: 0 };
+  return { ...kept, spin: { x: base.x, y: base.y, pump: base.pump, ax, ay } };
+}
+
+/** #1336: a stroke's message cut to its flight (the answer to an input with `fly`): no bounces, roll or check, the rest at the landing, holed and penalty not told */
+export function airOnly(m: ShotMsg): ShotMsg {
+  const F = m.flight, end = F.length ? F[F.length - 1]! : null;
+  const { bounces: _b, roll: _r, rollT: _rt, rollZ: _rz, check: _c, drop: _d, dropLie: _dl, bounceLies: _bl, ...rest } = m; void _b; void _r; void _rt; void _rz; void _c; void _d; void _dl; void _bl;
+  return { ...rest, bounces: [], roll: [], rest: end ? [end[0], end[1]] : m.from, restLie: m.landLie ?? m.restLie, holed: false, penalty: 0, air: true };
+}
 /** T441, T442: what the shot picked now would do (answered with a `preview` of the same key); the input as it would be struck at full power */
 export interface AimMsg { v: 1; t: 'aim'; key: number; input: ViewInput }
 

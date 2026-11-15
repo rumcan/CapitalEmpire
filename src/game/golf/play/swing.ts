@@ -36,6 +36,26 @@ export const HOLD_V = 3;
 export const HOLD_PUTT_TOP = 5;
 /** the key-spam boost: power added per Space press during the swing, the cap, how much a full boost narrows the sweet spot and widens the spread */
 export const BOOST = { per: 0.01, max: 0.06, narrow: 0.4, spread: 0.3 } as const;
+/** #1336 (the owner, 2026-11-15: "the faster you spam the forward arrow key while you are holding the swing the more power you get ... The power boost power keeps
+ *  dropping"): the hold-and-release swing's tapped boost, for every golfer from the model's version 5 (live.ts MODEL_V). While the swing is held each tap of Up (or W)
+ *  adds `per` to a level (0..1) and the level halves every `half` seconds, so it follows how fast he taps; the level at the moment he lets go times the cap is the
+ *  swing's `boost` (SwingOutcome.boost: BOOST's more carry and wider spread). The cap is `plain` for everyone; a Power Mash charge armed (the card's) raises it to
+ *  BOOST.max. The save keeps the boost played, never the taps; a putt takes none */
+export const TAP_BOOST = { per: 0.14, half: 0.6, plain: 0.04 } as const;
+/** the level `dt` seconds on from `level`, with no tap: it halves every TAP_BOOST.half seconds */
+export const tapDrain = (level: number, dt: number): number => clamp(level, 0, 1) * 0.5 ** (Math.max(0, dt) / TAP_BOOST.half);
+/** the level just after a tap: TAP_BOOST.per more, at most 1 */
+export const tapAdd = (level: number): number => Math.min(1, clamp(level, 0, 1) + TAP_BOOST.per);
+/** the most boost a tapped swing may play: TAP_BOOST.plain, or BOOST.max with a charge armed */
+export const tapCap = (armed: boolean): number => armed ? BOOST.max : TAP_BOOST.plain;
+/** the boost a level plays (the level times the cap), to the ten-thousandth (what the view sends and the save keeps) */
+export const tapBoost = (level: number, armed: boolean): number => Math.round(clamp(level, 0, 1) * tapCap(armed) * 1e4) / 1e4;
+/** the level at time t (s) after taps at the times `taps` (s, rising; any clock): each drains from the last, the ones after t not counted */
+export function tapLevel(taps: readonly number[], t: number): number {
+  let lv = 0, at = -Infinity;
+  for (const s of taps) { if (s > t) break; lv = tapAdd(at === -Infinity ? 0 : tapDrain(lv, s - at)); at = s; }
+  return at === -Infinity ? 0 : tapDrain(lv, t - at);
+}
 /** the miss: degrees off the aim per meter unit outside the sweet spot and the most, for a full shot and a putt; a full shot past HOOK_DEG is a hook or a
  *  slice (curving: a hook runs on, a slice carries short), under it a pull or a push */
 export const MISS = { fullDeg: 90, fullMax: 18, puttDeg: 30, puttMax: 8, hookDeg: 5, hookRoll: 1.5, sliceCarry: 0.96 } as const;

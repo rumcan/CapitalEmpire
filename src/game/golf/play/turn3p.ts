@@ -15,7 +15,7 @@ import { LIE_FX, kindOfLie, slopeEffect, lieKindFor, lieCarry } from './lies';
 import { envOf, previewShot, type ShotEnv } from './conditions';
 import { LOFT, launchWord } from './bag';
 import { markerSpeed, sweetSpot } from './swing';
-import { spinCap } from './spin';
+import { AIR, airTaps, spinCap } from './spin';
 import type { HeightAt } from './roll';
 import type { WindNow } from './wind';
 import type { Frame3p } from './export3p';
@@ -66,6 +66,7 @@ export function clubChoice(sk: ShotSkill, club: Club, lie: Lie, env: ShotEnv | n
     loftDeg: LOFT[club], launch: putter ? '' : launchWord(LOFT[club]),
     run: putter ? 1 : CLUB_RUN[club] * kit.roll / (CLUB_BASE[club]?.roll ?? 1), // (bag.ts bagView's run: what a shot with conditions rolls by)
     backspin: spinCap(club, lie, 0, -1, kind, kit.spin), topspin: spinCap(club, lie, 0, 1, kind, kit.spin),
+    ...(putter ? {} : { air: airTaps(club, lie, kind, kit.spin, hasMech(sk, 'airspin') ? 1 : AIR.plain) }), // (#1336: the taps in the air, live.ts shotOutcome's share)
     shapes: !putter, spin: !putter,
     ...(putter ? {} : { bend: bendOf(club, carryM, kit) }),
   };
