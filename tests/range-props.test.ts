@@ -27,7 +27,7 @@ function host(biz: RangeBizSave) {
     biz: () => biz, plot: () => ({ rect: plots[2], facing: 2 }), carPark: () => null,
     addPiece: (_p, key) => ({ auto: key } as unknown as Prop), removeProp: () => {}, setGround: () => {}, layPaths: () => {}, clearTrees: () => {},
     money: () => 1e6, spend: () => {}, book: () => {}, demand: () => ({ tier: 1, exits: 2, residents: 0 }), dayLen: () => 600, simT: () => 0, clock: () => ({ hour: 12, day: 1 }),
-    save: () => { saves++; }, toast: () => {}, emit: () => {},
+    save: () => { saves++; }, toast: () => {}, emit: () => {}, grid: () => null, layTee: () => false,
   };
   const h = new RangeHost(ctx, 1); h.sync();
   return { h, saves: () => saves };
