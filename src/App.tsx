@@ -87,7 +87,7 @@ import { debtOf } from './game/golf/finance';
 import { LOGO, TITLE, TitleCard } from './ui/jam/TitleCard';
 import LOADING_ART from './assets/ui/brand/loading.webp';
 import { MenuScene, posterOf } from './ui/jam/MenuScene';
-import { CHOICE_STORE_KEY, SHOW_STOPS, choiceFromStore, choiceHash, choiceOf, pickStart, sandboxOf, poseAt, sceneOff, showBoot, showWanted, weakMachine, type StartChoice } from './game/showcase';
+import { CHOICE_STORE_KEY, MENU_HASH, MENU_STORE_KEY, POSTER_FADE_MS, SHOW_STOPS, choiceFromStore, choiceHash, choiceOf, menuPageOf, sandboxOf, poseAt, sceneOff, showBoot, showWanted, weakMachine, type StartChoice } from './game/showcase';
 import { ShowDirector } from './game/showcase-director';
 import { loadShowcaseSave } from './game/showcase-load';
 import { formatPercent } from './ui/TournamentResults';
@@ -190,6 +190,13 @@ const hod = (h: number) => `${String(h % 24).padStart(2, '0')}:00`;
 const DEV_KEY = 'capitalempire.dev';
 function devStart(): boolean { if (JAM) return false; try { return new URLSearchParams(location.search).has('debug') || localStorage.getItem(DEV_KEY) === '1'; } catch { return false; } }
 
+/** whether this page may run the living scene behind the title card (showcase.ts showWanted): motion allowed, a visible tab, a machine that can, no bench / fixture / lab
+ *  boot and the scene not switched off; else the card shows its still picture */
+function sceneAllowed(): boolean {
+  const q = new URLSearchParams(location.search), nav = navigator as Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } };
+  let reduced = false; try { reduced = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { /* no media queries */ }
+  return showWanted({ jam: true, chose: false, reducedMotion: reduced, hidden: document.hidden, weak: weakMachine(nav), other: sceneOff(location.hash) || ['bench', 'fixture', 'osmcourse', 'lotlab', 'lotreview'].some(k => q.has(k)) });
+}
 /** what the title card can choose: a start (showcase.ts StartChoice) or Continue sandbox (#1314: the sandbox save slot's game) */
 type TitleChoice = StartChoice | 'sandbox-continue';
 
@@ -200,22 +207,23 @@ export default function App() {
   const [game, setGame] = useState<Game | null>(null);
   // J12 (#1271): the living scene behind the jam's title card (game/showcase.ts). A choice made on the card reloads the page with it in the address (the scene's world is never the
   // player's), so a page that finds one starts the game at once, as it always did; else the scene runs when this page may spare it; else the card shows its still picture over the game's own boot
-  const [choice] = useState(() => { if (!JAM) return null; let kept: StartChoice | null = null; try { kept = choiceFromStore(sessionStorage.getItem(CHOICE_STORE_KEY)); } catch { /* no storage */ } return choiceOf(location.hash) ?? kept; });
-  const [sceneWanted] = useState(() => {
-    if (!JAM) return false;
-    const q = new URLSearchParams(location.search), nav = navigator as Navigator & { deviceMemory?: number; connection?: { saveData?: boolean } };
-    let reduced = false; try { reduced = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { /* no media queries */ }
-    return showWanted({ jam: true, chose: !!choice, reducedMotion: reduced, hidden: document.hidden, weak: weakMachine(nav), other: sceneOff(location.hash) || ['bench', 'fixture', 'osmcourse', 'lotlab', 'lotreview'].some(k => q.has(k)) });
-  });
+  // The main menu page (the settings menu's Exit to main menu, in any build: showcase.ts menuPageOf) is the same card over the same scene. Outside the jam build only a choice
+  // the card itself stored is taken (a #play= left in a dev address never starts a new game)
+  const [choice] = useState(() => { let kept: StartChoice | null = null; try { kept = choiceFromStore(sessionStorage.getItem(CHOICE_STORE_KEY)); } catch { /* no storage */ } return JAM ? choiceOf(location.hash) ?? kept : kept; });
+  const [menuPage] = useState(() => { if (choice) return false; let kept = false; try { kept = sessionStorage.getItem(MENU_STORE_KEY) === '1'; } catch { /* no storage */ } return menuPageOf(location.hash) || kept; });
+  /** the title card is up when the page starts: the jam build's boot, and the main menu page in any build */
+  const titleAtBoot = (JAM || menuPage) && !choice;
+  const [sceneWanted] = useState(() => titleAtBoot && sceneAllowed());
   /** what the engine boots with (T157): the lot lab's light boot under ?lotlab (dev builds), else the game's (the scene's: no save read or written, no money floats); the lab draws no HUD or minimap */
   const [boot] = useState(() => { const b = bootFor(location.search, import.meta.env.DEV); return sceneWanted && b.kind === 'game' ? showBoot(b) : b; });
   const lab = boot.kind === 'lab';
   const [, bump] = useReducer((x: number) => x + 1, 0);
   // the jam build's title card (ui/jam/TitleCard.tsx): shown over the game until New game / Continue; the game waits (paused) behind it (the scene's runs: engine.ts show)
-  const [titleOpen, setTitleOpen] = useState(JAM && !choice);
+  const [titleOpen, setTitleOpen] = useState(titleAtBoot);
   const [hasSave, setHasSave] = useState(false);
   const saveSeen = useRef<Promise<boolean> | null>(null);
   useEffect(() => { if (JAM) { document.title = TITLE; const p = readSave().then(r => r.status === 'ok'); saveSeen.current = p; void p.then(setHasSave); } }, []);
+  useEffect(() => { if (!JAM && (menuPage || choice)) { const p = readSave().then(r => r.status === 'ok'); saveSeen.current = p; void p.then(setHasSave); } }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // the choice is read once: the address is cleared at once, so a reload of the game (F5) never starts a new one
   useEffect(() => { if (choice) { try { history.replaceState(null, '', location.pathname + location.search); } catch { /* the address stays */ } try { sessionStorage.removeItem(CHOICE_STORE_KEY); } catch { /* no storage */ } } }, [choice]);
   const titlePaused = useRef(false);
@@ -226,11 +234,24 @@ export default function App() {
   /** #1314: which save slots hold a game (the career's and the sandbox's), read each time the title card opens */
   const [slotSaves, setSlotSaves] = useState<Record<SaveSlot, boolean>>({ town: false, sandbox: false });
   useEffect(() => { if (titleOpen) void Promise.all([slotHasSave('town'), slotHasSave('sandbox')]).then(([town, sandbox]) => setSlotSaves({ town, sandbox })); }, [titleOpen]);
+  /** the main menu page left (its address and stored mark cleared, so F5 in the game, or a reload into the other slot, does not bring the menu back) */
+  const leaveMenuPage = () => { try { sessionStorage.removeItem(MENU_STORE_KEY); } catch { /* no storage */ } if (menuPageOf(location.hash)) { try { history.replaceState(null, '', location.pathname + location.search); } catch { /* the address stays */ } } };
+  /** Exit to main menu asked for the scene: once the game is saved, the page starts again as the main menu page (cancelled by a choice made on the card meanwhile) */
+  const exitPending = useRef(false);
+  const toMenuPage = () => {
+    exitPending.current = false;
+    try { sessionStorage.setItem(MENU_STORE_KEY, '1'); } catch { /* no storage: the address carries it */ }
+    try { history.replaceState(null, '', location.pathname + location.search + MENU_HASH); } catch { /* the stored mark carries it */ }
+    location.reload();
+  };
   /** #1314: the other save slot's game: this page saves nothing more, the slot is remembered and the page reloads into its game */
-  const toSlot = (g: Game, s: SaveSlot) => { g.holdSaves(); setSaveSlot(s); location.reload(); };
+  const toSlot = (g: Game, s: SaveSlot) => { leaveMenuPage(); g.holdSaves(); setSaveSlot(s); location.reload(); };
+  /** the save slot a choice plays in (#1314): the career's for New game and Continue, the sandbox's for a sandbox game and Continue sandbox */
+  const slotOf = (c: TitleChoice): SaveSlot => (c === 'new' || c === 'continue' ? 'town' : 'sandbox');
   /** the choice made. New game: a new career game (when a save stood or a sandbox game is open; else the game booted fresh is it); Continue: the career game (from a
    *  sandbox game its slot is loaded); a sandbox game (#1314): a new one in its own save slot (the career save untouched), or Continue sandbox */
   const startGame = (g: Game, c: TitleChoice) => {
+    leaveMenuPage();
     const sb = sandboxOf(c === 'sandbox-continue' ? null : c), cur = saveSlot();
     if (c === 'continue' && cur !== 'town') { toSlot(g, 'town'); return; }
     if (c === 'sandbox-continue') { if (cur !== 'sandbox') { toSlot(g, 'sandbox'); return; } }
@@ -240,10 +261,14 @@ export default function App() {
   };
   const leaveTitle = (c: TitleChoice) => {
     if (starting) return;
-    if (sceneWanted && c !== 'sandbox-continue') { // the scene's world is not the player's: the page starts again with the choice in its address and the game boots as it always did
+    exitPending.current = false;
+    if (sceneWanted) { // the scene's world is not the player's: the page only says which slot the choice plays in (it writes no save), then starts again with the choice in its address and the game boots that slot's save as it always did
       setStarting(true);
-      try { sessionStorage.setItem(CHOICE_STORE_KEY, c); } catch { /* no storage */ }
-      try { history.replaceState(null, '', choiceHash(c)); } catch { /* the address stays: the stored choice carries it */ }
+      const go: StartChoice = c === 'sandbox-continue' ? 'continue' : c; // (Continue sandbox: Continue, in the sandbox's slot)
+      setSaveSlot(slotOf(c));
+      try { sessionStorage.removeItem(MENU_STORE_KEY); } catch { /* no storage */ }
+      try { sessionStorage.setItem(CHOICE_STORE_KEY, go); } catch { /* no storage */ }
+      try { history.replaceState(null, '', choiceHash(go)); } catch { /* the address stays: the stored choice carries it */ }
       window.setTimeout(() => location.reload(), 60);
       return;
     }
@@ -251,28 +276,25 @@ export default function App() {
     startGame(game, c);
   };
   useEffect(() => { if (game?.ready && pending.current !== null) { const f = pending.current; pending.current = null; setStarting(false); startGame(game, f); } }, [game?.ready]); // eslint-disable-line react-hooks/exhaustive-deps
-  // a page started by the card's choice: the game's own boot, then the new game (when a save stood) or the saved one, at the normal speed
+  // a page started by the card's choice: the game's own boot, then the new game (when a save stood) or the saved one, at the normal speed. A sandbox game is laid in its own
+  // slot (#1314): the page was booted in the slot the card set, but an empty sandbox slot boots the career one (engine), so the slot is set again before the new town
   const choiceDone = useRef(false);
   useEffect(() => {
     if (!game?.ready || !choice || choiceDone.current) return;
     choiceDone.current = true;
-    void (async () => { const had = await (saveSeen.current ?? Promise.resolve(false)), sb = sandboxOf(choice); if (sb) game.newTown({ sandbox: sb }); else if (choice === 'new' && had) game.newTown(); game.setSpeed(1); })();
+    void (async () => { const had = await (saveSeen.current ?? Promise.resolve(false)), sb = sandboxOf(choice); if (sb) { setSaveSlot('sandbox'); game.newTown({ sandbox: sb }); } else if (choice === 'new' && had) game.newTown(); game.setSpeed(1); })();
   }, [game?.ready, choice, game]);
   // the scene: the director glides the camera over the prepared world; its first picture fades the still out; a machine too slow for it gives way to the still
   const snapRef = useRef<HTMLCanvasElement>(null);
   const [posterOn, setPosterOn] = useState(true);
-  const [startStop] = useState(() => {
-    if (choice) return 0; // (a page the card's choice started shows no card, so it does not use up a visit: the next visit still starts somewhere new)
-    let last: number | null = null; try { const v = localStorage.getItem('fairwayfortune.scene'); if (v !== null && Number.isFinite(Number(v))) last = Number(v); } catch { /* no storage */ }
-    const k = pickStart(SHOW_STOPS.length, Math.random(), last); try { localStorage.setItem('fairwayfortune.scene', String(k)); } catch { /* no storage */ }
-    return k;
-  });
+  /** every visit starts in the town and goes round: town, club, course, range, farm (the owner, 2026-11-15; showcase.ts SHOW_STOPS) */
+  const startStop = 0;
   const director = useRef<ShowDirector | null>(null);
   useEffect(() => {
     if (!game?.ready || !sceneWanted || director.current) return;
-    if (!game.show) { try { history.replaceState(null, '', '#scene=off'); } catch { /* none */ } location.reload(); return; } // the scene's world could not be had: start again without it
+    if (!game.show) { try { history.replaceState(null, '', menuPage ? `${MENU_HASH}&scene=off` : '#scene=off'); } catch { /* none */ } location.reload(); return; } // the scene's world could not be had: start again without it (the main menu page stays the menu, over the player's own game)
     if (!snapRef.current) return;
-    const d = new ShowDirector(game, SHOW_STOPS, startStop, snapRef.current, e => { if (e === 'first') setPosterOn(false); else if (e === 'slow') { d.end(); game.freeze(); setPosterOn(true); } else if (e === 'rest') { d.end(); game.freeze(); } });
+    const d = new ShowDirector(game, SHOW_STOPS, startStop, snapRef.current, e => { if (e === 'hour') game.warmShowRange(); else if (e === 'first') setPosterOn(false); else if (e === 'slow') { d.end(); game.freeze(); setPosterOn(true); } else if (e === 'rest') { d.end(); game.freeze(); } }, POSTER_FADE_MS); // (the first view holds while the still fades over it)
     director.current = d; d.begin(); Object.assign(window as unknown as Record<string, unknown>, { __showDirector: d, __showcase: { stops: SHOW_STOPS, poseAt } }); // (the checks' hooks, like __game: scripts/jam/menu-scene-shots.mjs)
   }, [game?.ready, sceneWanted, game, startStop]);
   useEffect(() => () => { director.current?.end(); director.current = null; }, []);
@@ -912,7 +934,12 @@ export default function App() {
                     </>}
                     {/* the owner, 2026-11-15: "the menu has no exit to main menu": saves, pauses and opens the title card over the living menu scene; Continue comes back */}
                     <button className="btn w-full" data-testid="menu-exit-title" data-tip="Save and go back to the main menu (Continue brings you back here)"
-                      onClick={() => { setMenu(false); void game.save(); titlePaused.current = false; setHasSave(true); setTitleOpen(true); }}>Exit to main menu</button>
+                      onClick={() => {
+                        setMenu(false); titlePaused.current = false; setHasSave(true); setTitleOpen(true); exitPending.current = true; // the card at once, over the paused game and the still picture
+                        // the living scene: only once this game is safely saved (bytes written) does the page start again as the main menu page; a game that cannot save
+                        // (the bench, a fixture, a start still being chosen) keeps the card over itself, as before
+                        void game.save().then(n => { if (exitPending.current && n > 0 && sceneAllowed()) toMenuPage(); });
+                      }}>Exit to main menu</button>
                     <button className="btn w-full" onClick={() => { setMenu(false); game.save(); }} data-tip="Saved automatically; force a save now"><ActionTile tile="save-game" size={TILE_SMALL} />Save</button>
                     <button className="btn w-full" onClick={() => { setMenu(false); void game.downloadSave(); }} data-tip="Download the save as a .cesave file (for a bug report, or to carry it to another computer)"><ActionTile tile="save-game" size={TILE_SMALL} />Download save</button>
                     <button className="btn w-full" onClick={() => saveFile.current?.click()} data-tip="Load a .cesave file in place of this game: this game is backed up first"><ActionTile tile="load-save" size={TILE_SMALL} />Load save file…</button>

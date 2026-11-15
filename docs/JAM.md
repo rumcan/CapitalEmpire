@@ -279,7 +279,7 @@ The painted ground and the game's own ground had no shared rule for who is on to
   The builder pins the map with `?seed=`, a dev-server feature under which the game keeps the old start (the range offered for sale), so J9's start pick does not come up and the world is the same on every rebuild
   (a page without a seed would lay J9's start, which the builder also takes: `startPickAuto`, but its range may then stand elsewhere: look at the shots and move the stops).
 - **The stops** (`src/game/showcase.ts` SHOW_STOPS): the range with golfers on the mats, the car park with cars arriving, from the first tee down the fairway, a green with its flag, a farm, the county road with
-  its houses, the snack shop and the bridge. Each is 14 to 17 s of slow glide at 25 to 30% zoom (30% is the closest the game goes), then a cross-fade (the picture is copied over the game while the next
+  its houses, the snack shop and the bridge (2026-11-15: reordered and shortened, see below). Each is 14 to 17 s of slow glide at 25 to 30% zoom (30% is the closest the game goes), then a cross-fade (the picture is copied over the game while the next
   place bakes); the next place's ground is asked for 3.5 s ahead. A lap is about 90 s. A visit starts at a different place from the last (`localStorage fairwayfortune.scene`). The town clock is kept in the
   golf morning (07:00 to 13:00) so a day's groups are always out; after 10 minutes of play the scene rests (the engine stops drawing, the last picture stays: a menu left open neither burns the GPU nor lets the world's season roll over); the point of interest sits at 64% of a wide screen's width (the card is on the left), in the middle of a narrow one.
 - **Never the player's world.** The scene loads the file in place of the save: nothing is read from or written to the player's slot (`saveBlocked` before anything could write), it takes no input, shows no
@@ -294,6 +294,33 @@ The painted ground and the game's own ground had no shared rule for who is on to
   ground arrives); the engine's own work is 1.2 ms CPU and 0.9 ms draw a frame and the director's under 0.2 ms. New game and Continue reload the page into the game's own boot: 6.5 s from the click to
   the game's first card (the game used to be booted behind the card, but the card itself came 3.8 s later). Added to the build: 6 files, 1.68 MB (the stills), and the world (31 KB, inlined in the code).
   The button smoke test (`npm run jam:smoke`) clicks New game through the reload.
+- **2026-11-15 (the owner: "traffic driving and people walking ... then the course where people are playing golf. zoom it out a little bit so we have more houses. then the desert driving
+  range with green grass")**, PR #1360:
+  - **Why it was a still picture**: the scene, the card at boot and the choice were decided once when the page started, and only in the jam build. The settings menu's Exit to main menu (PR 1354)
+    opens the card over the player's own game, where the scene was never wanted, so the card showed only its still (`road.jpg`), in every build.
+  - **Exit to main menu now runs the scene, in any build.** The card shows at once over the paused game (with the still). The game is saved, and only once the save is written (`game.save()` > 0 bytes)
+    does the page start again as the main menu page (`#menu`, and `fairwayfortune.menu` in session storage). That page boots the prepared world with saving off, like the jam build's boot. Continue and
+    New game reload with the choice, and the game's own boot loads the save just written. A game that cannot save, or a page that may not run the scene, keeps the card over itself, as before. A
+    choice made while the save runs cancels the reload. Outside the jam build only a choice the card stored is taken (a `#play=` in a dev address is not).
+  - **The lap** always starts in the town: the county road with its river and bridge (traffic, people on the pavements), then the club's car park, the first fairway, a green and the range. Each
+    stop is 10 to 12 s (8 to 14 allowed), at 15.5 to 18% zoom (the owner, later: "zoom out a bit so you can see more stuff and less flaws"). That is still the street tier (12% and closer),
+    where the people, cars and animals are drawn.
+  - **The farm stop went**: the farmstead's parked pickup stands under the farmhouse's porch. The yard's pickup is parked on the lane at the yard's front edge (`ext/farms/farms.ts`, the
+    farmstead's "parked on the yard's drive in front of the house" `B.vehicle`), which runs 1.7 m from the house's wall, so its length ran alongside the house's front. Fixed in every
+    game: it parks wholly ahead of the front (`HOUSE_CAR_GAP`), with the same random draws, so nothing else on a farm moves (`tests/ext-farms.test.ts`).
+  - **A busy scene** (the scene only; it saves nothing). It starts at 09:00, so the morning's groups are on every hole (at 07:00 one group was walking to the first tee), and 2.5
+    townspeople walk per built lot (the game: 0.5). **The range**: the prepared world's ball room held 791 balls, less than one bucket on its day, so every golfer drove off unserved. The scene
+    stocks it (`SHOW_RANGE_BALLS`) and gives the range's demand 2,500 more residents. A golfer takes about 100 s from the map's edge to a bay there, so when the director sets the morning
+    (its `hour` event, under the still), the engine runs the range 240 sim s on (`RangeHost.warm`). All 12 bays are taken at the start, and 5 to 7 through the lap.
+    `menu-scene-motion.mjs --flow probe` logs the range's day as the scene runs.
+  - **No jump from the still to the live scene** (the owner: "a still of a farm and then it suddenly changes to a farm animation"). The still is the live scene's own first view (the same camera,
+    zoom and hour) drawn with nothing moving: the engine's `stillLife` leaves out the cars, people, animals, carts and balls. It is shot at 2560 x 1440 by
+    `menu-scene-motion.mjs --flow poster`, and the page lays it at the live scene's scale with its point of interest where the camera puts it (`showcase.ts posterBox`; no cover crop). The
+    director holds the first view while the still fades (`firstHold`), so the swap only brings the movers in. Only the town's still ships (the other five stills went).
+  - **Looking at it**: `node scripts/jam/menu-scene-motion.mjs --base <url> --flow poster|boot|exit`. The boot flow shoots the swap (three frames over the fade), then plays the lap and takes two
+    frames ~4 s apart at each stop, plus the frame time between them. The exit flow plays and saves a game and presses Exit to main menu. It checks that the save on the menu page is unchanged
+    after the scene ran, then presses Continue and checks the same town is back.
+  - MEASURED_LINE
 
 ## Button tests: run them before every jam build (T459, the owner 2026-11-13: "are you guys not testing buttons?")
 A dead button must not ship. Two checks:

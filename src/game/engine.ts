@@ -28,7 +28,7 @@ import { STRUCT_COST, STRUCT_MAX, groundClass, highwayRoute, longestRun, splitBy
 import { CULL_MIN_PX, FULL_UV, GLRenderer, POINT_STRIDE, SHADOW_STRIDE, SPRITE_STRIDE, VECTOR_STRIDE } from './gl';
 import { GroundCache } from './ground-cache';
 import { GAME_BOOT, clampCentre, flatTerrain, type BootOptions } from './boot';
-import { SHOW_FARM_MONTH, SHOW_GOLFERS } from './showcase';
+import { SHOW_FARM_MONTH, SHOW_GOLFERS, SHOW_PEDS_PER_LOT, SHOW_RANGE_BALLS, SHOW_RANGE_RESIDENTS, SHOW_RANGE_WARM_S, SHOW_HOURS } from './showcase';
 import { TILE_BANDS, TILES_REVISION, anchorAt, bandAt, bandRange, bandsAhead, cellOf, cellsIn, coverageOf, drawnScale, nearUntil, nextBand, tiledFamily, tileIndex, tilePermutation, tileScreenPx, tileSize, tileSpec } from './painted-tiles';
 import { desertLeavesDev, onPaintedSurfaces, paintedSurfaces, setDesertSurfaces } from './painted-surfaces-live';
 import { borderDefault, crewBandLook, finishBorders, finishOf, finishStripeLook, mowSpec } from './course-finish';
@@ -746,6 +746,13 @@ export class Game {
   /** T147, the money floats (moneyfloats.ts): green +$X rises where money comes in, red -$X where it goes out at a place or a sale is lost; on by
    *  default, remembered (the gear menu's Money floats). Set it with setShowMoneyFloats */
   showMoneyFloats = true;
+  /** J12: the menu scene's still (scripts/jam/menu-scene-motion.mjs --flow poster): the world drawn with nothing that moves (no cars, people, animals, carts or balls), so the
+   *  still under the title card is the live scene's first frame without its movers, and the swap to the live scene only brings them in */
+  stillLife = false;
+  /** J12: the menu scene's range warmed up (RangeHost.warm: its golfers already at the bays, not on their way from the map's edge); the scene only */
+  warmShowRange(simS = SHOW_RANGE_WARM_S) { if (this.show && this.golf?.start === 'range') this.showWarmed = this.range.warm(simS, SHOW_HOURS.start); }
+  /** the visits the scene's range had after its warm-up (-1: it could not be warmed; null: not asked: the checks read it) */
+  showWarmed: number | null = null;
   readonly floats = new MoneyFloats();
   /** T151, the map's world labels: collected over the overlay's frame, placed in one pass (none overlapping, stable) and written together; the
    *  money floats' columns are placed after them (floatCols) */
@@ -833,7 +840,7 @@ export class Game {
     money: () => this.money, spend: n => this.spendAt(this.rangeSpot(), 'construction', n), book: n => this.as('range', () => this.traffic.spend('business', -n)),
     month: () => this.golfMonthIndex(), payUpkeep: n => this.spendAt(this.rangeSpot(), 'upkeep', n), balls: n => this.spendAt(this.rangeSpot(), 'balls', n), // (T386: the supplier's balls)
     once: id => { const p = this.golf?.progress; if (!p || p.seen.includes(id)) return false; p.seen.push(id); this.scheduleSave(); return true; },
-    demand: () => ({ tier: this.golf?.tier ?? 1, exits: this.golf?.exits?.length ?? 2, residents: this.traffic.pop, propsAppeal: this.decor.appeal(), practiceAppeal: this.golf?.range ? practiceAppeal(this.golf.range) : 0 }),
+    demand: () => ({ tier: this.golf?.tier ?? 1, exits: this.golf?.exits?.length ?? 2, residents: this.traffic.pop + (this.show ? SHOW_RANGE_RESIDENTS : 0), propsAppeal: this.decor.appeal(), practiceAppeal: this.golf?.range ? practiceAppeal(this.golf.range) : 0 }),
     dayLen: () => this.traffic.dayLen, simT: () => this.traffic.simTime(performance.now()),
     pace: () => { const T = this.traffic; return this.golfMode && T.town.prof ? localRate(T.town, T.simTime(performance.now())) * T.dayLen / 1440 : 1; }, // (T266)
     clock: () => { const c = this.clock(); return { hour: c.hour + c.minute / 60, day: c.day }; },
@@ -3500,7 +3507,7 @@ export class Game {
       setLotModel(LATEST_LOT_MODEL); this.farmModel = FARM_MODEL; this.farmsNew.clear(); this.golf = null; this.genTerrain(newSeed()); this.seedTowns();
     }
     else loaded = save;
-    if (showSave && loaded === showSave) { this.show = true; this.dayBusy = SHOW_GOLFERS; if (this.golf) delete this.golf.everyday; this.setFarmMonth(SHOW_FARM_MONTH); } // J12: the scene's course has a busy day (its golfers are always on the holes): its day book starts afresh, so the roster is the busy day's, not the quiet one the world was built on
+    if (showSave && loaded === showSave) { this.show = true; this.dayBusy = SHOW_GOLFERS; if (this.golf) delete this.golf.everyday; this.setFarmMonth(SHOW_FARM_MONTH); const sb = this.golf?.range?.balls; if (sb) sb.clean = Math.max(sb.clean, SHOW_RANGE_BALLS); } // J12: the scene's course has a busy day (its golfers are always on the holes): its day book starts afresh, so the roster is the busy day's, not the quiet one the world was built on
     tick(0.7);
     const tl = performance.now();
     this.ground.init(this.terrain);
@@ -9514,7 +9521,7 @@ export class Game {
         for (const l of this.traffic.lots.values()) if (l.level >= LV.BUILT) doors.push({ x: l.o[0] + l.u[0] * l.w / 2 + l.n[0], y: l.o[1] + l.u[1] * l.w / 2 + l.n[1], kind: l.use === 1 ? 0 : 1 });
         this.peds.setDoors(doors);
       }
-      this.peds.populate(Math.min(PED_MAX, built * 0.5));
+      this.peds.populate(Math.min(PED_MAX, built * (this.show ? SHOW_PEDS_PER_LOT : 0.5))); // (J12: the menu scene's town has more people out walking)
     }
     if (this.speed) this.peds.step(dt);
   }
@@ -13735,10 +13742,10 @@ export class Game {
       const bx0 = Math.min(...c.map(p => p.x)) - pad, by0 = Math.min(...c.map(p => p.y)) - pad, bx1 = Math.max(...c.map(p => p.x)) + pad, by1 = Math.max(...c.map(p => p.y)) + pad;
       this.viewTileBox = [bx0, by0, bx1, by1]; // (T228: the car parks' parked cars are looked at only on screen, syncParkCars)
       // (T192: with their brake lights from the closest zooms down to 8%, drawn in the sprite pass right after each car)
-      const cars: Drawable[] = this.traffic ? this.traffic.visible(bx0, by0, bx1, by1, cam.z >= 0.08) : [];
+      const cars: Drawable[] = this.traffic && !this.stillLife ? this.traffic.visible(bx0, by0, bx1, by1, cam.z >= 0.08) : [];
       // at the street tier the townspeople and the crowd (the galleries' fans, the queues, the walking parties) are the movers, merged in by depth
       let movers = cars;
-      if (tier === 'street') {
+      if (tier === 'street' && !this.stillLife) {
         const peds = this.peds.n ? this.pedMovers(bx0, by0, bx1, by1) : [], crowd = this.crowdMovers(bx0, by0, bx1, by1, now / 1000), range = this.range.movers_(bx0, by0, bx1, by1);
         // T312: the people on screen step round each other (spacing.ts: a drawn offset only; ?spacing=0, dev: off, the bench's before)
         const s0 = performance.now();
@@ -13757,7 +13764,7 @@ export class Game {
       // (T192: no car light overlay any more: no headlights, beams or turn signals; the brake lights are glow instances in the sprite stream)
       const vecOn = shadows || this.cast.on;
       // T386 (#1043): the balls lying on the outfield are one instanced draw of GL points (rangehost.ts fieldPoints: at most BALL_DRAW_MAX, thinned past it), in the same upload
-      const nBall = tier === 'street' && this.range.scene ? this.range.fieldPoints(this.ballPts, X0, Y0, X1, Y1) : 0;
+      const nBall = tier === 'street' && !this.stillLife && this.range.scene ? this.range.fieldPoints(this.ballPts, X0, Y0, X1, Y1) : 0;
       const [sAt, pAt, ...vAt] = gl.uploadParts([[f.shadows, shadows ? f.shadowFloats : 0], [f.stream, f.floats],
         ...f.vec.map(v => [v.data, vecOn ? v.floats : 0] as [Float32Array, number]), [this.ballPts, nBall * 2 * BALL_POINT_FLOATS]]);
       const bAt = vAt.pop()!;
