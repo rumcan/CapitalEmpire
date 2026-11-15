@@ -6,16 +6,18 @@
 export const UI_SCALES = [0.9, 1, 1.1, 1.25] as const;
 /** the localStorage key */
 export const UI_SCALE_KEY = 'capitalempire.uiScale';
+/** the text size with nothing chosen (the owner, 2026-11-15: "make 90% text size the default") */
+export const UI_SCALE_DEFAULT = 0.9;
 
-/** the offered scale nearest to v (100% for anything that is not a finite number) */
+/** the offered scale nearest to v (UI_SCALE_DEFAULT for anything that is not a finite number) */
 export function clampUiScale(v: unknown): number {
   const n = typeof v === 'number' ? v : typeof v === 'string' && v.trim() !== '' ? Number(v) : NaN;
-  if (!Number.isFinite(n)) return 1;
+  if (!Number.isFinite(n)) return UI_SCALE_DEFAULT;
   return UI_SCALES.reduce<number>((a, b) => (Math.abs(b - n) < Math.abs(a - n) ? b : a), 1);
 }
-/** the stored scale (100% when there is none, it is bad, or storage throws) */
+/** the stored scale (UI_SCALE_DEFAULT, 90%, when there is none, it is bad, or storage throws) */
 export function loadUiScale(store?: Pick<Storage, 'getItem'> | null): number {
-  try { const s = store === undefined ? globalThis.localStorage : store; const v = s?.getItem(UI_SCALE_KEY); return v == null ? 1 : clampUiScale(v); } catch { return 1; }
+  try { const s = store === undefined ? globalThis.localStorage : store; const v = s?.getItem(UI_SCALE_KEY); return v == null ? UI_SCALE_DEFAULT : clampUiScale(v); } catch { return UI_SCALE_DEFAULT; }
 }
 /** stores the scale (nothing when storage throws); returns the scale stored */
 export function saveUiScale(v: number, store?: Pick<Storage, 'setItem'> | null): number {

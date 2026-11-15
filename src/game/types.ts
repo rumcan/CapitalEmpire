@@ -1,7 +1,7 @@
 export interface Box { hx: number; hy: number; dx: number; dy: number }
 export interface Glow { x: number; y: number; r: number }
 
-/** A library sprite (from the Maple Falls town builder export). */
+/** A library sprite (from the Pine Falls town builder export). */
 export interface LibItem {
   id: string;
   name: string;

@@ -16,7 +16,6 @@ import { GRID_KINDS } from '../../game/paint-tool';
 import { EditTees } from '../golf/TeeSets';
 import { showCheck } from '../spotlight/shows';
 import { ActionTile, TILE_SMALL } from '../ActionTile'; // J8 (#1261): Seed, Sod, Frame with trees, Edit Hole Layout and Delete wear painted tiles
-import { JAM } from '../../game/features';
 
 const STEPS = ['Tee', 'Green', 'Shape'] as const;
 /** what each step asks for, under the steps */
@@ -82,8 +81,8 @@ export function HoleWizardPanel({ game }: { game: Game }) {
       )}
       {gh && <Stats game={game} />}
       {/* (#1296, docs/JAM.md "Future development": the jam has no tee sets and no painting by hand: Edit Hole Layout moves the tee, the green and the bends alone) */}
-      {w.base && w.step === 'shape' && !JAM && <EditTees game={game} n={w.base.hole} /> /* T268: place, move and remove each tee set */}
-      {w.base && w.step === 'shape' && !JAM && <EditPaint game={game} />}
+      {w.base && w.step === 'shape' && <EditTees game={game} n={w.base.hole} /> /* T268: place, move and remove each tee set */}
+      {w.base && w.step === 'shape' && <EditPaint game={game} />}
       {gh && !w.base && <Planting game={game} /> /* T254: Edit Hole Layout plants nothing */}
       {gh && w.step === 'shape' && !w.base && <Frame game={game} cost={gh.cost} />}
       {gh && w.step === 'shape' && !w.base && <Ground game={game} cost={gh.cost} />}

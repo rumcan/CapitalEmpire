@@ -35,12 +35,12 @@ export function layoutOf(n: number): { step: number; across: number } {
 
 /** the business a picture shows (the shops' and venues' four-view art: the NE view's id; the lettering on its sign) */
 export const BUSINESS: Readonly<Record<string, string>> = {
-  'town:bakery': 'Bakery', 'town:grocery': 'Maple Falls Grocery', 'town:pharmacy': 'Pharmacy', 'town:laundromat': 'Laundry',
+  'town:bakery': 'Bakery', 'town:grocery': 'Pine Falls Grocery', 'town:pharmacy': 'Pharmacy', 'town:laundromat': 'Laundry',
   'town:fish_tackle': 'Fish & tackle', 'town:barber': 'Barbershop', 'world:video': 'Video', 'world:video_rental': 'Video Vault',
   'world:arcade': 'Arcade', 'world:diner': 'Diner', 'world:snack_bar': 'Snack bar',
 };
 /** the businesses whose sign carries a proper name (one of each to a block face; see docs/GOLF-SPRITES.md for the shops the town needs more of) */
-export const NAMED: ReadonlySet<string> = new Set(['Maple Falls Grocery', 'Video Vault']);
+export const NAMED: ReadonlySet<string> = new Set(['Pine Falls Grocery', 'Video Vault']);
 
 /** the shop fronts a shop lot (com) shows, in colour order: the two video shops and the two named ones kept apart on the lattice */
 export const SHOP_PALETTE: readonly string[] = ['town:bakery', 'town:grocery', 'town:pharmacy', 'world:video', 'town:laundromat', 'world:video_rental', 'town:fish_tackle', 'town:barber'];

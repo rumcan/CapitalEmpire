@@ -362,7 +362,7 @@ describe('Facilities, the Course flyout\'s sixth tile (#1272)', () => {
   it('golf games only (the classic game has none); the jam build has none (it opens Practice from its Build menu)', () => {
     assert.ok(!menuOf(courseItem, ctx(false, null)).some(r => r.key === 'facilities'), 'no tile in the classic game');
     const jam = jamRail(RAIL).find(r => r.id === 'course')!;
-    assert.deepEqual(jam.tools.map(t => t.id), courseItem.tools.filter(t => !t.within).map(t => t.id), 'the jam keeps Holes and Buildings'); assert.ok(!menuOf(jam, ctx(true, null)).some(r => r.key === 'facilities'), 'no tile in the jam build');
+    assert.deepEqual(jam.tools.map(t => t.id), courseItem.tools.filter(t => !t.within || t.id === 'paint' || t.id === 'props').map(t => t.id), 'the jam keeps Holes and Buildings, and (2026-11-15) Plants and Props');
     assert.ok(jamRail(RAIL).every(r => r.id !== 'facilities' && !r.tools.some(t => t.id === 'practice')), 'no rail item holds Practice in the jam (the Build menu arms it)');
   });
 });

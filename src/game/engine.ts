@@ -3117,7 +3117,7 @@ export class Game {
    *  hidden with Shape by hand, lays nothing and draws no footprint or disc */
   get brushOpen(): boolean {
     if (this.tool !== 'course' || this.paint.planOpen || this.paint.property || this.paint.mode === 'myhole') return true; /* T256: Range › Build and From My holes are open from the start */
-    if (JAM) return false; // (#1296, docs/JAM.md "Future development": the jam has no Shape by hand: its Course tool outside New hole lays nothing, shows no brush pill and no footprint, though a range start's practice brushes open the progressive UI's)
+    // (2026-11-15: the jam build paints greens, bunkers and water by hand too: the owner wants it shown; was #1296's jam cut) // (#1296, docs/JAM.md "Future development": the jam had no Shape by hand: its Course tool outside New hole lays nothing, shows no brush pill and no footprint, though a range start's practice brushes open the progressive UI's)
     const ui = this.toolUi(); return !ui || ui.shapeByHand;
   }
   /** the cursor hint's change last told to the UI, and when (the pill follows within 100 ms, never more than ten times a second) */
@@ -6189,9 +6189,9 @@ export class Game {
   /** the tournament run whose weather the game shows now (1-based, as getTournamentWeather takes it): the one the tournament chip and the grass
    *  read (during the evaluation the run just played, else the next). The title's weather is the month's in this run, so August's is the tournament's */
   weatherRun(): number { const r = this.traffic.round; return r.stage === 'eval' && r.last ? r.last.run : r.runs + 1; }
-  /** the top bar's title (T235, #690; the concept's): in a golf game the club's name (golf/clubtitle.ts: "Maple Falls Driving Range" before a
+  /** the top bar's title (T235, #690; the concept's): in a golf game the club's name (golf/clubtitle.ts: "Pine Falls Driving Range" before a
    *  range start's first hole, "... Golf Club", "... Golf & Country Club" from tier 4) over "Year 3 • October • Sunny 16°C"; null in a classic
-   *  town game (the old "Maple Falls / Town Builder"). holes: the course's holes with a tee and a pin (the founding chip's), counted here when not given */
+   *  town game (the old "Pine Falls / Town Builder"). holes: the course's holes with a tee and a pin (the founding chip's), counted here when not given */
   titleName(holes: number = this.inviteCheck()?.holes ?? 0): ClubTitle | null {
     const g = this.golf; if (!g) return null;
     const r = this.traffic.round, c = this.traffic.clockTime(performance.now()) - (r.stage !== 'free' ? 1 : 0), range = g.start === 'range';
@@ -9309,7 +9309,7 @@ export class Game {
     this.cam.X = worldX(cs[0]!.x, cs[0]!.y); this.cam.Y = worldY(cs[0]!.x, cs[0]!.y);
     if (this.stampOn) this.stampPending = true;
   }
-  /** A starter Maple Falls showing every road type: highway with a 45° approach, a boulevard, an avenue, a roundabout, lights with slipways, streets and a lane. */
+  /** A starter Pine Falls showing every road type: highway with a 45° approach, a boulevard, an avenue, a roundabout, lights with slipways, streets and a lane. */
   seedTown() {
     const { start } = this.terrain, Ox = clamp(start.x + 32 - 80, 8, MAP - 168), Oy = clamp(start.y + 32 - 80, 8, MAP - 168);
     const net = this.net, byId = (id: string) => LIBRARY.findIndex(i => i.id === id);

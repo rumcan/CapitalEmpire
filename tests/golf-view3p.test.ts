@@ -109,8 +109,8 @@ describe('view3p: the bridge to the view from behind the golfer', () => {
   });
 
   it('seeds from the name, the same every time', () => {
-    assert.equal(seedOf('Maple Falls Golf Club'), seedOf('Maple Falls Golf Club'));
-    assert.notEqual(seedOf('Maple Falls Golf Club'), seedOf('Oak Hill Golf Club'));
+    assert.equal(seedOf('Pine Falls Golf Club'), seedOf('Pine Falls Golf Club'));
+    assert.notEqual(seedOf('Pine Falls Golf Club'), seedOf('Oak Hill Golf Club'));
   });
 });
 
