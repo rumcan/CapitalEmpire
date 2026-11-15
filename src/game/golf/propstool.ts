@@ -19,7 +19,7 @@ import type { RangeScene } from './rangebiz';
 import { turned } from '../lots/preset-art';
 import { objectFacings } from '../object-eight';
 import { facingAt, type ObjectFacing } from '../object-eight-core';
-import { DECOR_BY_KEY, POND_R, SIZE_STEP, clampSize, decorAppeal, decorSpotWhy, familyKey, inPoly, mixPick, sellBack, sizeText, sizedPrice, standsIn, type Box, type DecorGroup, type DecorItem, type DecorSpot, type PropKind } from './decor';
+import { DECOR_BY_KEY, POND_R, SIZE_STEP, clampSize, decorAppeal, decorSpotWhy, familyKey, inPoly, isFlag, mixPick, sellBack, sizeText, sizedPrice, standsIn, type Box, type DecorGroup, type DecorItem, type DecorSpot, type PropKind } from './decor';
 import { discCells, pondAt, pondHasStones, setPondEdge, shorePieces, type Pond, type PondPiece } from './ponds';
 import { KIT_FOUNTAIN } from '../kit';
 
@@ -298,12 +298,12 @@ export class PropsTool {
       range: (px, py) => {
         if (!sc) return '';
         for (const pa of sc.patches) if ((pa.surf === 'concrete' || pa.surf === 'asphaltDark' || pa.surf === 'tee') && inPoly(pa.pts, px, py)) return 'mats';
-        for (const t of sc.targets) if ((t.x - px) ** 2 + (t.y - py) ** 2 <= (t.r + 0.6) ** 2) return 'target';
+        // (#1302: a target green takes a prop as the rest of the range's ground does: a flag, a rock, a marker)
         return '';
       },
       overlaps: b => { for (const p of this.ctx.propsIn(b)) if (p !== ignore && b[0] < p.x1 - 0.05 && b[2] > p.x0 + 0.05 && b[1] < p.y1 - 0.05 && b[3] > p.y0 + 0.05) return this.ctx.propName(p); return ''; },
     };
-    let why = decorSpotWhy(box, spot, standsIn(d, this.where), d.water === 'in');
+    let why = decorSpotWhy(box, spot, standsIn(d, this.where), d.water === 'in', isFlag(d));
     const price = o.price ?? d.price, name = (o.key ? DECOR_BY_KEY.get(o.key)?.name : undefined) ?? d.name;
     if (!why && !ignore && price > this.ctx.money()) why = `Not enough money: it costs $${price.toLocaleString()}`;
     // T257: the size when not 100%, and a mirrored look, in the label
