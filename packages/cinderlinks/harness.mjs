@@ -505,21 +505,22 @@ const HOST_PLAY = String.raw`
     // the owner (2026-11-15: "the green slope indicators only showed up the moment the hole was completed"): on his putt turn the host's green is a mesh
     // (lines between the lattice's neighbours, coloured by steepness) costing under 0.3 ms a frame; once the round is over nothing is drawn, the view's
     // own grid least of all
-    { const R = 12, lat = []; for (let j = -R; j <= R; j++) for (let i = -R; i <= R; i++) { const x = p0[0] + 0.37 + i, y = p0[1] + 0.61 + j; if (Math.hypot(i, j) <= R && matAt(x * S, y * S) === M_GREEN) lat.push(x, y, 0.6, -0.8, (i + j) & 1 ? 0.004 : 0.03); }
+    { const R = 12, lat = []; for (let j = -R; j <= R; j++) for (let i = -R; i <= R; i++) { const x = p0[0] + 0.37 + i, y = p0[1] + 0.61 + j; if (Math.hypot(i, j) <= R && matAt(x * S, y * S) === M_GREEN) lat.push(x, y, 0.6, -0.8, i > 0 ? 0.03 : 0.001); }   // (the right half 3%, the left flat)
       const m = turn([p0[0] - ux * 6, p0[1] - uy * 6], 0); m.green = Object.assign({}, m.green, { pts: lat, step: 1 }); hostMessage(m); step(4); jumpToBall(); step(6); render();
       const lit = () => { ob.fill(0); drawPuttGrid(); let n = 0, l = 0; for (let i = 0; i < ob.length; i++) if (ob[i]) { n++; if (ob[i] >>> 24 === GRID_LINE_A) l++; } return [n, l]; };
       const M = hostPuttPts(HP.turn.green, hostS()), [px, lines] = lit();
       for (let k = 0; k < 20; k++) drawPuttGrid(); let ms = 1e9; for (let r = 0; r < 15; r++) { const t0 = performance.now(); for (let k = 0; k < 10; k++) drawPuttGrid(); ms = Math.min(ms, (performance.now() - t0) / 10); }
       const keep = [HP.turn, HP.over, ball.state]; HP.turn = null; HP.over = true; ball.state = 0; const [after] = lit(); HP.turn = keep[0]; HP.over = keep[1]; ball.state = keep[2]; ob.fill(0);
-      // 2026-11-15: the lines neutral (one faint white whatever the slope); the slope as dots that flow downhill: they move with the clock, faster where steeper,
-      // and are coloured by it (the lattice above: every other point flat, the rest 3%)
-      const pgKeep = pgNow, col = () => { ob.fill(0); drawPuttGrid(); const s = new Set(); for (let i = 0; i < ob.length; i++) if (ob[i] && ob[i] >>> 24 === 255) s.add(ob[i] & 0xffffff); return s; };
-      pgNow = () => 10; const c1 = col(), d1 = M.dots, at1 = Uint32Array.from(ob); pgNow = () => 10.25; col(); let moved = 0; for (let i = 0; i < ob.length; i++) if ((ob[i] >>> 24 === 255) !== (at1[i] >>> 24 === 255)) moved++; pgNow = pgKeep;
+      // 2026-11-15 (the owner: "the dots have to be on the grid", "the grid ... green and red ... like a heat map"): the lines coloured by the slope (the flat left half green,
+      // the 3% right half another colour); white dots, all in step, that move with the clock and each ride a line of the lattice (its run ends on the line to a neighbour)
+      const pgKeep = pgNow, dotPx = () => { ob.fill(0); drawPuttGrid(); const a = []; for (let i = 0; i < ob.length; i++) if (ob[i] === PG_DOT) a.push(i); return a; };
+      pgNow = () => 10; const p1 = dotPx(), d1 = M.dots; pgNow = () => 10 + 0.5 / PG_BEAT; const p2 = new Set(dotPx()); let moved = 0; for (const i of p1) if (!p2.has(i)) moved++; pgNow = pgKeep;
       const lineCols = new Set(); for (let i = 0; i < ob.length; i++) if (ob[i] >>> 24 === GRID_LINE_A) lineCols.add(ob[i] & 0xffffff);
-      info.puttDots = { dots: d1, colours: c1.size, moved, lineColours: lineCols.size, flatSp: +M.sp[0].toFixed(3), steepSp: +Math.max(...M.sp).toFixed(3) };
-      if (!(d1 > 100) || c1.size < 2 || moved < 50) errs.push('host green: the slope dots do not flow downhill in its colours (' + JSON.stringify(info.puttDots) + ')');
-      if (lineCols.size !== 1) errs.push('host green: the grid lines are not one neutral colour (' + JSON.stringify(info.puttDots) + ')');
-      if (!(Math.max(...M.sp) > 4 * Math.min(...M.sp))) errs.push('host green: a steeper slope does not flow faster (' + JSON.stringify(info.puttDots) + ')');
+      let offGrid = 0, riders = 0; for (let p = 0; p < M.n; p++) { const q = M.nb[p]; if (q < 0) continue; riders++; const ax = M.xyz[p * 3], ay = M.xyz[p * 3 + 1], bx = M.xyz[q * 3] - ax, by = M.xyz[q * 3 + 1] - ay, rx = M.run[p * 3] - ax, ry = M.run[p * 3 + 1] - ay; let isLine = false; for (let k = 0; k < M.e.length; k += 2) if ((M.e[k] === p && M.e[k + 1] === q) || (M.e[k] === q && M.e[k + 1] === p)) { isLine = true; break; } if (Math.abs(bx * ry - by * rx) > 1e-6 * Math.hypot(bx, by) || rx * bx + ry * by < 0 || !isLine) offGrid++; }
+      info.puttDots = { dots: d1, moved, lineColours: lineCols.size, riders, offGrid, inStep: M.ph.every((v) => v === M.ph[0]) && M.sp.every((v) => v === M.sp[0]) };
+      if (!(d1 > 100) || moved < 30) errs.push('host green: the slope dots do not move along the grid (' + JSON.stringify(info.puttDots) + ')');
+      if (lineCols.size < 2) errs.push('host green: the grid lines are not a heat map of the slope (' + JSON.stringify(info.puttDots) + ')');
+      if (!(riders > 50) || offGrid || !info.puttDots.inStep) errs.push('host green: the slope dots leave the grid lines or are not in step (' + JSON.stringify(info.puttDots) + ')');
       info.puttGrid = { pts: M.n, lines: M.e.length / 2, px, linePx: lines, gridMs: +ms.toFixed(4), afterRound: after };
       if (!(M.e.length / 2 >= M.n)) errs.push('host green: the slope grid is not a mesh (' + JSON.stringify(info.puttGrid) + ')');
       if (!(lines > 300)) errs.push('host green: the slope grid draws no lines on his putt turn (' + JSON.stringify(info.puttGrid) + ')');
