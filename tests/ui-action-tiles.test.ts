@@ -39,7 +39,9 @@ test('every tile id has its WebP, a small 144 px picture, and no picture lacks a
 test('every table of tiles names only tiles that exist', () => {
   const tables = Object.entries(T).filter(([k, v]) => /_TILE$/.test(k) && v && typeof v === 'object' && !Array.isArray(v));
   assert.ok(tables.length >= 8, 'the scan finds the tables');
-  for (const [name, table] of tables) for (const [key, id] of Object.entries(table as Record<string, string>)) assert.ok(ALL.has(id), `${name}.${key}: no tile "${id}"`);
+  // (#1304: the icon tiles, ICON_TILES, are named before they are painted: Icon.tsx keeps the gold icon until each one's WebP is cut)
+  const named = new Set<string>([...ALL, ...T.ICON_TILES]);
+  for (const [name, table] of tables) for (const [key, id] of Object.entries(table as Record<string, string>)) assert.ok(named.has(id), `${name}.${key}: no tile "${id}"`);
 });
 
 test('every range upgrade has a tile that exists, and so has each branch of the ball room tree (J13, #1277)', () => {

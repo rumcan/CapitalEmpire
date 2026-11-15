@@ -19,6 +19,7 @@ import { SIZE as LOT_SIZE } from '../lots/lots';
 import { NEAR_M } from '../ext/hole-wizard';
 import { playWhy } from './parcels';
 import { TILE_M } from './types';
+import { saleSignId } from './second-hand';
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------
 // the numbers (the owner's balance is one line each)
@@ -57,8 +58,8 @@ const STEP = 0.25;
 export const ST = { SALE: 0, SOLD: 1, BUILDING: 2, BUILT: 3 } as const;
 export type Stage = 0 | 1 | 2 | 3;
 export const STAGE_NAME: readonly string[] = ['For sale', 'Sold', 'Being built', 'Built'];
-/** the For Sale post a plot for sale shows (a stand-in sign: docs/GOLF-SPRITES.md asks for the real one) */
-export const SALE_SIGN = 'newprop:shanty-signpost';
+/** the For Sale post a plot for sale shows (#1300: never the shanty signpost: the second-hand sale sign once painted, else the plain direction signpost) */
+export const SALE_SIGN = saleSignId();
 
 /** a laid lot: its id, its frame (the town lot's: origin o at the front-left corner at the verge's edge, u along the street, n away from it, w x d tiles),
  *  its stage and the game month (a fractional count, the engine's golfMonthAt) the stage began (at) and ends (after: Infinity for built), the seed its house

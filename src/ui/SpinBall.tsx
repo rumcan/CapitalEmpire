@@ -5,6 +5,7 @@
 import { useEffect, useRef } from 'react';
 import type { Game } from '../game/engine';
 import { CLUB_NAME, SPIN } from '../game/golf/play';
+import { paintedArt } from './painted-art';
 
 /** the canvas (CSS px), the ball's centre and radius */
 const W = 136, H = 136, CX = 68, CY = 66, R = 50;
@@ -17,14 +18,21 @@ function drawBall(c: HTMLCanvasElement, v: View, pulse: number) {
   if (c.width !== Math.round(W * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
   const ctx = c.getContext('2d'); if (!ctx) return;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
-  // the ball: lit from the upper right (the game's sun), a cool shade at the lower left
-  const g = ctx.createRadialGradient(CX + R * 0.35, CY - R * 0.4, R * 0.1, CX, CY, R);
-  g.addColorStop(0, '#ffffff'); g.addColorStop(0.55, '#eef2f6'); g.addColorStop(1, '#b8c2cf');
-  ctx.beginPath(); ctx.arc(CX, CY, R, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+  // the ball: #1304 the painted ball (src/assets/ui/art/spin-ball.webp) when it has landed, else the drawn one (the old look): lit from the upper right
+  // (the game's sun), a cool shade at the lower left
+  const painted = paintedArt('spin-ball');
+  if (painted) {
+    ctx.drawImage(painted, CX - R, CY - R, R * 2, R * 2);
+    ctx.beginPath(); ctx.arc(CX, CY, R, 0, Math.PI * 2);
+  } else {
+    const g = ctx.createRadialGradient(CX + R * 0.35, CY - R * 0.4, R * 0.1, CX, CY, R);
+    g.addColorStop(0, '#ffffff'); g.addColorStop(0.55, '#eef2f6'); g.addColorStop(1, '#b8c2cf');
+    ctx.beginPath(); ctx.arc(CX, CY, R, 0, Math.PI * 2); ctx.fillStyle = g; ctx.fill();
+  }
   ctx.lineWidth = 1.5; ctx.strokeStyle = v.air ? (v.room ? '#fbbf24' : '#f87171') : 'rgba(15,23,42,0.6)'; ctx.stroke();
-  // dimples (a fixed scatter)
+  // dimples (a fixed scatter; the painted ball has its own)
   ctx.fillStyle = 'rgba(100,116,139,0.18)';
-  for (let k = 0; k < 26; k++) {
+  for (let k = 0; !painted && k < 26; k++) {
     const a = k * 2.399963, rr = R * 0.88 * Math.sqrt((k + 0.5) / 26), x = CX + rr * Math.cos(a), y = CY + rr * Math.sin(a);
     ctx.beginPath(); ctx.arc(x, y, 2.2, 0, Math.PI * 2); ctx.fill();
   }

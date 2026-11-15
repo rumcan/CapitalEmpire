@@ -25,14 +25,18 @@ export const SHEET_NAMES = {
   v12: [['stamped-balls', 'swing-video', 'fans-lemonade', 'weighted-clubs'], ['launch-monitor', 'ball-tracker', 'floodlights', 'bays-24'], ['pro-shop', 'coffee-kiosk', 'range-till', 'home-caravan']],
   // J13, the props menu (#1284's tiles half) and the Texture Painter: the Props flyout's entries and the painter's button
   v13: [['all-props', 'natural-props', 'man-made-props', 'desert-oasis'], ['trees-mixed', 'lake-props', 'fences', 'signs'], ['fountain', 'texture-painter', 'clear-plants', 'nursery-plants']],
+  // #1304: the old gold icons still on screen (Icon.tsx; tool-tiles.ts ICON_TILE): the top bar's chips, the buttons, the map tools and roads (queue-icons1304.json)
+  v14: [['rating-leaf', 'club-house', 'golfers', 'golf-bag'], ['takings', 'trophy', 'calendar', 'card-deck'], ['compass', 'hole-flag', 'buildings', 'reputation']],
+  v15: [['pause', 'play', 'fast', 'skip'], ['rewind', 'forward', 'zoom-in', 'zoom-out'], ['info', 'close', 'up', 'down']],
+  v16: [['left', 'right', 'swap', 'road'], ['one-way', 'sidewalk', 'junction', 'bus'], ['wooded-road', 'locked', 'windsock', 'new-look']],
 };
 const hash = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 export function sheetVersion(source, explicit) {
-  const detected = /^golf-build-tool-tiles-sheet-(v(?:1[0-3]|[1-9]))\.png$/i.exec(path.basename(source))?.[1].toLowerCase();
+  const found = /^golf-build-tool-tiles-sheet-(v\d+)\.png$/i.exec(path.basename(source))?.[1].toLowerCase(), detected = found && SHEET_NAMES[found] ? found : undefined;
   if (explicit && !SHEET_NAMES[explicit]) throw Error('Unknown menu sheet version: ' + explicit);
   if (detected && explicit && detected !== explicit) throw Error(`Sheet filename is ${detected}, not ${explicit}`);
   const version = explicit ?? detected;
-  if (!version) throw Error('Unrecognised sheet filename: specify --version v1 to v13; never guess the subject order');
+  if (!version) throw Error(`Unrecognised sheet filename: specify --version ${Object.keys(SHEET_NAMES).join(', ')}; never guess the subject order`);
   return version;
 }
 
@@ -40,9 +44,11 @@ export function sheetVersion(source, explicit) {
 export async function prepUiToolTiles({ source, version, outputDir = 'src/assets/ui/tiles', size = 144, manifestFile } = {}) {
   version = sheetVersion(source, version);
   const names = SHEET_NAMES[version], bytes = await fs.readFile(source);
-  const { data, info } = await sharp(bytes).removeAlpha().raw().toBuffer({ resolveWithObject: true });
-  const W = info.width, H = info.height, C = info.channels, ground = [data[0], data[1], data[2]];
-  const on = (x, y) => { const i = (y * W + x) * C; return Math.abs(data[i] - ground[0]) + Math.abs(data[i + 1] - ground[1]) + Math.abs(data[i + 2] - ground[2]) > 24; };
+  // the cards on a flat ground colour (the older sheets: charcoal), or (#1304, the owner's rule: ChatGPT paints transparent PNGs) on a transparent ground
+  const { data, info } = await sharp(bytes).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const W = info.width, H = info.height, C = info.channels, ground = [data[0], data[1], data[2]], clear = data[3] < 64;
+  const on = clear ? (x, y) => data[(y * W + x) * C + 3] > 128
+    : (x, y) => { const i = (y * W + x) * C; return Math.abs(data[i] - ground[0]) + Math.abs(data[i + 1] - ground[1]) + Math.abs(data[i + 2] - ground[2]) > 24; };
   function bands(n, m, hit) {
     const out = []; let inside = false, start = 0;
     for (let a = 0; a <= n; a++) {
