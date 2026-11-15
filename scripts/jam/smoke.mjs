@@ -299,8 +299,7 @@ try {
     await click('title', 'Continue', page.locator('[data-testid="title-continue"]'), { wait: 800 });
     await page.waitForFunction(() => !document.querySelector('[data-testid="title-card"]'), null, { timeout: 10000 });
     row('title', 'back in the game', 'PASS', 'the title card gone after Continue');
-  } catch (e) { row('title', 'Exit to main menu and Continue', 'FAIL', String(e.message ?? e).split('
-')[0]); }
+  } catch (e) { row('title', 'Exit to main menu and Continue', 'FAIL', String(e.message ?? e).split('\n')[0]); }
   if ((await page.locator('[data-testid="radio-play"]').getAttribute('aria-pressed')) === 'true') await click('radio', 'Radio (off)', page.locator('[data-testid="radio-play"]')); // (the card's own Play may have turned it off already)
   // ---- the speeds (#1275: the bar is collapsed by default: its chevron shows every speed, and shuts them again)
   await click('top bar', 'speed bar: show every speed', page.locator('[data-testid="speed-toggle"]'));
