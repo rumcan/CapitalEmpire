@@ -1,3 +1,55 @@
 {
-  "voices": {}
+ "voices": {
+  "tour-town-1175c541": {
+   "file": "audio/voice/tour-town-1175c541.mp3",
+   "bytes": 137633,
+   "seconds": 22.8
+  },
+  "tour-room-571913e8": {
+   "file": "audio/voice/tour-room-571913e8.mp3",
+   "bytes": 64481,
+   "seconds": 10.6
+  },
+  "tour-golf-463b895f": {
+   "file": "audio/voice/tour-golf-463b895f.mp3",
+   "bytes": 76145,
+   "seconds": 12.6
+  },
+  "tour-town-535a00fb": {
+   "file": "audio/voice/tour-town-535a00fb.mp3",
+   "bytes": 69665,
+   "seconds": 11.5
+  },
+  "tour-roads-5af12216": {
+   "file": "audio/voice/tour-roads-5af12216.mp3",
+   "bytes": 114594,
+   "seconds": 19
+  },
+  "tour-room-e41b178f": {
+   "file": "audio/voice/tour-room-e41b178f.mp3",
+   "bytes": 89105,
+   "seconds": 14.7
+  },
+  "tour-golf-83d86c85": {
+   "file": "audio/voice/tour-golf-83d86c85.mp3",
+   "bytes": 66353,
+   "seconds": 11
+  },
+  "guide-range-place-b1e50e07": {
+   "file": "audio/voice/guide-range-place-b1e50e07.mp3",
+   "bytes": 73849,
+   "seconds": 12.2
+  },
+  "guide-range-lot-4e6617f9": {
+   "file": "audio/voice/guide-range-lot-4e6617f9.mp3",
+   "bytes": 57575,
+   "seconds": 9.5
+  },
+  "guide-range-buckets-f5500e74": {
+   "file": "audio/voice/guide-range-buckets-f5500e74.mp3",
+   "bytes": 128427,
+   "seconds": 21.3
+  }
+ },
+ "engine": "Kokoro-82M am_michael (Apache-2.0)"
 }
