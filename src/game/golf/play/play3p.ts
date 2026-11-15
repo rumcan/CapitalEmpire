@@ -20,7 +20,7 @@ import { ALL_EARNED, type Earned } from './unlocks';
 import { green3p, puttAim, type Green3p } from './green3p';
 import { playRound, standings } from './round';
 import { teeTimes } from './field';
-import { envOf } from './conditions';
+import { envOf, type ShotEnv } from './conditions';
 import type { ShotSkill } from './shot';
 import type { HeightAt } from './roll';
 import type { WindNow } from './wind';
@@ -149,8 +149,9 @@ export class Play3p {
   readonly carts: CartPlay | null;
   /** T443: the boost charges used on each hole (by index) */
   private used = new Map<number, number>();
-  /** #1336: the input whose flight was sent (`fly`), waiting for the spin's totals at the landing (null: none) */
-  private pend: ViewInput | null = null;
+  /** #1336: the input whose flight was sent (`fly`), waiting for the spin's totals at the landing (null: none). #1368: with the conditions it was struck in
+   *  (the wind of that moment): the landing plays it in them, not in the wind seconds later, so the stroke's flight is the one flown */
+  private pend: { vi: ViewInput; env: ShotEnv | null } | null = null;
   /** T423: the green sent with the turn in hand (null: not on the green) */
   private green: Green3p | null = null;
   private get earn(): Earned { return this.o.earned ?? ALL_EARNED; }
@@ -210,8 +211,8 @@ export class Play3p {
     // #1336: a full shot struck with `fly`: its flight only, and the input kept for the landing; the input sent then plays the kept one with its taps in the air
     if (vi0.fly) { const m = this.fly(vi0, t); if (m) return [m]; }
     const pend = this.pend; this.pend = null;
-    const vi = pend && !vi0.fly ? withTaps(pend, vi0) : vi0;
-    const input = this.owned(vi, t, true);
+    const kept = pend && !vi0.fly ? pend : null, vi = kept ? withTaps(kept.vi, vi0) : vi0;
+    const input = this.owned(vi, t, true, kept ? kept.env : undefined);
     const mine = this.drv.play(input);
     const out: HostMsg[] = [];
     this.next(out, { shot: mine, input }, t.holeIdx);
@@ -239,18 +240,19 @@ export class Play3p {
     const { fly: _f, ...v1 } = vi; void _f;
     const input = this.owned(v1, t, false), shot = this.drv.peek(input);
     if (!shot) return null;
-    this.pend = v1;
+    this.pend = { vi: v1, env: input.env ?? null };
     return airOnly(this.strokeMsg(shot, input));
   }
 
   /** the view's input as the model plays it: the aim in tiles, the conditions and the model's version filled in, and what he has not earned taken out (a
    *  shape's curve or flight, side spin, backspin, clicks in the air, a boost with no charge left on the hole); `spend`: a boost uses a charge. #1336: a boost past
-   *  TAP_BOOST.plain is the Power Mash charge's: without a charge left it is held to the plain cap */
-  private owned(vi0: ViewInput, t: OwnerTurn, spend: boolean): OwnerInput {
+   *  TAP_BOOST.plain is the Power Mash charge's: without a charge left it is held to the plain cap. #1368: `env0`, the conditions to play it in (the strike's, for
+   *  the input at the landing); absent, the conditions now */
+  private owned(vi0: ViewInput, t: OwnerTurn, spend: boolean, env0?: ShotEnv | null): OwnerInput {
     const { fly: _f, ...vi } = vi0; void _f;
     const e = this.earn, putting = vi.club === 'putter', aim0 = fromView(vi.aim, this.centre);
     const aim = putting && this.green ? puttAim(t.ball, aim0, this.green.startDeg) : aim0; // (T423: a putt is aimed along the read; the model judges it at the pin's line)
-    const env = putting ? null : envOf(this.windNow(), this.view.kindAt, this.o.height ?? null, t.ball, t.lie, aim);
+    const env = putting ? null : env0 !== undefined ? env0 : envOf(this.windNow(), this.view.kindAt, this.o.height ?? null, t.ball, t.lie, aim);
     const { shape: sh0, spin: sp0, swing: sw0, ...rest } = vi;
     const amt = (v: unknown, lo: number, hi: number) => { const n = Number(v); return Number.isFinite(n) ? Math.round(Math.max(lo, Math.min(hi, n)) * 100) / 100 : 0; };   // (J5f: a continuous amount, held to the side he has earned)
     const shape = sh0 ? { curve: amt(sh0.curve, e.draw ? -1 : 0, e.fade ? 1 : 0), flight: amt(sh0.flight, e.low ? -1 : 0, e.high ? 1 : 0) } : null;

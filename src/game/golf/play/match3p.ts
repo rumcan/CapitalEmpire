@@ -11,7 +11,7 @@ import { MODEL_V } from './live';
 import { yourTurn, rowOf, type YourRound } from './yours';
 import { holeDecided, matchNextHole, matchTurn, nameSeed, oppShot, playMatchYours, scoreOf } from './match';
 import type { EnvFor } from './conditions';
-import { envOf } from './conditions';
+import { envOf, type ShotEnv } from './conditions';
 import type { ShotSkill } from './shot';
 import type { HeightAt } from './roll';
 import type { WindNow } from './wind';
@@ -50,7 +50,7 @@ export class Match3p {
   /** a count of the strokes sent: the actors lists and the strokes carry it as their minute (a match has no clock of its own) */
   private tick = 0;
   /** #1336: the input whose flight was sent (`fly`), waiting for the taps at the landing (null: none) */
-  private pend: ViewInput | null = null;
+  private pend: { vi: ViewInput; env: ShotEnv | null } | null = null;   // (#1368: with the conditions it was struck in: the landing plays it in them)
   private readonly centre: Pt;
 
   constructor(private readonly o: Match3pOpts) {
@@ -79,13 +79,13 @@ export class Match3p {
     if (vi0.holeIdx !== t.holeIdx || vi0.stroke !== t.stroke) { this.pend = null; return [this.turnMsg(t)]; }
     // #1336: a full shot struck with `fly`: its flight only (playMatchYours is pure: the round it returns is dropped), the input kept; the one sent at the landing plays it with its taps
     const fly = !!vi0.fly && vi0.club !== 'putter' && !vi0.scr, pend = this.pend; this.pend = null;
-    const vi = fly ? vi0 : pend ? withTaps(pend, vi0) : vi0;
+    const vi = fly ? vi0 : pend ? withTaps(pend.vi, vi0) : vi0;
     const aim = fromView(vi.aim, this.centre), putting = vi.club === 'putter';
-    const env = putting ? null : envOf(this.windNow(), this.o.view.kindAt, this.o.height ?? null, t.ball, t.lie, aim);
+    const env = putting ? null : !fly && pend ? pend.env : envOf(this.windNow(), this.o.view.kindAt, this.o.height ?? null, t.ball, t.lie, aim);   // (#1368: the landing in the strike's wind, not the wind seconds later)
     const { holeIdx: _h, stroke: _s, fly: _f, ...rest } = vi; void _h; void _s; void _f;
     const input: Omit<OwnerInput, 'holeIdx' | 'stroke'> = { ...rest, aim, v: MODEL_V, ...(env ? { env } : {}) };
     if (fly) {
-      const { fly: _g, ...kept } = vi0; void _g; this.pend = kept;
+      const { fly: _g, ...kept } = vi0; void _g; this.pend = { vi: kept, env };
       const p = playMatchYours(this.o.view, this.r, this.o.skills, input, this.o.seed), n = this.o.view.holes[p.shot.hole]?.n ?? p.shot.hole + 1;
       const m = shotMsg({ shot: { ...p.shot, golfer: OWNER_M3P, t: this.tick + 1 }, input, skills: this.o.skills, hole: n, view: this.o.view, height: this.o.height ?? null, wind: this.windNow() }, this.centre);
       return [airOnly({ ...m, at: this.tick + 1 })];

@@ -14,7 +14,7 @@ import { RAIL } from '../src/ui/rail-items';
 import { menuOf, type MenuCtx, type MenuRow } from '../src/ui/flyout-menu';
 import { propMenuLists } from '../src/game/golf/decor';
 
-const DIR = 'src/assets/ui/tiles', ALL = new Set<string>([...TOOL_TILES, ...ACTION_TILES, ...PROP_TILES]);
+const DIR = 'src/assets/ui/tiles', ALL = new Set<string>([...TOOL_TILES, ...ACTION_TILES, ...PROP_TILES, ...T.ICON_TILES]);   // (#1304: the icon tiles, sheets v14 to v16)
 
 /** the tiles cut but worn by nothing yet: each commit that places one takes it off this list (J13, #1277). the props tiles that no menu row wears wait for #1284's natural / man-made restructure of the Props menu (another coder's) and the Texture
  *  Painter's button (#1282's rename) */

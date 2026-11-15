@@ -33,6 +33,30 @@ export const DESERT_TINT_LOOK: readonly { a: number; mul?: string }[] = [{ a: 0 
  *  and the fallen leaves' piles (leaf-atlas.ts: dozens of sprites a pile) a little less (at the road litter's size a pile of them was one grey stain), and they cast a lighter shadow */
 export const DESERT_LITTER_SCALE = 1.7, DESERT_FALL_SCALE = 1.15, DESERT_SHADOW_A = 0.05; // (a soft clump of sand has a soft silhouette: its shadow is a faint one, or it is a grey haze)
 
+// #1311 (the owner, 2026-11-14, of a pale dry-grass patch on the orange sand beside a palm: "remove this grass decal from the desert floor but leave it on the
+// roads"): in the desert the floor (open ground, the lots, under the yards' plants) lays no dry grass: the lots' grass-tuft decals (lot-decals.ts group 'tufts',
+// 'decal-02-dry-golden-grass' among them: never repainted for the desert, a pale straw patch on the sand) stand only in the verge in front of a lot, by the road,
+// and the scatter on open ground (renderer drawLitter) leaves out the sheets' straw tufts; the roads' litter (the gutters' clumps and strays, the sidewalk's edge)
+// and the kerb's dry tufts keep theirs. Outside the desert nothing changes.
+/** #1311: the LEAVES cells that hold a straw tuft on the desert's sheets (desertLeafSheet and its grain sheet: the long cells with i % 4 === 2) */
+export const STRAW_CELLS: ReadonlySet<number> = new Set(LEAVES.filter(l => !l.round && l.i % 4 === 2).map(l => l.i));
+/** #1311: the lot decal groups the desert floor leaves out (they stay in a lot's verge, by the road) */
+export const DESERT_FLOOR_SKIP_GROUPS: readonly string[] = ['tufts'];
+/** #1311: whether a litter cell is laid on the open floor (renderer drawLitter's scatter on open ground): in the desert, no straw tuft. The roads' litter lays every cell */
+export const floorLitterCell = (desert: boolean, i: number): boolean => !desert || !STRAW_CELLS.has(i);
+/** #1311: how far a lot's marks patch reaches past the lot (lots/compose-core.ts: the lot's quad grown 2 tiles each way, the front edge first) */
+export const MARK_PAD = 2;
+/** #1311: whether a mark at (x, y) lies in front of its lot, in the verge by the road: less than MARK_PAD along the lot's depth from the marks patch's front edge
+ *  (pts: its quad, x0 y0 at the front left, x3 y3 at the back left) */
+export function markOnVerge(pts: readonly number[], x: number, y: number): boolean {
+  if (pts.length < 8) return false;
+  const bx = pts[6]! - pts[0]!, by = pts[7]! - pts[1]!, L = Math.hypot(bx, by); if (!(L > 1e-6)) return false;
+  return ((x - pts[0]!) * bx + (y - pts[1]!) * by) / L < MARK_PAD;
+}
+/** #1311: whether a lot mark of decal group `group` is drawn: in the desert a grass tuft only in the verge (onVerge), never on the lot's floor; every other mark,
+ *  and every mark outside the desert, as before */
+export const lotMarkShown = (desert: boolean, group: string, onVerge: boolean): boolean => !desert || onVerge || !DESERT_FLOOR_SKIP_GROUPS.includes(group);
+
 const pick = <T>(a: readonly T[], r: () => number): T => a[Math.floor(r() * a.length) % a.length]!;
 const hex = (h: string): [number, number, number] => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
 const rgba = (h: string, a: number): string => { const [r, g, b] = hex(h); return `rgba(${r},${g},${b},${a})`; };
