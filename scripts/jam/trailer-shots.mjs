@@ -101,6 +101,14 @@ export async function record(env) {
     await ready(); await wait(4000); await closeCards();
     // (a town event's leaderboard has no close: the club runs on until it is over, as it would for a player)
     for (let k = 0; k < 45 && await G(() => !!document.querySelector('[data-testid="leaderboard"]')); k++) { await speed(20); await wait(2000); }
+    // and on to a month from spring to late summer with no event card (the golf view draws the season: in winter the rough is frosted white)
+    const months = WORLD.view?.months ?? ['Apr', 'May', 'Jun', 'Jul', 'Aug'];
+    for (let k = 0; k < 120; k++) {
+      const s = await G(() => ({ m: document.body.innerText.match(/\b([A-Z][a-z]{2}) 19\d\d\b/)?.[1] ?? '', ev: !!document.querySelector('[data-testid="leaderboard"]') }));
+      if (!s.ev && months.includes(s.m)) break;
+      await speed(20); await closeCards(); await wait(1500);
+    }
+    console.log('   club at', await G(() => document.body.innerText.match(/\b[A-Z][a-z]{2} 19\d\d\b/)?.[0]));
     await closeCards(); await speed(1);
   }
   // ---------- the golf view
@@ -136,7 +144,7 @@ export async function record(env) {
   }
   const leave = async () => { await page.keyboard.press('Escape'); await wait(1500); await G(() => { const g = window.__game; if (g.view3pHole !== null) g.close3p(); }); await cursor(true); };
   /** the ball at rest after a stroke: the next turn (its stroke count moved on from prev) */
-  const ballRest = async (prev = null, ms = 30000) => { await wait(1500); for (let k = 0; k < ms / 250; k++) { const s = await turnNow().catch(() => null); if (s && (prev === null || s.stroke !== prev)) return s; await wait(250); } return null; };
+  const ballRest = async (prev = null, ms = 30000) => { await wait(1500); for (let k = 0; k < ms / 250; k++) { const s = await turnNow().catch(() => null); if (s && (prev === null || s.stroke !== prev)) return s; if (k > 8 && await F('return typeof holed !== "undefined" && !!holed').catch(() => false)) return null; /* (in the cup) */ await wait(250); } return null; };
 
   const C = WORLD.view ?? {};
   const takes = +opt('takes', 3);
@@ -307,7 +315,12 @@ export async function record(env) {
     });
     // ---------------- the town: traffic in its streets, close (the owner: "how traffic actually works")
     await shot('traffic', async () => {
-      await closeCards(); const c = await G(() => window.__game.golf.town); await speed(1);
+      await closeCards(); await speed(1);
+      // (the town's built houses: their middle, where its streets and its cars are; the town's seed point can be an empty field)
+      const c = await G(() => { const g = window.__game, pts = []; for (const l of g.traffic.lots.values()) if (l.o && (l.level ?? 0) > 0) pts.push({ x: l.o[0], y: l.o[1] });
+        const m = pts.length ? { x: pts.reduce((s, p) => s + p.x, 0) / pts.length, y: pts.reduce((s, p) => s + p.y, 0) / pts.length } : g.golf.town;
+        let best = null; for (const n of g.net.nodes.values()) if (n.segs.length >= 3) { const d = Math.hypot(n.x - m.x, n.y - m.y); if (!best || d < best.d) best = { x: n.x, y: n.y, d }; } // (the junction nearest the houses)
+        return best && best.d < 120 ? best : m; });
       const o = C.trafficOff ?? [0, 0], z = C.trafficZoom ?? 0.42;
       await cam(c.x + o[0], c.y + o[1], z); await wait(2500);
       await start('traffic'); await wait(2500); await cam(c.x + o[0] + 12, c.y + o[1] - 6, z * 1.1, 6000); await wait(6200); await stop();
