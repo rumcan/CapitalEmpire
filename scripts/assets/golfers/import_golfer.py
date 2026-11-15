@@ -79,8 +79,15 @@ def figures(path, tol, soft, grid=(3, 3)):
     """the figures of a cols x rows picture (the sheet's 3x3, a clip's 4x3 or 4x2), in reading order: each an RGBA image cropped to its pieces
     (a club's thin shaft may come apart from the hands: every piece goes to the cell its middle is in)"""
     cols, rows = grid
-    im = Image.open(path).convert('RGB'); rgb = np.asarray(im).astype(np.float32)
-    fg, a, bg = key_out(rgb, tol, soft)
+    src = Image.open(path)
+    rgba = np.asarray(src.convert('RGBA')).astype(np.float32); rgb = rgba[..., :3]
+    al = rgba[..., 3] / 255.0
+    if src.mode in ('RGBA', 'LA', 'PA') and (al < 0.05).mean() > 0.2:
+        # a picture with its own alpha (ChatGPT's transparent PNGs, the owner 2026-11-14): its alpha is the figure, nothing keyed (keying a transparent
+        # picture's black ate a dark navy shirt, 2026-11-15)
+        fg, a, bg = rgb, al, np.zeros(3, np.float32)
+    else:
+        fg, a, bg = key_out(rgb, tol, soft)
     h, w = a.shape
     lab, sizes = components(a > 0.5)
     big = (max(200, int(sizes[1:].max() * 0.004)) if grid == (3, 3) else 60) if len(sizes) > 1 else 200   # specks below this are noise
