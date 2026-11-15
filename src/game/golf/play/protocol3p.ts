@@ -19,6 +19,7 @@ import type { FeaturesFile } from './features3p';
 import type { Earned } from './unlocks';
 import type { Green3p } from './green3p';
 import type { LieGrid } from './lies3p';
+import type { LastBall } from './launch';
 
 /** the protocol's version: every message carries it, and a message of another version is refused (isHostMsg / isViewMsg) */
 export const PROTOCOL_V = 1;
@@ -46,7 +47,9 @@ export type CourseType = 'public' | 'private' | 'tour' | 'links';
 /** T447: the times of day the view can light a course at: golden hour (the default), day, dusk and night (night-golf events only) */
 export type Time3p = 'golden' | 'day' | 'dusk' | 'night';
 /** the times a course itself can be set to (the hole card's choice); dusk and night come only from a round */
-export const COURSE_TIMES_3P = [['golden', 'Golden hour'], ['day', 'Day']] as const;
+export const COURSE_TIMES_3P = [['day', 'Day'], ['golden', 'Golden hour'], ['dusk', 'Dusk'], ['night', 'Night']] as const;   // (the owner, 2026-11-15: "add the other time of day options": all four lights the view draws)
+/** a few words on each time of day (the picker's hint) */
+export const COURSE_TIME_HINT: Readonly<Record<CourseTime3p, string>> = { day: 'Full daylight, the sun high', golden: 'The low gold light of late afternoon (the default)', dusk: 'The sun down, the sky purple and fading', night: 'Under the stars, the course lit by lamps' };
 export type CourseTime3p = typeof COURSE_TIMES_3P[number][0];
 
 /** the course: the course file (export3p.ts, T412: shapes in metres and the packed height grid; typed loosely until that exporter lands), the
@@ -201,7 +204,11 @@ export interface PracticeMsg { v: 1; t: 'practice'; place: 'range' | 'short';
   /** J6b: the junk pile the last ball hit, to say ("Hit the old car!"; absent: none) */
   hit?: string;
   /** J6b: the range's own flags stand among the course's things as the game's pictures: the view draws only their distance labels (absent: it draws flags too) */
-  pics?: true }
+  pics?: true;
+  /** #1344: the ball just played, once, in the message after it (launch.ts lastBall: carry, roll, total and offline in metres, ball and club speed in mph and the smash, the launch,
+   *  apex, backspin and side spin, a putt's length, leave and line, and one or two tips). The view shows it top centre once the ball rests, until the next ball. Absent: no new ball
+   *  (a pick, the first message; an older host) */
+  last?: LastBall }
 
 export type HostMsg = CourseMsg | ActorsMsg | BoardMsg | MatchMsg | TurnMsg | ShotMsg | HoleEndMsg | PreviewMsg | ClockMsg | LeaveMsg | LiesMsg | PracticeMsg;
 

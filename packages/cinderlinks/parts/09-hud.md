@@ -219,11 +219,14 @@ R: J8: and each club tab wears its club's painted tile (club-driver, club-wood, 
 Check: function clubTile(
 R: 2026-11-15 (the owner: "Why not make the draw and fade like normal golf games where you just move the dot on the ball?"): in host mode the curve and the flight (J5f's amounts, -1 to 1) are set by dragging a dot on a ball: left a draw, right a fade, up high, down low; the painted draw, fade, high and low tiles sit round it and dim for a side he has not earned; a gold ring marks his limit (his full bend against a scratch golfer's) and the dot stops at it, its edge his full amount; a small arrow beside it previews the shape; Reset (or a double click) is straight. It sends the same shape the sliders sent; Z and X still step through them. Folded under it: how to boost and spin, and Go for it.
 Check: function shapeAmt(
+R: #1344 (the owner: "doesnt say this is locked and i cant use it to draw or fade. it only says the height is still locked"): every side he has not earned shows as locked: its tile dimmed with a small lock badge on it, and that half of the ball greyed and hatched, so the dot plainly cannot go there. While anything is locked a line under the ball always says it, one per group, with what unlocks it (the host's turn.earned.lock: "Draw/fade locked: Accuracy 60 (you have 48) · practise Shot shaping", "High/low locked: Touch 60 (you have 52) · practise Flight"; an older host's why); nothing locked, no line. A drag onto a locked side is refused: the dot stays at the middle that way, the ball shakes and the lock line flashes. The gold ring is said plainly: "Gold ring: the most you can bend it (8.0 m; a pro bends 10.7 m)".
+Check: function hostShapeLocks(
+Check: function shapeRefused(
 Check: function hostShapeAt(
 R: 2026-11-15 (the owner: "the weird circles", "these are drawn so badly"): the aim is one clean line of steady width from the ball to one ring lying on the ground where the ball is predicted to land (a true circle projected through the camera, sized from the spread, 0.9 to 4.5 m); the point aimed at is a small cross; the roll after the landing is a faint short dash; no separate wind trace.
 Check: function groundRing(
 Check: function aimSpreadR(
-R: 2026-11-15 (the owner: "the grid that shows slope is white. this grid is yellow. is there no slope?"): on his putt turn the green's lattice lines are a neutral faint white and the slope is shown by dots that flow downhill along it, their speed and colour (white, cyan, yellow, orange, red) by its steepness; the hole card says the break and the slope to the cup.
+R: 2026-11-15 (the owner: "the dots have to be on the grid. this is the same in every single golf game", "the grid must be green and red based on the slope ... like a heat map"): on his putt turn the green's lattice lines are a heat map of the slope (green on the flat, then yellow-green, yellow, orange, red as it steepens to 4%), and white dots ride the grid: each sits on its crossing and slides along the grid line that runs most downhill, farther where steeper, all in step, so they never leave the lines.
 Check: function pgNow(
 R: 2026-11-15: after each of his shots a short result fades by itself after about two seconds (carry, total, what is left to the pin).
 Check: function hostToast(
@@ -468,7 +471,7 @@ function hostRest() {   // the playback is over: the ball lies at the host's res
   ball.x = m.rest[0] * S; ball.y = m.rest[1] * S; ballRest();
   strokes = m.stroke + (m.penalty || 0); total += 1 + (m.penalty || 0);
   if (m.holed) { sndMsg('cup', { drop: true }); ball.state = 3; ball.x = hole.pin.x; ball.y = hole.pin.y; for (let k = 0; k < 120; k++) addParticle(k & 1 ? P_SPARK : P_EMBER, hole.pin.x, hole.pin.y, ball.z + 0.1, (rnd() - 0.5) * 3, (rnd() - 0.5) * 3, 2 + rnd() * 5, 40 + rndi(70), rndi(4)); }
-  else if (m.penalty) { splash(ball.x, ball.y, wlAt(ball.x, ball.y), 26); say(m.restLie === 'water' ? 'Water: one stroke, and a drop' : 'Out of bounds: one stroke', 260); }
+  else if (m.penalty) { if (m.restLie !== 'cliff') splash(ball.x, ball.y, wlAt(ball.x, ball.y), 26); say(m.restLie === 'water' ? 'Water: one stroke, and a drop' : m.restLie === 'cliff' ? 'Into the rocks: 1 penalty stroke, drop' : 'Out of bounds: one stroke', 260); }   // (#1345: the view's own rocks: a lateral drop, no splash)
   groupShotEnd(m);   // (T425: after another's stroke the owner's ball and score come back, 08e-group.md)
   galleryReact(m);   // (T429: the crowd near it cheers a holed putt, groans at a short miss: 08f-gallery.md)
   while (HP.q.length && !HP.play) { const q = HP.q.shift(); if (q.t === 'shot') hostShot(q); else if (q.t === 'turn') hostTurn(q); else if (q.t === 'holeEnd') hostHoleEnd(q); else if (q.t === 'practice') pracShow(q); }
@@ -743,17 +746,18 @@ const shotEl = document.createElement('div'); shotEl.id = 'shotc';
 const shotBtn = document.createElement('button'); shotBtn.type = 'button'; shotBtn.id = 'shotBtn'; shotBtn.title = 'Shape the shot: draw, fade, high, low';
 shotBtn.innerHTML = '<canvas width="64" height="64"></canvas><span>Straight</span>';
 const SHAPE_LAB = 'Drag the dot: left draw, right fade, up high, down low';
+const lockBadge = (k) => '<i class="lkb lk-' + k + '" aria-hidden="true"><svg viewBox="0 0 12 12"><rect x="2.2" y="5.2" width="7.6" height="5.6" rx="1.2" fill="currentColor"/><path d="M4 5.4V3.9a2 2 0 0 1 4 0v1.5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg></i>';   // (#1344: on a locked side's tile)
 const tileImg = (k) => '<img class="e-' + k + '" data-e="' + k + '" src="tiles/shot-' + k + '.webp" alt="" aria-hidden="true" draggable="false">';
 shotEl.innerHTML = '<div class="sh"><b>Shot shape</b><em id="pickTxt"></em><button type="button" class="rst" data-k="reset" title="Back to a straight shot (or double-click the ball)">Reset</button></div>'
-  + '<div class="bw">' + tileImg('draw') + tileImg('fade') + tileImg('high') + tileImg('low') + '<canvas id="shapeBall" width="192" height="192"></canvas><canvas id="shapeArc" width="64" height="64"></canvas></div>'
-  + '<div class="lab">' + SHAPE_LAB + '</div><div class="lim" id="limTxt"></div>'
+  + '<div class="bw">' + tileImg('draw') + tileImg('fade') + tileImg('high') + tileImg('low') + lockBadge('draw') + lockBadge('fade') + lockBadge('high') + lockBadge('low') + '<canvas id="shapeBall" width="192" height="192"></canvas><canvas id="shapeArc" width="64" height="64"></canvas></div>'
+  + '<div class="lab">' + SHAPE_LAB + '</div><div class="lock" id="lockTxt"></div><div class="lim" id="limTxt"></div>'
   + '<details><summary>Spin and boost</summary><div class="hw"><img src="tiles/shot-spin.webp" alt="" aria-hidden="true" draggable="false"><span><b class="k">Boost</b> hold the swing and tap ↑ (or W) fast; it falls when you stop, so let go at the peak.<br><b class="k">Spin</b> while the ball flies tap ↓ back, ↑ top, ← → side; the opposite arrow takes it off.</span></div>'
   + '<div class="st"><b data-k="boost" class="boost"><img src="tiles/go-for-it.webp" alt="" aria-hidden="true" draggable="false"><span class="tx"><span class="nm">Go for it (I)</span><em class="lw" id="boostTxt"></em></span></b></div><div class="lim" id="spinTxt"></div></details>';
 if (typeof hudEl !== 'undefined' && hudEl.appendChild) hudEl.appendChild(shotEl);
 if (cornerEl && cornerEl.insertBefore) cornerEl.insertBefore(shotBtn, cornerEl.firstChild);
 const q1 = (el, s) => (el && el.querySelector ? el.querySelector(s) : null), c2d = (cv) => (cv && cv.getContext ? cv.getContext('2d') : null);
 const shapeBall = q1(shotEl, '#shapeBall'), shctx = c2d(shapeBall), arcCtx = c2d(q1(shotEl, '#shapeArc')), btnCtx = c2d(q1(shotBtn, 'canvas')), btnTxt = q1(shotBtn, 'span');
-let shotShown = '', shotOpen = false, shapeDrag = false, tipShown = false;
+let shotShown = '', shotOpen = false, shapeDrag = false, tipShown = false, shapeLockTxt = '', shapeShakeT = 0, shapeRefusals = 0;   // (#1344: the lock line shown, the shake's timer, the drags refused)
 try { shotOpen = localStorage.getItem('cl_shotopen') === '1'; } catch (e) { /* (no storage: shut) */ }
 function shapeRing() { const C = hostClub(), B = C && C.bend; return B && B.scrM > 0 ? clamp(B.m / B.scrM, 0.3, 1) : 1; }   // his limit's ring, as a share of the ball's radius (a scratch golfer's full bend: the whole ball)
 function shapeAmt(px, py, rr) {   // a point on the ball (-1..1 each, y up; the ball's edge at 1) -> [curve, flight]: held inside the ring, the ring's edge a full 1, a dot near the middle none
@@ -762,7 +766,22 @@ function shapeAmt(px, py, rr) {   // a point on the ball (-1..1 each, y up; the 
   return [Math.round(x / rr * 100) / 100, Math.round(y / rr * 100) / 100];
 }
 function hostShapeAt(c, f) { hostPickAmt('curve', c); hostPickAmt('flight', f); return hostShotIn().shape || null; }   // (the ball's dot: the same two amounts the sliders sent)
-function shapeFrom(e) { if (!HP || !shapeBall || !shapeBall.getBoundingClientRect) return; const r = shapeBall.getBoundingClientRect(), k = 192 / 88; const a = shapeAmt(((e.clientX - r.left) / r.width - 0.5) * k, -((e.clientY - r.top) / r.height - 0.5) * k, shapeRing()); hostShapeAt(a[0], a[1]); }
+function shapeFrom(e) { if (!HP || !shapeBall || !shapeBall.getBoundingClientRect) return; const r = shapeBall.getBoundingClientRect(), k = 192 / 88; shapeDragTo(((e.clientX - r.left) / r.width - 0.5) * k, -((e.clientY - r.top) / r.height - 0.5) * k); }
+function shapeDragTo(x, y) { const a = shapeAmt(x, y, shapeRing()); if (shapeBlocked(a[0], a[1])) shapeRefused(); return hostShapeAt(a[0], a[1]); }   // (#1344: the dot dragged to (x, y) on the ball, -1..1, y up: a locked side refused with a shake)
+function shapeBlocked(c, f) { return (c < 0 && !hostEarned('draw')) || (c > 0 && !hostEarned('fade')) || (f > 0 && !hostEarned('high')) || (f < 0 && !hostEarned('low')); }   // (#1344: a dot asked for on a side he has not earned)
+function hostShapeLocks() {   // #1344: the shape's sides he has not earned, and one line per locked group (draw/fade, high/low) with what unlocks it (the host's short line, else its why)
+  const e = HP && HP.turn && HP.turn.earned, L = (e && e.lock) || {}, sides = ['draw', 'fade', 'high', 'low'].filter((k) => !hostEarned(k)), lines = [];
+  for (const [g, a, b] of [['curve', 'draw', 'fade'], ['flight', 'high', 'low']]) {
+    const la = sides.indexOf(a) >= 0, lb = sides.indexOf(b) >= 0, cap = (w) => w[0].toUpperCase() + w.slice(1); if (!la && !lb) continue;
+    lines.push((la && lb ? cap(a) + '/' + b : cap(la ? a : b)) + ' locked: ' + (L[g] || hostWhy(la ? a : b) || 'not earned yet'));
+  }
+  return { sides, lines };
+}
+function shapeRefused() {   // #1344: a drag onto a locked side: the ball shakes and the lock line flashes (the dot has stayed at the middle that way)
+  shapeRefusals++; if (shapeShakeT || typeof setTimeout !== 'function') return;
+  const le = q1(shotEl, '#lockTxt'); if (shapeBall) shapeBall.className = 'shake'; if (le) le.className = 'lock flash';
+  shapeShakeT = setTimeout(() => { shapeShakeT = 0; if (shapeBall) shapeBall.className = ''; if (le) le.className = 'lock'; }, 450);
+}
 if (typeof addEventListener === 'function') {   // #1301: a drag that began on a ball goes on past its edge; let go anywhere
   addEventListener('mousemove', (e) => { if (shapeDrag) shapeFrom(e); });
   addEventListener('mouseup', () => { shapeDrag = false; });
@@ -793,7 +812,8 @@ function hostShotShow() {   // the button and the panel, written only when somet
   const C = hostClub(), on = hostOnTurn() && !hostBusy() && !HP.sw && nearBall() && !!C && C.club !== 'putter', P = hostPick();
   const sig = on ? [P.curve, P.flight, P.armed, hostCharges(), club, shotOpen, JSON.stringify((HP.turn && HP.turn.earned) || '')].join('|') : 'off';
   if (sig === shotShown) return; shotShown = sig;
-  shotEl.className = on && shotOpen ? 'on' : ''; shotBtn.className = on ? 'on' + (shotOpen ? ' open' : '') : '';
+  const LK = hostShapeLocks(); shapeLockTxt = on ? LK.lines.join('\n') : '';   // (#1344: the locked sides as badges and a hatched half, and the lock line)
+  shotEl.className = on && shotOpen ? 'on' + LK.sides.map((k) => ' no-' + k).join('') : ''; shotBtn.className = on ? 'on' + (shotOpen ? ' open' : '') : '';
   if (!on) return;
   if (!tipShown) { tipShown = true; try { if (!localStorage.getItem('cinderlinks.tip')) { localStorage.setItem('cinderlinks.tip', '1'); say('Shape the shot on the ball, bottom right  ·  ? shows the keys', 320); } } catch (e) { /* (no storage: no tip) */ } }   // (once: help is a hint, never paragraphs)
   if (btnTxt) btnTxt.textContent = shapeWords(P);
@@ -806,14 +826,15 @@ function hostShotShow() {   // the button and the panel, written only when somet
   for (const e of shotEl.querySelectorAll('img[data-e]')) { const ok = hostEarned(e.dataset.e); e.className = 'e-' + e.dataset.e + (ok ? '' : ' lock'); }   // (a side he has not earned: its tile dimmed)
   const set = (id, t) => { const el = q1(shotEl, id); if (el) el.textContent = t; return el; };
   set('#pickTxt', shapeWords(P));
-  const B = C.bend, locked = ['draw', 'fade', 'high', 'low'].filter((k) => !hostEarned(k)), lockTxt = locked.length ? 'Locked: ' + locked.map((k) => k + ' (' + (hostWhy(k) || 'not earned yet') + ')').join(', ') : '';
+  const B = C.bend, lockTxt = shapeLockTxt.replace(/\n/g, '. ');
   let lim = '', why = '';
   if (B && B.scrM > 0) {   // #1301 (the owner: "indicate if that is my handicap limit or not"): one short line; the why on hover
     const mine = B.pulled < B.scrPulled - 0.02;
-    lim = mine ? 'Gold ring: your limit, ' + B.m.toFixed(1) + ' m of bend (a pro ' + B.scrM.toFixed(1) + ' m)' : 'Full bend ' + B.m.toFixed(1) + ' m at ' + Math.round(C.carryM) + ' m';
+    lim = mine ? 'Gold ring: the most you can bend it (' + B.m.toFixed(1) + ' m; a pro bends ' + B.scrM.toFixed(1) + ' m)' : 'Full bend ' + B.m.toFixed(1) + ' m at ' + Math.round(C.carryM) + ' m';   // (#1344: in plain words)
     why = mine ? 'You pull off ' + Math.round(B.pulled * 100) + '% of a shaped shot (club skill ' + Math.round(B.skill * 100) + ', accuracy ' + Math.round(B.accuracy * 100) + '): the dot stops at the ring. Practise Shot shaping to widen it.' : 'As much as a scratch golfer: the game bends a shot a few degrees at most.';
   }
-  const le = set('#limTxt', lim || lockTxt); if (le) le.title = [why, lim ? lockTxt : ''].filter(Boolean).join(' ');
+  const le = set('#limTxt', lim); if (le) le.title = why;
+  const lt = set('#lockTxt', shapeLockTxt); if (lt) lt.title = LK.sides.map((k) => k + ': ' + (hostWhy(k) || 'not earned yet')).join('. ');   // (#1344: always there while anything is locked; the host's full why on hover)
   if (shapeBall) shapeBall.title = SHAPE_LAB + '. Double-click: straight.' + (why ? ' ' + why : '') + (lockTxt ? ' ' + lockTxt : '');
   const lk = ['side', 'back'].filter((k) => !hostEarned(k)); set('#spinTxt', lk.length ? 'Locked: ' + lk.map((k) => (k === 'side' ? 'side spin' : 'backspin') + ' (' + (hostWhy(k) || 'not earned yet') + ')').join(', ') : '');   // (#1301: what is locked, in words)
   const bt = q1(shotEl, '#boostTxt'); if (bt) bt.textContent = hostEarned('boost') ? (P.armed ? 'armed: cap +6%' : 'raises the cap') + ' · ' + hostCharges() + ' left this hole' : 'Locked: ' + hostWhy('boost');
@@ -828,7 +849,18 @@ function ballFace(c, W, big) {   // a lit golf ball filling a W x W canvas (the 
 }
 function paintShape(c, W, P, big) {   // the shape ball: the sides he has not earned dimmed, the cross, the gold ring of his limit, the dot
   c.clearRect(0, 0, W, W); const R = ballFace(c, W, big), cx = W / 2, cy = W / 2, rr = shapeRing();
-  if (c.save && c.clip) { c.save(); c.beginPath(); c.arc(cx, cy, R, 0, 6.2832); c.clip(); c.fillStyle = 'rgba(20, 21, 25, 0.5)'; if (!hostEarned('draw')) c.fillRect(0, 0, cx, W); if (!hostEarned('fade')) c.fillRect(cx, 0, W - cx, W); if (!hostEarned('high')) c.fillRect(0, 0, W, cy); if (!hostEarned('low')) c.fillRect(0, cy, W, W - cy); c.restore(); }
+  if (c.save && c.clip) {
+    c.save(); c.beginPath(); c.arc(cx, cy, R, 0, 6.2832); c.clip(); c.fillStyle = 'rgba(20, 21, 25, 0.5)';
+    const half = { draw: [0, 0, cx, W], fade: [cx, 0, W - cx, W], high: [0, 0, W, cy], low: [0, cy, W, W - cy] };
+    for (const k of ['draw', 'fade', 'high', 'low']) {
+      if (hostEarned(k)) continue; const h = half[k]; c.fillRect(h[0], h[1], h[2], h[3]);
+      if (big && c.rect) {   // (#1344: and hatched, so the dot plainly cannot go there)
+        c.save(); c.beginPath(); c.rect(h[0], h[1], h[2], h[3]); c.clip(); c.strokeStyle = 'rgba(251, 154, 75, 0.5)'; c.lineWidth = 2; c.beginPath();
+        for (let d = -W; d < W; d += 11) { c.moveTo(d, W); c.lineTo(d + W, 0); } c.stroke(); c.restore();
+      }
+    }
+    c.restore();
+  }
   c.strokeStyle = 'rgba(60, 54, 40, 0.35)'; c.lineWidth = big ? 1.5 : 1; c.beginPath(); c.moveTo(cx - R * 0.88, cy); c.lineTo(cx + R * 0.88, cy); c.moveTo(cx, cy - R * 0.88); c.lineTo(cx, cy + R * 0.88); c.stroke();
   if (big && rr < 0.995) { c.strokeStyle = '#f5b52e'; c.lineWidth = 2.5; if (c.setLineDash) c.setLineDash([7, 5]); c.beginPath(); c.arc(cx, cy, R * rr, 0, 6.2832); c.stroke(); if (c.setLineDash) c.setLineDash([]); }
   c.strokeStyle = 'rgba(0, 0, 0, 0.55)'; c.lineWidth = big ? 3 : 2; c.beginPath(); c.arc(cx, cy, R, 0, 6.2832); c.stroke();
@@ -884,7 +916,11 @@ const GRID_RGB = [rgb(255, 255, 255), rgb(125, 211, 252), rgb(250, 204, 21), rgb
 // neutral, a faint thin white whatever the slope, and the slope is shown by dots that flow downhill along it, one to a point (phase-offset, so together they
 // read as a current), each running one lattice step down the slope and fading in and out, their speed and colour by how steep it is there: on the flat they
 // barely creep, white; then cyan, yellow, orange, red as it steepens. Worked out once a green (PG_MEMO); a frame only moves them on (pgNow).
-const GRID_LINE_A = 70, GRID_LINE = ((rgb(255, 255, 255) & 0xffffff) | (GRID_LINE_A << 24)) >>> 0;
+// 2026-11-15, again (the owner: "the dots have to be on the grid", "the grid must be green and red based on the slope ... like a heat map"): the lines are the heat map
+// (each line the colour of its two ends' mean slope: green flat .. red at 4%), the dots white, each on its crossing, sliding along the line from it that runs most downhill
+// (PG_RUN[0] + PG_RUN[1] x steepness of the line's length), all in step (PG_BEAT a second): never off the grid. A point with no line running downhill keeps its dot still
+const GRID_LINE_A = 150, GRID_HEAT = [rgb(74, 222, 128), rgb(190, 230, 70), rgb(250, 204, 21), rgb(249, 115, 22), rgb(239, 68, 68)].map((c) => ((c & 0xffffff) | (GRID_LINE_A << 24)) >>> 0);
+const GRID_LINE = GRID_HEAT[0], PG_DOT = 0xffffffff, PG_RUN = [0.1, 0.8], PG_BEAT = 0.6;
 const pgU = (s) => (s <= 0.002 ? 0 : Math.min(1, (s - 0.002) / 0.038));   // (green.ts breakBucket's scale: 0 flat .. 1 at a 4% slope)
 const pgBucket = (s) => { const u = pgU(s); return u <= 0 ? 0 : u < 0.25 ? 1 : u < 0.55 ? 2 : u < 0.85 ? 3 : 4; };
 const PG_MEMO = new WeakMap();   // T438: a green's grid worked out once a green, not each frame: its points on the land, the dots' runs, the lattice's lines
@@ -894,10 +930,10 @@ function hostPuttPts(G, S) {
   if (M && M.S === S && M.hv === hv) return M;
   const P = G.pts, n = Math.floor(P.length / 5), c = (G.step > 0 ? G.step : 1) * S, xyz = new Float64Array(n * 3), run = new Float64Array(n * 3), col = new Uint32Array(n), sp = new Float32Array(n), ph = new Float32Array(n);
   for (let p = 0; p < n; p++) {
-    const k = p * 5, x = P[k] * S, y = P[k + 1] * S, u = pgU(P[k + 4]), ex = x + P[k + 2] * c, ey = y + P[k + 3] * c;
+    const k = p * 5, x = P[k] * S, y = P[k + 1] * S;
     col[p] = GRID_RGB[pgBucket(P[k + 4])]; xyz[p * 3] = x; xyz[p * 3 + 1] = y; xyz[p * 3 + 2] = groundH(x, y) + 0.02;
-    run[p * 3] = ex; run[p * 3 + 1] = ey; run[p * 3 + 2] = groundH(ex, ey) + 0.02;   // (where its dot runs to: one step down the slope)
-    sp[p] = 0.05 + 1.15 * u; ph[p] = hash2(p, 17, 5);   // (lattice steps a second: a creep on the flat, over one at 4%)
+    run[p * 3] = x; run[p * 3 + 1] = y; run[p * 3 + 2] = xyz[p * 3 + 2];   // (its dot's run along the grid: set below, once the lines are known; none: it stays on its crossing)
+    sp[p] = PG_BEAT; ph[p] = 0;   // (all in step)
   }
   // the lattice's lines: each point to its neighbours one step away (found through a hash of step-sized buckets; the diagonals, 1.41 steps, are not lines)
   const B = new Map(), e = [], key = (i, j) => (i + 32768) * 65536 + (j + 32768);
@@ -909,26 +945,37 @@ function hostPuttPts(G, S) {
       for (const q of L) { if (q <= p) continue; const d = Math.hypot(xyz[q * 3] - x, xyz[q * 3 + 1] - y); if (d > c * 0.8 && d < c * 1.2) e.push(p, q); }
     }
   }
-  M = { S, hv, n, xyz, run, col, sp, ph, e: Int32Array.from(e), sx: new Int32Array(n), sy: new Int32Array(n), sd: new Float64Array(n), dots: 0 };
+  // each line's heat (its two ends' mean slope); each point's dot runs along its line that best follows the slope downhill (cos over 0.5), as far as the slope says
+  const ec = new Uint32Array(e.length / 2), best = new Float64Array(n).fill(0.5), nb = new Int32Array(n).fill(-1);
+  for (let k = 0; k < e.length; k += 2) {
+    const a = e[k], b = e[k + 1], u = (pgU(P[a * 5 + 4]) + pgU(P[b * 5 + 4])) / 2; ec[k / 2] = GRID_HEAT[u <= 0.1 ? 0 : u < 0.3 ? 1 : u < 0.55 ? 2 : u < 0.8 ? 3 : 4];
+    const dx = xyz[b * 3] - xyz[a * 3], dy = xyz[b * 3 + 1] - xyz[a * 3 + 1], L = Math.hypot(dx, dy) || 1;
+    const ca = (P[a * 5 + 2] * dx + P[a * 5 + 3] * dy) / L, cb = -(P[b * 5 + 2] * dx + P[b * 5 + 3] * dy) / L;   // (how well the line runs downhill from a, and from b)
+    if (pgU(P[a * 5 + 4]) > 0 && ca > best[a]) { best[a] = ca; nb[a] = b; }
+    if (pgU(P[b * 5 + 4]) > 0 && cb > best[b]) { best[b] = cb; nb[b] = a; }
+  }
+  for (let p = 0; p < n; p++) { const q = nb[p]; if (q < 0) continue; const f = Math.min(0.95, PG_RUN[0] + PG_RUN[1] * pgU(P[p * 5 + 4])), i3 = p * 3, q3 = q * 3;
+    run[i3] = xyz[i3] + (xyz[q3] - xyz[i3]) * f; run[i3 + 1] = xyz[i3 + 1] + (xyz[q3 + 1] - xyz[i3 + 1]) * f; run[i3 + 2] = xyz[i3 + 2] + (xyz[q3 + 2] - xyz[i3 + 2]) * f; }
+  M = { S, hv, n, xyz, run, col, sp, ph, nb, e: Int32Array.from(e), ec, sx: new Int32Array(n), sy: new Int32Array(n), sd: new Float64Array(n), dots: 0 };
   PG_MEMO.set(G, M); return M;
 }
 function hostPuttTurn() { const t = HP && HP.turn; return !!t && !!t.green && !hostBusy() && !bcam && ball.state === 0; }   // his putt turn: the ball at rest on the host's green, nothing in flight
 function hostPuttGrid() {
   const M = hostPuttPts(HP.turn.green, hostS()), X = M.xyz, Rn = M.run, n = M.n, SX = M.sx, SY = M.sy, SD = M.sd, E = M.e, t = pgNow();
   for (let p = 0; p < n; p++) { projectO(X[p * 3], X[p * 3 + 1], X[p * 3 + 2], PJ); SX[p] = PJ.x; SY[p] = PJ.y; SD[p] = PJ.s > 0 && PJ.d >= 1.5 ? PJ.d : 0; }   // (each point once a frame)
-  for (let k = 0; k < E.length; k += 2) {   // the lines between neighbours: neutral, faint
+  for (let k = 0; k < E.length; k += 2) {   // the lines between neighbours: the slope's heat map
     const a = E[k], b = E[k + 1], ad = SD[a], bd = SD[b]; if (!ad || !bd) continue;
     const ax = SX[a], ay = SY[a], dx = SX[b] - ax, dy = SY[b] - ay, m = Math.max(dx < 0 ? -dx : dx, dy < 0 ? -dy : dy);
     if (m < 2 || m > 700 || (ax < 0 && ax + dx < 0) || (ax >= OW && ax + dx >= OW) || (ay < 0 && ay + dy < 0) || (ay >= OH && ay + dy >= OH)) continue;
     const f = 1 / m, dd = bd - ad;
-    for (let i = 0; i < m; i++) { const u = i * f; gridPut(ax + Math.round(dx * u), ay + Math.round(dy * u), ad + dd * u, GRID_LINE); }   // (its far end is the next line's start)
+    const lc = M.ec[k >> 1]; for (let i = 0; i < m; i++) { const u = i * f; gridPut(ax + Math.round(dx * u), ay + Math.round(dy * u), ad + dd * u, lc); }   // (its far end is the next line's start)
   }
   let dots = 0;
-  for (let p = 0; p < n; p++) {   // the dots: each a step down the slope from its point, as far along as the clock has run it, fading in and out at the ends
+  for (let p = 0; p < n; p++) {   // the dots: each on its crossing, slid along its downhill line as far as the clock has run it
     if (!SD[p]) continue;
     let u = (M.ph[p] + t * M.sp[p]) % 1; if (u < 0) u += 1;
     const i3 = p * 3; projectO(X[i3] + (Rn[i3] - X[i3]) * u, X[i3 + 1] + (Rn[i3 + 1] - X[i3 + 1]) * u, X[i3 + 2] + (Rn[i3 + 2] - X[i3 + 2]) * u, PJ); if (PJ.s <= 0 || PJ.d < 1.5) continue;
-    const a = 96 + Math.round(159 * Math.min(1, Math.sin(Math.PI * u) * 1.6)), c = ((M.col[p] & 0xffffff) | (a << 24)) >>> 0, x = PJ.x, y = PJ.y, d = PJ.d;   // (never as faint as the lines: 96 and up)
+    const c = PG_DOT, x = PJ.x, y = PJ.y, d = PJ.d;   // (white, on the grid line it rides)
     gridPut(x - 1, y, d, c); gridPut(x, y, d, c); gridPut(x + 1, y, d, c); gridPut(x - 1, y - 1, d, c); gridPut(x, y - 1, d, c); gridPut(x + 1, y - 1, d, c); dots++;
   }
   M.dots = dots;

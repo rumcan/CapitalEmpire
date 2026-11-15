@@ -29,7 +29,8 @@ import { inPractice, practiceWords, scanPractice, type PracticeScan, type Practi
 import { cellSet, coveredBy, paintedOver, starterAt, starterName } from './practicestarter';
 import type { PlanCells } from './practicebuild';
 import type { StepAside } from './practicetool';
-import { PRACTICE_APPEAL, PRACTICE_FEE, PRACTICE_IDS, practiceAppeal, rangeScale, rangeUpkeep, type PracticeId } from './rangesave';
+import { CLEARABLE_KEY, PRACTICE_APPEAL, PRACTICE_FEE, PRACTICE_IDS, practiceAppeal, rangeScale, rangeUpkeep, type PracticeId } from './rangesave';
+import { scatterUnder } from './rangeclear';
 import { PRI } from '../label-place';
 import { LABEL_OUTLINE, type WorldLabels } from '../world-labels';
 import { COFFEE, EXTRA_IDS, GARAGE_CARS, HOME_AT, HOME_NAME, KIOSK_SHARE, LESSON, LESSON_SHARE, homeStage, lotGround, needsOf, type HomeStage, type LotGround } from './rangesave';
@@ -172,7 +173,7 @@ export class RangeHost {
     const home = b ? homeStage(b) : 0, look = this.look();
     // T288: a bare start's home alone while the range is not placed (the trailer and its yard: no range, no golfers)
     const bare = b && !pl ? this.ctx.bare?.() ?? null : null;
-    const key = b && pl ? `${pl.rect.join(',')}:${pl.facing}:${b.owned.join(',')}:${cp ? cp.key ?? cp.bays.length : -1}:${home}:${look.mats}:${look.greens}:${look.bullseye}:${b.practiceAt ? b.practiceAt.join(',') : b.practiceAt === null ? 'none' : ''}:${b.starter ? `${b.starter.seed}.${b.starter.gone.join('-')}` : ''}`
+    const key = b && pl ? `${pl.rect.join(',')}:${pl.facing}:${b.owned.join(',')}:${cp ? cp.key ?? cp.bays.length : -1}:${home}:${look.mats}:${look.greens}:${look.bullseye}:${b.practiceAt ? b.practiceAt.join(',') : b.practiceAt === null ? 'none' : ''}:${b.starter ? `${b.starter.seed}.${b.starter.gone.join('-')}` : ''}:${clearedKey(b.cleared)}`
       : bare ? `bare:${bare.rect.join(',')}:${bare.facing}:${home}` : '';
     if (!force && key === this.key) { this.syncWalk(); return; }
     if (bare && b) { this.layBare(bare, b, home); this.key = key; return; }
@@ -502,6 +503,28 @@ export class RangeHost {
     k0.gone = after; this.ctx.save();
     return { undo: () => set(before), redo: () => set(after) };
   }
+  /** #1302: the outfield's natural pieces (scene keys: the desert's plants and rocks, the oasis) taken away for good: they go from the save now (the scene lays itself again
+   *  at the next frame: the key follows the save) and the returned step brings them back (undo) or takes them away again (redo); null: none of them stands */
+  dropScatter(keys: readonly string[]): StepAside | null {
+    const b = this.ctx.biz(); if (!b) return null;
+    const was = b.cleared ?? [], hit = keys.filter(k => CLEARABLE_KEY.test(k) && !was.includes(k)); if (!hit.length) return null;
+    const before = [...was], after = [...new Set([...was, ...hit])].sort();
+    const set = (c: readonly string[]) => { const b1 = this.ctx.biz(); if (!b1) return; if (c.length) b1.cleared = [...c]; else delete b1.cleared; this.ctx.save(); this.ctx.emit(); };
+    set(after);
+    return { undo: () => set(before), redo: () => set(after) };
+  }
+  /** #1302: the scene key of a natural piece of the outfield the prop with auto key `auto` is ('range:desert12': 'desert12'), as the Bulldoze tool takes it; null: another
+   *  thing (the range's buildings, flags and boards stay the range's) */
+  scatterKeyOf(auto: string | undefined): string | null {
+    if (!auto?.startsWith('range:')) return null; const k = auto.slice(6);
+    return CLEARABLE_KEY.test(k) && this.props.has(k) ? k : null;
+  }
+  /** #1302: the natural pieces a change of the course grid (d) laid ground under go, as a step aside (the Texture Painter's stroke or shape: the paint wins, every surface it
+   *  lays; its undo brings them back); null: it laid none under any */
+  scatterPaintedOver(d: GridDiff): StepAside | null {
+    const sc = this.scene; if (!sc || !d.n) return null;
+    return this.dropScatter(scatterUnder(sc.pieces, d));
+  }
   /** #1298: the piece of the practice area's starter set standing under tile (x, y), as the Bulldoze tool sees it (null: none): its id and name */
   starterAt(x: number, y: number): { id: number; name: string; pts: number[] } | null {
     const b = this.ctx.biz(), sc = this.scene; if (!b?.starter || !sc || !sc.starter.length || !inPractice(sc.practice, x, y)) return null;
@@ -724,6 +747,12 @@ export class RangeHost {
         lots: this.scene ? this.ctx.lots?.(this.scene.counter) ?? [] : [] },
     };
   }
+}
+/** #1302: the cleared keys as a short text for the scene's key (a number: the sync asks every frame, so no joined list of a few hundred keys) */
+function clearedKey(c: readonly string[] | undefined): string {
+  if (!c?.length) return '';
+  let h = 0; for (const k of c) for (let i = 0; i < k.length; i++) h = (h * 31 + k.charCodeAt(i)) | 0;
+  return `${c.length}.${h >>> 0}`;
 }
 /** whether two scene pieces stand in the same spot as the same picture */
 function sameSpot(a: ScenePiece | undefined, b: ScenePiece): boolean { return !!a && a.id === b.id && a.x === b.x && a.y === b.y && a.q === b.q && a.scale === b.scale && a.fit === b.fit; }

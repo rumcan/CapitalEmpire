@@ -131,7 +131,7 @@ export interface GolfSave {
  /** T353 (#995): the house lots laid on the club's land (golf/estate.ts EstateSave): each lot's frame, stage, times, seed and price. Missing: none laid */
  estate?: EstateSave;
  /** T447: the time of day the course is played at from behind the golfer (protocol3p.ts CourseTime3p). Missing: golden hour, the default */
- time3p?: 'day';
+ time3p?: 'day' | 'dusk' | 'night';
  /** #1345: where the view from behind the golfer stands cliffs of its own relief, by course (play/cliffs3p.ts: the view's mask in tiles, the newest first). The model reads
   *  them for the owner's shots from version 7, a replay too, so they are kept with the course. Missing: none known (no cliffs) */
  cliffs3p?: CliffMask[];
@@ -229,6 +229,6 @@ export function normalizeGolfSave(g: Partial<GolfSave> | null | undefined): Golf
   if (Array.isArray(courseRects)) { const cr = courseRects.filter(r => Array.isArray(r) && r.length === 4 && r.every(v => Number.isFinite(v)) && r[2]! > 0 && r[3]! > 0).map(r => [...r] as Rect); if (cr.length) out.courseRects = cr; }
   // T353: the house lots, well formed only (a save whose lots do not read has none: the field stays out)
   if (estate && normalizeEstate(estate)) out.estate = estate;
-  if (time3p === 'day') out.time3p = 'day'; // T447: golden hour is the default and is not written
+  if (time3p === 'day' || time3p === 'dusk' || time3p === 'night') out.time3p = time3p; // T447: golden hour is the default and is not written
   return out;
 }

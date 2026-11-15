@@ -15,7 +15,7 @@ import { ActionTile, TILE_SMALL } from '../ActionTile'; // J8 (#1261): the hole 
 import { pickText } from './files3p';
 import { TeeSetRows } from './TeeSets';
 import { allLabel } from '../../game/golf/play/practice';
-import { COURSE_TIMES_3P, type CourseTime3p } from '../../game/golf/play/protocol3p';
+import { COURSE_TIMES_3P, COURSE_TIME_HINT, type CourseTime3p } from '../../game/golf/play/protocol3p';
 
 /** the surfaces' names as the Holes panel says them */
 const NAME: Record<string, string> = { green: 'Green', tee: 'Tee', fairway: 'Fairway', rough: 'Rough', bunker: 'Bunker', water: 'Water', fescue: 'Fescue', waste: 'Waste area', longGrass: 'Long grass' };
@@ -73,13 +73,18 @@ export function HoleCard({ game, right = 'right-3' }: { game: Game; right?: stri
         {/* J8: the card's main action, with its picture large */}
         <button className="chip self-start gap-2.5 py-1.5 pr-3 text-sm font-semibold disabled:opacity-40" disabled={why3p.length > 0} onClick={() => game.open3p(c.n)} title={why3p.length ? why3p.join('. ') : `Walk hole ${c.n} from its tee, seen from behind the golfer (Esc comes back)`} data-testid="hole-play-3p"><ActionTile tile="play-hole" size={56} />Play this hole</button>
         {why3p.length > 0 && <div className="text-[12px] text-slate-400" data-testid="hole-play-3p-why">{why3p.join(' · ')}</div>}
-        {/* T447: the time of day the course is played at (the whole course's setting, saved with it); golden hour unless Day is chosen */}
-        <div className="flex items-center gap-1 text-[12px] text-[var(--muted)]" data-testid="hole-time-3p">
-          <span className="flex items-center gap-1.5"><ActionTile tile="daylight" size={TILE_SMALL + 4} />Light</span>
-          {COURSE_TIMES_3P.map(([id, name]) => (
-            <button key={id} className={`chip ${time3p === id ? 'chip-on' : ''}`} aria-pressed={time3p === id} onClick={() => { game.setTime3p(id); setTime3p(id); }}
-              title={id === 'golden' ? 'Play the course in the low gold light of late afternoon (the default)' : 'Play the course in full daylight'} data-testid={`hole-time-3p-${id}`}>{name}</button>
-          ))}
+        {/* T447: the time of day the course is played at (the whole course's setting, saved with it). The owner, 2026-11-15: all four lights, and a picker that reads:
+            a labelled box with one segmented row (Day, Golden hour, Dusk, Night) and the chosen one's words under it */}
+        <div className="mt-1 rounded-lg border border-white/10 bg-white/5 p-2" data-testid="hole-time-3p">
+          <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--muted)]"><ActionTile tile="daylight" size={TILE_SMALL + 4} />Time of day</div>
+          <div className="grid grid-cols-4 gap-0.5 rounded-md bg-black/30 p-0.5" role="radiogroup" aria-label="Time of day">
+            {COURSE_TIMES_3P.map(([id, name]) => (
+              <button key={id} type="button" role="radio" aria-checked={time3p === id} aria-pressed={time3p === id} onClick={() => { game.setTime3p(id); setTime3p(id); }}
+                className={`truncate rounded px-1.5 py-1 text-[12px] font-medium transition-colors ${time3p === id ? 'bg-amber-400 text-slate-900 shadow' : 'text-slate-300 hover:bg-white/10 hover:text-white'}`}
+                title={COURSE_TIME_HINT[id]} data-testid={`hole-time-3p-${id}`}>{name}</button>
+            ))}
+          </div>
+          <div className="mt-1 text-[11px] text-slate-400" data-testid="hole-time-3p-hint">{COURSE_TIME_HINT[time3p]}</div>
         </div>
         {/* T434: a course another player shared (its file), played from behind the golfer with your own golfer */}
         {!JAM && <button className="chip self-start" onClick={() => { void pickText().then(async t => { if (!t) return; const why = await game.shareLoad3p(t); if (why) game.toast(why, 'warn'); }); }} title="Open a course file another player shared and play it with your golfer" data-testid="hole-play-shared">Play a shared course…</button>}

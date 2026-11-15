@@ -312,6 +312,23 @@ const HOST_PLAY = String.raw`
     if (took !== false || HP.pick.curve !== 0 || !/Accuracy 60/.test(msgText) || hostPickSet('boost') !== false) errs.push('host craft: a locked pick was taken');
     msgText = ''; { const z = hostPickSet('curve'); if (z !== false || !/Draw is locked: Accuracy 60/.test(msgText) || HP.pick.curve !== 0) errs.push('host craft: Z took a curve he has not earned'); }
     msgText = ''; { const s = hostPickAmt('curve', -0.5); if (s !== 0 || !/Draw is locked/.test(msgText)) errs.push('host craft: a slider took a draw he has not earned'); }
+    // #1344: with the curve locked the open panel shows the lock line (what unlocks it, what he has) and a lock badge on each locked side; a drag onto it is refused (shake and flash);
+    // with nothing locked, neither
+    { const keepOpen = shotOpen; shotOpen = true;
+      const curveOff = { draw: false, fade: false, high: true, low: true, side: true, back: true, tour: false, boost: false, charges: 0, why: { draw: 'Accuracy 60, any club at Tour level, or the Shot shaping drill', fade: 'Accuracy 60, any club at Tour level, or the Shot shaping drill' }, lock: { curve: 'Accuracy 60 (you have 48) · practise Shot shaping' } };
+      hostMessage(turn(2, curveOff, 0)); jumpToBall(); step(4, 0); shotShown = ''; hostShotShow();
+      const k1 = shotEl.className, t1 = shapeLockTxt, r0 = shapeRefusals; hostPickAmt('curve', 0); msgText = '';
+      shapeDragTo(-0.9, 0); const refused = shapeRefusals - r0, held = HP.pick.curve;
+      const hiOff = Object.assign({}, curveOff, { draw: true, fade: true, high: false, low: false, why: { high: 'Touch 60, Irons 50, or the Flight drill', low: 'Touch 60, Irons 50, or the Flight drill' }, lock: { flight: 'Touch 60 (you have 52) · practise Flight' } });
+      hostMessage(turn(2, hiOff, 0)); step(2, 0); shotShown = ''; hostShotShow(); const k3 = shotEl.className, t3 = shapeLockTxt;
+      hostMessage(turn(2)); step(2, 0); shotShown = ''; hostShotShow(); const k2 = shotEl.className, t2 = shapeLockTxt;
+      info.locks = { k1, t1, refused, held, k3, t3, k2, t2 };
+      if (!/\bon\b/.test(k1) || !/no-draw/.test(k1) || !/no-fade/.test(k1) || /no-high|no-low/.test(k1)) errs.push('host craft: the locked sides do not wear their lock badges (' + k1 + ')');
+      if (t1 !== 'Draw/fade locked: Accuracy 60 (you have 48) · practise Shot shaping') errs.push('host craft: the lock line does not say what unlocks the curve (' + t1 + ')');
+      if (refused < 1 || held !== 0 || !/Draw is locked/.test(msgText)) errs.push('host craft: a drag onto a locked side was not refused with a shake (' + JSON.stringify(info.locks) + ')');
+      if (!/no-high/.test(k3) || /no-draw/.test(k3) || t3 !== 'High/low locked: Touch 60 (you have 52) · practise Flight') errs.push('host craft: the flight\'s lock is not shown (' + k3 + ' / ' + t3 + ')');
+      if (k2 !== 'on' || t2 !== '') errs.push('host craft: a lock line or badge shows with nothing locked (' + k2 + ' / ' + t2 + ')');
+      shotOpen = keepOpen; shotShown = ''; }
     hostMessage(turn(2, Object.assign({}, none, { boost: true, charges: 1, why: {} }), 1)); jumpToBall(); step(4, 0);
     hostPickSet('boost'); const armed = HP.pick.armed;
     keys.Space = true; step(60, 0); for (let k = 0; k < 10; k++) hostBoostTap(); keys.Space = false; for (let k = 0; k < 120 && !(hostLast && hostLast.t === 'input'); k++) step(1, 0);   // (T446: Space held swings; #1336: Up tapped to the full)
@@ -373,28 +390,44 @@ const HOST_PLAY = String.raw`
     const kit = (club, carryM) => ({ club, carryM, scatterM: 18, longM: 12, playsM: carryM * 0.98, sideM: 1, loftDeg: 30, speed: 0.9, sweet: 0.08 });
     const turn = (stroke) => ({ v: 1, t: 'turn', golfer: 0, holeIdx: 0, hole: holeN, par: hole.par, stroke, at: 0, lie: 'tee', lieKind: 'tee', ball: b0, pin: p0, distM: dl, wind: { mph: 0, from: 0 },
       slope: { up: 0, across: 0 }, clubs: [kit('driver', 230), kit('iron7', 150)], suggested: { club: 'driver', aim: [b0[0] + ux * 230, b0[1] + uy * 230], power: 1 } });
-    const prac = (active, balls) => ({ v: 1, t: 'practice', place: 'range', drills: [{ id: 'distance', name: 'Distance', goal: 'g', got: 0, need: 5, done: false, reward: 'r', here: true }, { id: 'shaping', name: 'Shaping', goal: 'g', got: 0, need: 5, done: false, reward: 'r', here: true }], active, note: null, paid: null, flags: [], hcp: '18', balls });
+    const prac = (active, balls, last) => ({ v: 1, t: 'practice', place: 'range', drills: [{ id: 'distance', name: 'Distance', goal: 'g', got: 0, need: 5, done: false, reward: 'r', here: true }, { id: 'shaping', name: 'Shaping', goal: 'g', got: 0, need: 5, done: false, reward: 'r', here: true }], active, note: null, paid: null, flags: [], hcp: '18', balls, ...(last ? { last } : {}) });
     const step = (n) => { for (let k = 0; k < n; k++) tickGame(); };
     const rest = (stroke) => { hostMessage({ v: 1, t: 'shot', golfer: 0, hole: holeN, stroke, club: 'iron7', from: b0, flight: [], bounces: [], roll: [], rest: b0, restLie: 'tee', holed: false, penalty: 0, at: 0 }); };
     for (const c of Object.keys(keys)) keys[c] = false; mouse.down = false; charging = false; player.swing = -1;
     step(70); hostMessage(prac('distance', 0)); hostMessage(turn(1)); step(4);
     if (club !== 0) errs.push('host practice: the first ball did not take the suggested club');
+    // #1344: the panel folds to its pill and opens again (kept); its header says the place and, folded, the ball
+    { const f1 = pracFoldSet(true), c1 = pracEl.className, h1 = pracEl.innerHTML, f0 = pracFoldSet(false), c0 = pracEl.className;
+      info.fold = { folded: c1, open: c0 };
+      if (!f1 || c1 !== 'panel fold' || f0 || c0 !== 'panel') errs.push('host practice: the panel does not fold and open (' + JSON.stringify(info.fold) + ')');
+      if (!/data-fold="1"/.test(h1) || !/<b>Practice<\/b><i>The range<\/i><em>Ball 1<\/em>/.test(h1)) errs.push('host practice: the folded pill does not say Practice, the place and the ball');
+      if (pracLastV || /\bon\b/.test(pracLastEl ? pracLastEl.className : '')) errs.push('host practice: a last-ball readout before any ball'); }
     // he moves the aim 60 m on, 25 m to the right, takes the 7-iron and a 40% draw
     const tx = ball.x + (ux * 60 - uy * 25) * S, ty = ball.y + (uy * 60 + ux * 25) * S, l = Math.hypot(tx - ball.x, ty - ball.y);
     aim.x = tx; aim.y = ty; aim.dx = (tx - ball.x) / l; aim.dy = (ty - ball.y) / l; hostAimPin = true; club = 1; hostPickAmt('curve', -0.4); step(2);
     const mine = [aim.x, aim.y, aim.dx, aim.dy];
     if (snapAt) { step(10); snapAt('prac-ball1'); }
-    hostStrike(); rest(1); hostMessage(prac('distance', 1)); hostMessage(turn(2));
+    // #1344: the ball's readout comes with the practice message after it, waits behind the ball's playback, and shows the host's numbers; the next strike takes it away
+    const LB = { kind: 'full', club: 'driver', carryM: 201.9, rollM: 16.2, totalM: 218.1, offM: -6.4, pinM: 30.2, holed: false, ballMph: 140, clubMph: 97, smash: 1.44, launchDeg: 11.4, apexM: 24.6, backRpm: 2750, sideRpm: -450,
+      tips: ['Pulled 6.4 m left: early release', 'Boost had faded: release at the top of your taps'] };
+    hostStrike(); rest(1); hostMessage(prac('distance', 1, LB)); hostMessage(turn(2));
+    const heldBack = !!pracLastV;   // (the ball is still being played back: not yet)
     for (let k = 0; k < 400 && (HP.play || HP.q.length || ball.state !== 0); k++) tickGame();
+    { const h = pracLastEl ? pracLastEl.innerHTML : '';
+      info.last = { heldBack, cls: pracLastEl && pracLastEl.className, has: ['Carry', '202 m', '218 m', '6.4 m L', '140 mph', '97 mph', '1.44', '11.4\u00b0', '25 m', '2,750 rpm', 'Draw 450 rpm', 'Pulled 6.4 m left', 'Boost had faded', 'data-x="1"'].filter((w) => h.indexOf(w) < 0) };
+      if (heldBack || !pracLastEl || pracLastEl.className !== 'panel on full' || info.last.has.length) errs.push('host practice: the last ball\'s readout is not shown with the sent numbers once it rests (' + JSON.stringify(info.last) + ')'); }
     if (snapAt) { step(10); snapAt('prac-ball2'); }
     info.second = { club, curve: HP.pick && HP.pick.curve, aim: [aim.x === mine[0], aim.y === mine[1], aim.dx === mine[2], aim.dy === mine[3]], pin: hostAimPin };
     if (!HP.turn || HP.turn.stroke !== 2) errs.push('host practice: the second ball was not taken');
     if (aim.x !== mine[0] || aim.y !== mine[1] || aim.dx !== mine[2] || aim.dy !== mine[3]) errs.push('host practice: the aim jumped after the ball landed (' + JSON.stringify(info.second) + ')');
     if (club !== 1 || !HP.pick || HP.pick.curve !== -0.4) errs.push('host practice: the club or the curve went back to the default (' + JSON.stringify(info.second) + ')');
     // the third ball too: nothing was touched in between
-    hostStrike(); rest(2); hostMessage(prac('distance', 2)); hostMessage(turn(3));
+    hostStrike(); if (pracLastV || pracLastEl.className !== 'panel') errs.push('host practice: the readout stayed up as the next ball was struck');
+    rest(2); hostMessage(prac('distance', 2, { kind: 'putt', club: 'putter', carryM: 0, rollM: 4.2, totalM: 4.2, offM: -0.5, pinM: 0.9, holed: false, puttM: 5, leaveM: -0.8, lineM: -0.5, tips: ['Never up, never in: 0.8 m short, a firmer stroke'] })); hostMessage(turn(3));
     for (let k = 0; k < 400 && (HP.play || HP.q.length || ball.state !== 0); k++) tickGame();
     if (aim.x !== mine[0] || aim.y !== mine[1] || club !== 1) errs.push('host practice: the aim jumped after the second ball');
+    { const h = pracLastEl.innerHTML; info.putt = ['Last putt', '<i>Putt</i><b>5 m</b>', '<i>Short</i><b>0.8 m</b>', '0.5 m left', 'Never up'].filter((w) => h.indexOf(w) < 0);
+      if (pracLastEl.className !== 'panel on putt' || info.putt.length || /mph|rpm/.test(h)) errs.push('host practice: a putt\'s readout is not its length, leave and line (' + JSON.stringify(info.putt) + ')'); }
     // #1308: a fade and a club picked, and the same ball's turn sent again (new wind): they stay; then a fade struck and the next ball starts with the same fade and club
     hostPickAmt('curve', 0.6); club = 0; step(2); hostMessage(turn(3)); step(2);
     if (club !== 0 || !HP.pick || HP.pick.curve !== 0.6) errs.push('host practice: a turn sent again for the same ball put his club or fade back (' + club + ', ' + (HP.pick && HP.pick.curve) + ')');
@@ -409,7 +442,7 @@ const HOST_PLAY = String.raw`
     hostStrike(); rest(5); hostMessage(prac('shaping', 5)); hostMessage(turn(6));
     for (let k = 0; k < 400 && (HP.play || HP.q.length || ball.state !== 0); k++) tickGame();
     if (club !== 1 || Math.abs(Math.hypot(aim.x - ball.x, aim.y - ball.y) / S - 100) > 0.01) errs.push('host practice: after a drill picked the aim did not stay again');
-    pracClear();
+    pracClear(); if (pracLastV) errs.push('host practice: the readout stayed after the practice closed');
     return { errs, info };
   }
   // #1308: the contact shadow: blobShadow darkens the ground under its centre and nothing of what stands nearer, and every person on foot and the resting ball ask for one
@@ -505,21 +538,22 @@ const HOST_PLAY = String.raw`
     // the owner (2026-11-15: "the green slope indicators only showed up the moment the hole was completed"): on his putt turn the host's green is a mesh
     // (lines between the lattice's neighbours, coloured by steepness) costing under 0.3 ms a frame; once the round is over nothing is drawn, the view's
     // own grid least of all
-    { const R = 12, lat = []; for (let j = -R; j <= R; j++) for (let i = -R; i <= R; i++) { const x = p0[0] + 0.37 + i, y = p0[1] + 0.61 + j; if (Math.hypot(i, j) <= R && matAt(x * S, y * S) === M_GREEN) lat.push(x, y, 0.6, -0.8, (i + j) & 1 ? 0.004 : 0.03); }
+    { const R = 12, lat = []; for (let j = -R; j <= R; j++) for (let i = -R; i <= R; i++) { const x = p0[0] + 0.37 + i, y = p0[1] + 0.61 + j; if (Math.hypot(i, j) <= R && matAt(x * S, y * S) === M_GREEN) lat.push(x, y, 0.6, -0.8, i > 0 ? 0.03 : 0.001); }   // (the right half 3%, the left flat)
       const m = turn([p0[0] - ux * 6, p0[1] - uy * 6], 0); m.green = Object.assign({}, m.green, { pts: lat, step: 1 }); hostMessage(m); step(4); jumpToBall(); step(6); render();
       const lit = () => { ob.fill(0); drawPuttGrid(); let n = 0, l = 0; for (let i = 0; i < ob.length; i++) if (ob[i]) { n++; if (ob[i] >>> 24 === GRID_LINE_A) l++; } return [n, l]; };
       const M = hostPuttPts(HP.turn.green, hostS()), [px, lines] = lit();
       for (let k = 0; k < 20; k++) drawPuttGrid(); let ms = 1e9; for (let r = 0; r < 15; r++) { const t0 = performance.now(); for (let k = 0; k < 10; k++) drawPuttGrid(); ms = Math.min(ms, (performance.now() - t0) / 10); }
       const keep = [HP.turn, HP.over, ball.state]; HP.turn = null; HP.over = true; ball.state = 0; const [after] = lit(); HP.turn = keep[0]; HP.over = keep[1]; ball.state = keep[2]; ob.fill(0);
-      // 2026-11-15: the lines neutral (one faint white whatever the slope); the slope as dots that flow downhill: they move with the clock, faster where steeper,
-      // and are coloured by it (the lattice above: every other point flat, the rest 3%)
-      const pgKeep = pgNow, col = () => { ob.fill(0); drawPuttGrid(); const s = new Set(); for (let i = 0; i < ob.length; i++) if (ob[i] && ob[i] >>> 24 === 255) s.add(ob[i] & 0xffffff); return s; };
-      pgNow = () => 10; const c1 = col(), d1 = M.dots, at1 = Uint32Array.from(ob); pgNow = () => 10.25; col(); let moved = 0; for (let i = 0; i < ob.length; i++) if ((ob[i] >>> 24 === 255) !== (at1[i] >>> 24 === 255)) moved++; pgNow = pgKeep;
+      // 2026-11-15 (the owner: "the dots have to be on the grid", "the grid ... green and red ... like a heat map"): the lines coloured by the slope (the flat left half green,
+      // the 3% right half another colour); white dots, all in step, that move with the clock and each ride a line of the lattice (its run ends on the line to a neighbour)
+      const pgKeep = pgNow, dotPx = () => { ob.fill(0); drawPuttGrid(); const a = []; for (let i = 0; i < ob.length; i++) if (ob[i] === PG_DOT) a.push(i); return a; };
+      pgNow = () => 10; const p1 = dotPx(), d1 = M.dots; pgNow = () => 10 + 0.5 / PG_BEAT; const p2 = new Set(dotPx()); let moved = 0; for (const i of p1) if (!p2.has(i)) moved++; pgNow = pgKeep;
       const lineCols = new Set(); for (let i = 0; i < ob.length; i++) if (ob[i] >>> 24 === GRID_LINE_A) lineCols.add(ob[i] & 0xffffff);
-      info.puttDots = { dots: d1, colours: c1.size, moved, lineColours: lineCols.size, flatSp: +M.sp[0].toFixed(3), steepSp: +Math.max(...M.sp).toFixed(3) };
-      if (!(d1 > 100) || c1.size < 2 || moved < 50) errs.push('host green: the slope dots do not flow downhill in its colours (' + JSON.stringify(info.puttDots) + ')');
-      if (lineCols.size !== 1) errs.push('host green: the grid lines are not one neutral colour (' + JSON.stringify(info.puttDots) + ')');
-      if (!(Math.max(...M.sp) > 4 * Math.min(...M.sp))) errs.push('host green: a steeper slope does not flow faster (' + JSON.stringify(info.puttDots) + ')');
+      let offGrid = 0, riders = 0; for (let p = 0; p < M.n; p++) { const q = M.nb[p]; if (q < 0) continue; riders++; const ax = M.xyz[p * 3], ay = M.xyz[p * 3 + 1], bx = M.xyz[q * 3] - ax, by = M.xyz[q * 3 + 1] - ay, rx = M.run[p * 3] - ax, ry = M.run[p * 3 + 1] - ay; let isLine = false; for (let k = 0; k < M.e.length; k += 2) if ((M.e[k] === p && M.e[k + 1] === q) || (M.e[k] === q && M.e[k + 1] === p)) { isLine = true; break; } if (Math.abs(bx * ry - by * rx) > 1e-6 * Math.hypot(bx, by) || rx * bx + ry * by < 0 || !isLine) offGrid++; }
+      info.puttDots = { dots: d1, moved, lineColours: lineCols.size, riders, offGrid, inStep: M.ph.every((v) => v === M.ph[0]) && M.sp.every((v) => v === M.sp[0]) };
+      if (!(d1 > 100) || moved < 30) errs.push('host green: the slope dots do not move along the grid (' + JSON.stringify(info.puttDots) + ')');
+      if (lineCols.size < 2) errs.push('host green: the grid lines are not a heat map of the slope (' + JSON.stringify(info.puttDots) + ')');
+      if (!(riders > 50) || offGrid || !info.puttDots.inStep) errs.push('host green: the slope dots leave the grid lines or are not in step (' + JSON.stringify(info.puttDots) + ')');
       info.puttGrid = { pts: M.n, lines: M.e.length / 2, px, linePx: lines, gridMs: +ms.toFixed(4), afterRound: after };
       if (!(M.e.length / 2 >= M.n)) errs.push('host green: the slope grid is not a mesh (' + JSON.stringify(info.puttGrid) + ')');
       if (!(lines > 300)) errs.push('host green: the slope grid draws no lines on his putt turn (' + JSON.stringify(info.puttGrid) + ')');

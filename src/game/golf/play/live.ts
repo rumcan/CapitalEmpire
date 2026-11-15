@@ -5,12 +5,12 @@
 import { TILE_M } from '../types';
 import { appendShots, FLIGHT_TIME, liveField, PUTT_FLIGHT } from './round';
 import type { Due, Field, HoleRun, PlayCtx, Player } from './round';
-import { PUTT_V2, carryFor, cliffDrop, puttEase, chooseShot, hitShot, luckyPutt, putt, rng, type ShotSkill } from './shot';
+import { PUTT_V2, carryFor, cliffDrop, puttEase, chooseShot, hitShot, luckyPutt, putt, rng, type ShotSkill, type Strike } from './shot';
 import { hasMech, kitOf, type ModCtx } from './mods';
 import { readShape, shapeEffect, type ShotShape } from './shape';
 import { holeFrom } from './courseview';
 import { BIG_BOOST_V, BOOST, HOLD_PUTT_TOP, HOLD_V, METER, METER_ANG, MIN_SWING_POWER, TAP_BOOST, readSwing, swingEffect, type SwingOutcome } from './swing';
-import { AIR, isAir, readSpin, spinEffect, type SpinInput } from './spin';
+import { AIR, isAir, readSpin, spinEffect, type SpinEffect, type SpinInput } from './spin';
 import { readEnv, type ShotEnv } from './conditions';
 import type { Club, CourseView, Landing, Lie, PlayHole, Pt, RoundPlan, Shot } from './types';
 
@@ -163,9 +163,12 @@ export class LiveGroup {
  *  and spread; without it the input's power. Returns where the ball came to rest, its lie, the penalty, whether it went in, the full shot's landing, and
  *  the swing read (null: none), the spin read (T318; null: none) and the conditions read (T334; null: none) */
 export function shotOutcome(view: CourseView, hole: PlayHole, from: Pt, plie: Lie, sk: ShotSkill, input: Omit<OwnerInput, 'holeIdx' | 'stroke'>, r: () => number, sctx?: ShotCtx):
-  { to: Pt; lie: Lie; penalty: 0 | 1; holed: boolean; landing: Landing | undefined; sw: SwingOutcome | null; spin: SpinInput | null; env: ShotEnv | null; shape: ShotShape | null } {
+  { to: Pt; lie: Lie; penalty: 0 | 1; holed: boolean; landing: Landing | undefined; sw: SwingOutcome | null; spin: SpinInput | null; env: ShotEnv | null; shape: ShotShape | null;
+    /** #1344: what the practice readout reads (play/launch.ts): the power played (a full shot's share of the club's full carry, the boost in it; a putt's share of its length), the club's full
+     *  carry for him at this moment (m; 0 for a putt), the boost played, whether it was the hold-and-release swing, and a full shot's strike (hitShot's; null for a putt) */
+    played: { power: number; fullM: number; boost: number; held: boolean; strike: Strike | null; fx: SpinEffect | null } } {
   const putting = input.club === 'putter';
-  let to: Pt, lie: Lie, penalty: 0 | 1 = 0, holed = false, landing: Landing | undefined;
+  let to: Pt, lie: Lie, penalty: 0 | 1 = 0, holed = false, landing: Landing | undefined, played = { power: 0, fullM: 0, boost: 0, held: false, strike: null as Strike | null, fx: null as SpinEffect | null };
   if ((input.v ?? 1) >= CLIFF_V) view = cliffView(view);   // #1345: the view's cliffs are a lateral hazard from version 7 (an older input plays as it did)
   // T316: the swing meter's outcome (when he swung it): its power, its miss (radians off the aim, + right as he faces it) and spread
   const tapV = (input.v ?? 1) >= TAP_V; // (#1336: the tapped boost and the spin tapped in the air are version 5's)
@@ -202,6 +205,7 @@ export function shotOutcome(view: CourseView, hole: PlayHole, from: Pt, plie: Li
     const tol = (v2 ? Math.min(ez.maxDeg, Math.max(PUTT_V2.minDeg, Math.atan(ez.cupM / Math.max(distM, 0.25)) * 180 / Math.PI)) : AIM_DEG) * kit.line;
     // (T335: `feel`, the putter's distance control: the pace error counts for 1 / feel of what it was, in the window and in the leave; 1: as before)
     const paceErr = Math.abs(pw - 1) / kit.feel;
+    played = { power: pw, fullM: 0, boost: 0, held, strike: null, fx: null };
     const factor = deg <= tol ? (v2 ? Math.max(0, 1 - paceErr * distM / ez.windowM) : Math.max(0, 1 - 4 * paceErr)) : 0;
     let k = putt(r, kit.skill, distM, factor, v2, v2 ? ez.offsetM : undefined);
     k = luckyPutt(r, k, distM, kit.luck); // (T335: a lucky drop or a lip-out: one more draw, only for a putter with luck)
@@ -242,6 +246,7 @@ export function shotOutcome(view: CourseView, hole: PlayHole, from: Pt, plie: Li
       if (o.penalty > o2.penalty || (o.penalty === o2.penalty && dist(o2.to) < dist(o.to))) o = o2;
     }
     to = o.to; lie = o.lie; penalty = o.penalty; landing = o.landing;
+    played = { power: pw, fullM: carryFor(sk, input.club, mctx), boost: sw ? sw.boost : 0, held, strike: o.strike, fx: sp && sp.amount > 0 && !o.strike.flier ? sp : null };
     const pinM = () => Math.hypot(to.x - hole.pin.x, to.y - hole.pin.y) * TILE_M;
     const drop = (): void => { landing = { ...landing!, rest: { x: hole.pin.x, y: hole.pin.y }, restLie: 'green' }; to = { x: hole.pin.x, y: hole.pin.y }; lie = 'green'; holed = true; };
     // (T337: Ace Magnet: a par 3's tee shot that finishes within a few metres drops now and then; Backyard Trick Shot: so does a wedge that finishes within two; a draw only when the card is there and the shot is close)
@@ -252,5 +257,5 @@ export function shotOutcome(view: CourseView, hole: PlayHole, from: Pt, plie: Li
       const q = backToFairway(view, hole, to, CARD_HOOKS.finderReach); if (q) { landing = { ...landing!, rest: q, restLie: 'fairway' }; to = q; lie = 'fairway'; }
     }
   }
-  return { to, lie, penalty, holed, landing, sw, spin, env, shape };
+  return { to, lie, penalty, holed, landing, sw, spin, env, shape, played };
 }

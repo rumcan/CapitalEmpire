@@ -18,6 +18,7 @@ import type { RoundDriver } from './play3p';
 import { DRILLS, drillProgress, drillsAt, greenAt, judgeDrill, junkHit, junkReach, type DrillCall, type DrillGreen, type DrillId, type DrillJunk, type DrillShot, type DrillSpot, type DrillsSave } from './drills';
 import type { ViewPt } from './protocol3p';
 import { mulberry } from '../../iso';
+import { lastBall, type LastBall } from './launch';
 
 /** the two practice places: the range's mats, and the short game area (the chipping green and its bunker) */
 export type PracticePlace = 'range' | 'short';
@@ -146,6 +147,8 @@ export class PracticeDriver implements RoundDriver {
   balls = 0;
   /** J6b: the junk pile the last ball hit, said once (null: none) */
   hitJunk: string | null = null;
+  /** #1344: the last ball's readout (launch.ts lastBall: carry, roll, speeds, spin, tips), taken once by the practice message (null: none since) */
+  last: LastBall | null = null;
   constructor(readonly course: PracticeCourse, readonly place: PracticePlace, private readonly sk: ShotSkill, private readonly seed: number, private readonly hooks: PracticeHooks) {
     this.view = course.view;
     const here = drillsAt(place), sv = hooks.drills();
@@ -187,6 +190,9 @@ export class PracticeDriver implements RoundDriver {
     { const j = this.spot === 'range' ? junkHit(this.course.junk, o.landing?.at ?? null, o.landing?.rest ?? o.to) : null; this.hitJunk = j ? `Hit the ${j.name.toLowerCase()}!` : null; }   // (J6b: any range ball that hits a junk pile is said)
     const shot: Shot = { golfer: this.golfer, hole: t.holeIdx, stroke: t.stroke, t: 0, from: { ...t.ball }, to: o.to, club: input.club, lie: o.lie, penalty: o.penalty, holed: o.holed,
       ...(o.landing ? { landing: o.landing } : {}) };
+    this.last = lastBall({ kind: input.club === 'putter' ? 'putt' : this.place === 'short' ? 'chip' : 'full', club: input.club, lie: t.lie, from: t.ball, aim: inp.aim, pin: t.pin,
+      land: o.landing?.at ?? null, rest: o.landing && !o.penalty ? o.landing.rest : o.to, restLie: o.landing?.restLie ?? o.lie, holed: o.holed, penalty: o.penalty,
+      played: o.played, shape: o.shape, sw: o.sw, env: o.env });   // (#1344: the readout, before the next ball)
     this.list.push(shot); this.inputs.push(input); this.balls++;
     if (this.active) {
       const ds: DrillShot = { spot: this.spot, club: input.club, shape: o.shape, landing: o.landing?.at ?? null, landLie: o.landing?.lie ?? null, rest: o.landing?.rest ?? o.to,

@@ -107,12 +107,59 @@ button { font-family: var(--sans); }
 /* the glass panels (CapitalEmpire's .glass): the card, the help, the shot panel, the settings menu, the leaderboard and match cards */
 .panel, #card, #help, #shotc, #styleMenu { background: var(--panel); border: 1px solid var(--line); border-radius: 1.1em; box-shadow: var(--shadow); color: var(--ink); }
 body > .panel { border-radius: 0.9em; }
-#prac .ph { font-size: 0.85em; letter-spacing: 0.12em; color: var(--gold); margin-bottom: 0.35em; } #prac .pd { display: flex; gap: 0.7em; align-items: flex-start; padding: 0.5em 0.55em; margin: 0.35em 0; border: 1px solid var(--line); border-radius: 0.8em; background: rgba(0, 0, 0, 0.22); cursor: pointer; }
+#prac .pd { display: flex; gap: 0.7em; align-items: flex-start; padding: 0.5em 0.55em; margin: 0.35em 0; border: 1px solid var(--line); border-radius: 0.8em; background: rgba(0, 0, 0, 0.22); cursor: pointer; }
 #prac .pd.on { border-color: var(--gold-line); background: var(--gold-wash); } #prac .pd.off { opacity: 0.45; cursor: default; } #prac .pd.done .pt i { color: var(--good); } #prac .pd:hover:not(.off) { border-color: var(--line-hi); }
 #prac .pt { display: flex; justify-content: space-between; gap: 0.5em; } #prac .pt b { color: var(--ink); } #prac .pt i { font-style: normal; color: var(--gold-hi); } #prac .pg { color: var(--ink); font-size: 0.92em; margin-top: 0.15em; } #prac .pr { color: var(--muted); font-size: 0.85em; } #prac .pw { color: var(--warn); font-size: 0.85em; margin-top: 0.1em; }
 #prac .pb { height: 0.4em; margin: 0.25em 0; border-radius: 999px; background: rgba(255, 255, 255, 0.1); overflow: hidden; } #prac .pb u { display: block; height: 100%; text-decoration: none; border-radius: 999px; background: var(--gold); } #prac .pd.done .pb u { background: var(--good); }
 #prac .pi { flex: none; width: 64px; height: 64px; border-radius: 12%; pointer-events: none; } #prac .px { flex: 1; min-width: 0; }   /* (J8: a drill's tile at the left of its words; #1301: 64 px, a card) */
 #prac .pn { margin-top: 0.45em; color: var(--gold-hi); } #prac .pf { margin-top: 0.25em; color: var(--muted); font-size: 0.88em; }
+/* #1344 (the owner: "make the 'practice - the range' window shrink and expand"): the practice panel's place and size live here so it can fold. Its header folds it; folded, the
+   header alone is a pill in the hole pill's look (the serif gold word, the place, the ball, the arrow). Long words wrap: never a sideways scroll bar */
+#prac { position: absolute; left: 1.4%; top: 20%; width: clamp(250px, 24vw, 340px); max-width: 40%; max-height: 64%; box-sizing: border-box; padding: 0.55em 0.7em; font-size: clamp(11px, 0.95vw, 14px); line-height: 1.35;
+  pointer-events: auto; z-index: 5; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; overflow-wrap: anywhere; }
+#prac .ph { position: sticky; top: -0.55em; z-index: 1; display: flex; align-items: baseline; gap: 0.5em; margin: -0.55em -0.1em 0.3em; padding: 0.45em 0.2em 0.35em; background: #16171b; border-bottom: 1px solid var(--line); cursor: pointer; white-space: nowrap; overflow-wrap: normal; min-width: 0; }   /* (sticky: the fold is always at hand while the list scrolls) */
+#prac .ph b { font: 700 1.1em/1.2 var(--serif); color: var(--gold-hi); }
+#prac .ph i, #prac .ph em { font-style: normal; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+#prac .ph i { color: var(--ink); } #prac .ph em { display: none; color: var(--muted); font-variant-numeric: tabular-nums; }
+#prac .ph i::before, #prac .ph em::before { content: '\00b7'; margin-right: 0.5em; color: var(--muted); }
+#prac .ph s { margin-left: auto; padding-left: 0.3em; text-decoration: none; color: var(--muted); font-size: 0.8em; }
+#prac .ph:hover b { color: var(--gold); } #prac .ph:hover s { color: var(--gold-hi); }
+#prac.fold { width: auto; max-width: min(24em, 40%); padding: 0.35em 0.8em 0.4em; border-radius: 1.1em; overflow: hidden; }
+#prac.fold > :not(.ph) { display: none; }
+#prac.fold .ph { position: static; margin: 0; padding: 0; border: 0; background: none; }
+#prac.fold .ph em { display: inline; }
+#prac.fold .ph s { transform: rotate(-90deg); }
+#prac.fold:hover { border-color: var(--gold-line); }
+/* #1344 (the owner: "fix the scroll bar style"): the HUD's scroll bar on every panel that scrolls (the practice panel, the shot panel, the help): thin (6 px), a rounded muted-gold thumb on a
+   clear track, brighter under the pointer, no arrows; Blink and WebKit by ::-webkit-scrollbar, Firefox by scrollbar-width and scrollbar-color (set only where ::-webkit-scrollbar is not known:
+   Chrome drops its ::-webkit-scrollbar look once those are set). Never a sideways one: the panels hide overflow-x */
+#prac::-webkit-scrollbar, #shotc::-webkit-scrollbar, #help::-webkit-scrollbar { width: 6px; height: 0; background: transparent; }
+#prac::-webkit-scrollbar-button, #shotc::-webkit-scrollbar-button, #help::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+#prac::-webkit-scrollbar-track, #shotc::-webkit-scrollbar-track, #help::-webkit-scrollbar-track, #prac::-webkit-scrollbar-corner, #shotc::-webkit-scrollbar-corner, #help::-webkit-scrollbar-corner { background: transparent; }
+#prac::-webkit-scrollbar-thumb, #shotc::-webkit-scrollbar-thumb, #help::-webkit-scrollbar-thumb { min-height: 28px; border-radius: 999px; background: rgba(245, 181, 46, 0.36); }
+#prac::-webkit-scrollbar-thumb:hover, #shotc::-webkit-scrollbar-thumb:hover, #help::-webkit-scrollbar-thumb:hover { background: rgba(255, 209, 102, 0.85); }
+@supports not selector(::-webkit-scrollbar) {
+  #prac, #shotc, #help { scrollbar-width: thin; scrollbar-color: rgba(245, 181, 46, 0.4) transparent; }
+  #prac:hover, #shotc:hover, #help:hover { scrollbar-color: rgba(255, 209, 102, 0.8) transparent; }
+}
+/* #1344 (the owner: "add some info about the ball you just hit. center top"): the last ball's launch-monitor strip, at the top centre under the edge, between the hole pill (left, at most
+   26em wide) and the map (right): the club, a row of cells (a small caps name over the number) that wraps, and one or two tips. Only while there is a last ball */
+#lastBall { position: absolute; left: 50%; top: 2%; transform: translateX(-50%); display: none; box-sizing: border-box; width: max-content; max-width: min(40em, calc(100% - 2 * (1.4% + 27em)));
+  padding: 0.4em 0.65em 0.45em; border-radius: 1.1em; pointer-events: auto; font-size: 0.92em; line-height: 1.3; overflow-wrap: anywhere; }
+#lastBall.on { display: block; }
+#lastBall .lbh { display: flex; align-items: center; gap: 0.5em; white-space: nowrap; overflow-wrap: normal; }
+#lastBall .lbh b { font: 700 1.05em/1.2 var(--serif); color: var(--gold-hi); }
+#lastBall .lbh em { flex: 1; min-width: 0; font-style: normal; font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; }
+#lastBall .lbh em::before { content: '\00b7'; margin-right: 0.5em; color: var(--muted); }
+#lastBall .lbx { flex: none; width: 1.55em; height: 1.55em; padding: 0; display: grid; place-items: center; border: 1px solid var(--line-hi); border-radius: 50%; background: rgba(255, 255, 255, 0.06); color: var(--muted); font: 700 0.95em/1 var(--sans); cursor: pointer; }
+#lastBall .lbx:hover { color: var(--gold-hi); border-color: var(--gold-line); }
+#lastBall .lbr { display: flex; flex-wrap: wrap; gap: 0.3em; margin-top: 0.3em; }
+#lastBall .lbr span { display: flex; flex-direction: column; flex: 1 0 auto; min-width: 4.4em; padding: 0.12em 0.5em 0.18em; border-radius: 0.6em; background: rgba(0, 0, 0, 0.25); border: 1px solid var(--line); }
+#lastBall .lbr i { font-style: normal; font-size: 0.7em; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+#lastBall .lbr b { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap; }
+#lastBall .lbt { margin-top: 0.3em; font-size: 0.95em; }
+#lastBall .lbt div::before { content: '\203a'; margin-right: 0.4em; color: var(--muted); }
+#lastBall .lbt .tip { color: var(--gold-hi); } #lastBall .lbt .good { color: var(--good); }
 .pflag { padding: 0.1em 0.45em; border-radius: 0.5em; background: var(--panel); border: 1px solid var(--gold-line); color: var(--ink); font: 600 clamp(10px, 0.85vw, 13px) system-ui, sans-serif; white-space: nowrap; }
 body > .panel > b:first-child { font-size: 0.85em; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); }
 
@@ -209,6 +256,17 @@ body.host #minimap { top: 56px; }
 #shotc .bw img { position: absolute; width: 2.1em; height: 2.1em; border-radius: 12%; pointer-events: none; }
 #shotc .bw img.e-draw { left: 0; top: 4.95em; } #shotc .bw img.e-fade { right: 0; top: 4.95em; } #shotc .bw img.e-high { left: 4.95em; top: 0; } #shotc .bw img.e-low { left: 4.95em; bottom: 0; }
 #shotc .bw img.lock { opacity: 0.3; filter: grayscale(1); }
+/* #1344: a locked side's lock badge (on its tile's corner), the lock line under the ball (always there while anything is locked), and a refused drag's shake and flash */
+#shotc .lkb { position: absolute; display: none; place-items: center; width: 1.2em; height: 1.2em; border-radius: 50%; background: var(--panel); border: 1px solid var(--warn); color: var(--warn); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5); pointer-events: none; z-index: 1; }
+#shotc .lkb svg { display: block; width: 0.78em; height: 0.78em; }
+#shotc .lkb.lk-draw { left: 1.45em; top: 4.4em; } #shotc .lkb.lk-fade { right: 1.45em; top: 4.4em; } #shotc .lkb.lk-high { left: 6.45em; top: -0.2em; } #shotc .lkb.lk-low { left: 6.45em; top: 9.45em; }
+#shotc.no-draw .lk-draw, #shotc.no-fade .lk-fade, #shotc.no-high .lk-high, #shotc.no-low .lk-low { display: grid; }
+#shotc .lock { margin-top: 0.25em; padding: 0.2em 0.45em; border-radius: 0.6em; text-align: center; font-size: 0.85em; font-weight: 600; line-height: 1.35; color: var(--warn); background: rgba(251, 154, 75, 0.08); white-space: pre-line; cursor: help; }
+#shotc .lock:empty { display: none; }
+#shotc .lock.flash { animation: lockFlash 0.45s ease-out; }
+#shapeBall.shake { animation: shapeShake 0.4s ease-in-out; }
+@keyframes lockFlash { 0%, 55% { color: #fff; background: rgba(251, 154, 75, 0.38); } 100% { color: var(--warn); background: rgba(251, 154, 75, 0.08); } }
+@keyframes shapeShake { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(3px); } }
 #shotc .lab { text-align: center; font-size: 0.85em; color: var(--muted); }
 #shotc .lim { margin-top: 0.2em; text-align: center; font-size: 0.85em; color: var(--ink); cursor: help; }
 #shotc .lim:empty { display: none; }
@@ -272,9 +330,7 @@ body.host #minimap { top: 56px; }
 #keys:hover, #styleBtn:hover, #keys.on { border-color: var(--gold-line); color: var(--gold-hi); }
 /* the help: CapitalEmpire's keycaps */
 #help { position: absolute; right: 1.4%; bottom: calc(2.4% + 3.3em); box-sizing: border-box; max-width: min(36em, 58%); max-height: calc(97.6% - 3.3em - 2% - 1em); overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; pointer-events: auto; padding: 0.7em 0.95em; font-size: 0.9em; line-height: 1.6; display: none; white-space: pre-wrap; color: var(--ink); }
-/* CapitalEmpire's thin scrollbar (src/index.css, T205): a light thumb, gold under the pointer, no arrows; never a sideways one */
-#help::-webkit-scrollbar { width: 8px; background: transparent; } #help::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
-#help::-webkit-scrollbar-thumb { min-height: 28px; border: 2px solid transparent; border-radius: 999px; background: rgba(239, 233, 218, 0.26) padding-box; } #help::-webkit-scrollbar-thumb:hover { background: rgba(245, 181, 46, 0.85) padding-box; }
+/* (its scroll bar is the HUD's, with the practice panel's and the shot panel's: #1344, above) */
 #help.on { display: block; }
 #help b { display: inline-block; min-width: 7.5em; margin-right: 0.6em; font-weight: 700; color: var(--gold-hi); }
 #help b.h { border: 0; background: none; padding: 0; font-size: 0.85em; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); }

@@ -187,7 +187,8 @@ test('appeal on the map: the props near a range\'s front count, the labels name 
   assert.equal(new PropsTool(host(null).ctx).appeal(), 0, 'no range: no appeal');
   // the mats refuse a prop
   const bay = sc.bays[0]!.stand; t.pick('bench'); t.move(bay.x, bay.y); assert.equal(t.ghost!.why, 'Not on the hitting mats');
-  const tg = sc.targets[0]!; t.move(tg.x, tg.y); assert.equal(t.ghost!.why, 'Not on a target green');
+  // (#1302, the owner: "I should be able to place props on the range": a target green takes one, as the rest of the range's ground does)
+  const tg = sc.targets[0]!; t.move(tg.x, tg.y); assert.equal(t.ghost!.why, '');
 });
 
 test('the save: a Props tool prop keeps its kind (the 7th element), its view (its picture) and its spot; old tuples read as before', () => {
