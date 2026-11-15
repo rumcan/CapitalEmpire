@@ -276,6 +276,18 @@ const HOST_PLAY = String.raw`
       if (!/Fade is locked: Accuracy 60/.test(said1) || !/High is locked: Touch 60/.test(said2)) errs.push('host craft: a locked side did not say what unlocks it (' + said1 + ' / ' + said2 + ')');
       if (hostPickText() !== 'Draw 40%, low 25%') errs.push('host craft: the pick is not told with its amounts (' + hostPickText() + ')');
       step(12, 0); { const m = hostLast && hostLast.t === 'aim' ? hostLast.input.shape : null; if (!m || m.curve !== -0.4 || m.flight !== -0.25) errs.push('host craft: the sliders\' amounts did not go out in the aim (' + JSON.stringify(m) + ')'); }
+      // 2026-11-15: the ball's dot sends the same shape as the sliders did: the dot at 40% of the way to the ring on the draw side and 25% down is a 40% draw, 25% low,
+      // in the pick and in the aim that goes out; the ring is his limit (his bend against a scratch golfer's) and the dot stops at it, its edge his full amount
+      { hostPickAmt('curve', 0); hostPickAmt('flight', 0); step(12, 0);
+        const C0 = HP.clubs[club], keepB = C0.bend; C0.bend = { m: 6, scrM: 10, pulled: 0.6, scrPulled: 1, skill: 0.6, accuracy: 0.6 };
+        const rr = shapeRing(), a = shapeAmt(-0.4 * rr, -0.25 * rr, rr), got = hostShapeAt(a[0], a[1]); step(12, 0);
+        const sent = hostLast && hostLast.t === 'aim' ? hostLast.input.shape : null, edge = shapeAmt(-3, 0, rr), mid = shapeAmt(0.03, -0.02, rr), diag = shapeAmt(0.3, 0.3, rr);
+        info.ball = { rr, a, got, sent, edge, mid, diag };
+        if (Math.abs(rr - 0.6) > 1e-9) errs.push('host craft: the limit ring is not his bend against a scratch golfer\'s (' + rr + ')');
+        if (!got || got.curve !== -0.4 || got.flight !== -0.25 || !sent || sent.curve !== -0.4 || sent.flight !== -0.25) errs.push('host craft: the ball did not send the sliders\' shape (' + JSON.stringify(info.ball) + ')');
+        if (edge[0] !== -1 || edge[1] !== 0 || mid[0] !== 0 || mid[1] !== 0 || diag[0] !== 0.5 || diag[1] !== 0.5) errs.push('host craft: the dot is not held inside the ring (' + JSON.stringify(info.ball) + ')');
+        msgText = ''; hostShapeAt(0.5, 0.5); if (HP.pick.curve !== 0 || HP.pick.flight !== 0 || !/is locked/.test(msgText)) errs.push('host craft: the ball took a side he has not earned (' + JSON.stringify(HP.pick) + ')');
+        C0.bend = keepB; }
       hostPickAmt('curve', 0); hostPickAmt('flight', 0);
       const zs = [], xs = []; for (let k = 0; k < 3; k++) { hostPickSet('curve'); zs.push(HP.pick.curve); } for (let k = 0; k < 3; k++) { hostPickSet('flight'); xs.push(HP.pick.flight); }
       info.keys = { z: zs, x: xs };
@@ -415,7 +427,7 @@ const HOST_PLAY = String.raw`
     const step = (n) => { for (let k = 0; k < n; k++) tickGame(); };
     for (const c of Object.keys(keys)) keys[c] = false; mouse.down = false; charging = false;
     step(70); hostMessage(turn(b0, 0.6)); jumpToBall(); step(6); updateHud();
-    if (!/breaks right to left/.test(cardEl.innerHTML)) errs.push('host green: the read is not on the card');
+    if (![cardEl, cardRead, cardMore].some((e) => /breaks right to left/i.test(e.innerHTML || e.textContent || ''))) errs.push('host green: the read is not on the card');   // (2026-11-15: the pill's break line, and the Read row in its facts)
     const ends = (dAng) => { const pa = Math.atan2((p0[1] - b0[1]), (p0[0] - b0[0])) + dAng; aim.dx = Math.cos(pa); aim.dy = Math.sin(pa); aim.x = ball.x + aim.dx * Math.hypot(p0[0] - b0[0], p0[1] - b0[1]) * S; aim.y = ball.y + aim.dy * Math.hypot(p0[0] - b0[0], p0[1] - b0[1]) * S; render(); return HP.putt ? Math.hypot(HP.putt.x / S - p0[0], HP.putt.y / S - p0[1]) : null; };
     info.byRead = ends(a); info.atCup = ends(0);
     if (!(info.byRead !== null && info.byRead < 1e-6)) errs.push('host green: aimed along the read the putt does not end in the cup (' + info.byRead + ')');
@@ -444,6 +456,15 @@ const HOST_PLAY = String.raw`
       const M = hostPuttPts(HP.turn.green, hostS()), [px, lines] = lit();
       for (let k = 0; k < 20; k++) drawPuttGrid(); let ms = 1e9; for (let r = 0; r < 15; r++) { const t0 = performance.now(); for (let k = 0; k < 10; k++) drawPuttGrid(); ms = Math.min(ms, (performance.now() - t0) / 10); }
       const keep = [HP.turn, HP.over, ball.state]; HP.turn = null; HP.over = true; ball.state = 0; const [after] = lit(); HP.turn = keep[0]; HP.over = keep[1]; ball.state = keep[2]; ob.fill(0);
+      // 2026-11-15: the lines neutral (one faint white whatever the slope); the slope as dots that flow downhill: they move with the clock, faster where steeper,
+      // and are coloured by it (the lattice above: every other point flat, the rest 3%)
+      const pgKeep = pgNow, col = () => { ob.fill(0); drawPuttGrid(); const s = new Set(); for (let i = 0; i < ob.length; i++) if (ob[i] && ob[i] >>> 24 === 255) s.add(ob[i] & 0xffffff); return s; };
+      pgNow = () => 10; const c1 = col(), d1 = M.dots, at1 = Uint32Array.from(ob); pgNow = () => 10.25; col(); let moved = 0; for (let i = 0; i < ob.length; i++) if ((ob[i] >>> 24 === 255) !== (at1[i] >>> 24 === 255)) moved++; pgNow = pgKeep;
+      const lineCols = new Set(); for (let i = 0; i < ob.length; i++) if (ob[i] >>> 24 === GRID_LINE_A) lineCols.add(ob[i] & 0xffffff);
+      info.puttDots = { dots: d1, colours: c1.size, moved, lineColours: lineCols.size, flatSp: +M.sp[0].toFixed(3), steepSp: +Math.max(...M.sp).toFixed(3) };
+      if (!(d1 > 100) || c1.size < 2 || moved < 50) errs.push('host green: the slope dots do not flow downhill in its colours (' + JSON.stringify(info.puttDots) + ')');
+      if (lineCols.size !== 1) errs.push('host green: the grid lines are not one neutral colour (' + JSON.stringify(info.puttDots) + ')');
+      if (!(Math.max(...M.sp) > 4 * Math.min(...M.sp))) errs.push('host green: a steeper slope does not flow faster (' + JSON.stringify(info.puttDots) + ')');
       info.puttGrid = { pts: M.n, lines: M.e.length / 2, px, linePx: lines, gridMs: +ms.toFixed(4), afterRound: after };
       if (!(M.e.length / 2 >= M.n)) errs.push('host green: the slope grid is not a mesh (' + JSON.stringify(info.puttGrid) + ')');
       if (!(lines > 300)) errs.push('host green: the slope grid draws no lines on his putt turn (' + JSON.stringify(info.puttGrid) + ')');
