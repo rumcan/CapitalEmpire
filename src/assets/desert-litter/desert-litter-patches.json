@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "ticket": "#1304",
+  "source": "D:/AI/chatgpt-bridge/in/desert-litter-patches-1view-e1.png",
+  "grid": [
+    2,
+    2
+  ],
+  "pieces": [
+    {
+      "k": 0,
+      "what": "a long low drift of pale sand with wind ripples",
+      "file": "src/assets/desert-litter/desert-litter-patches-0.webp",
+      "sha256": "4af7e1d4b114712ae04eb9ac1dabec770e789f173f05a8ed4730e8c18dffc235"
+    },
+    {
+      "k": 1,
+      "what": "a low heap of sand and pebbles",
+      "file": "src/assets/desert-litter/desert-litter-patches-1.webp",
+      "sha256": "f0d9104af2d003dde5ff4968d9d0752447a3bd0d18daa51bfe1bba57632d3b3c"
+    },
+    {
+      "k": 2,
+      "what": "a loose scatter of grit and small stones",
+      "file": "src/assets/desert-litter/desert-litter-patches-2.webp",
+      "sha256": "b281f976823262c38af0831cccf1645fd95a61035e74bcb345c829d0e0153346"
+    },
+    {
+      "k": 3,
+      "what": "a flat patch of dry brown brush and twigs",
+      "file": "src/assets/desert-litter/desert-litter-patches-3.webp",
+      "sha256": "bf651b6fcaaf8cab37ae7041ed2f9cd19afcae4e450484c114b578635298df63"
+    }
+  ]
+}

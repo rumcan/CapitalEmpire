@@ -85,6 +85,7 @@ import { bendWords } from './game/route-input';
 import { COST_GROUPS, INCOME_LINES } from './game/golf/reports';
 import { debtOf } from './game/golf/finance';
 import { LOGO, TITLE, TitleCard } from './ui/jam/TitleCard';
+import LOADING_ART from './assets/ui/brand/loading.webp';
 import { MenuScene, posterOf } from './ui/jam/MenuScene';
 import { CHOICE_STORE_KEY, SHOW_STOPS, choiceFromStore, choiceHash, choiceOf, pickStart, sandboxOf, poseAt, sceneOff, showBoot, showWanted, weakMachine, type StartChoice } from './game/showcase';
 import { ShowDirector } from './game/showcase-director';
@@ -654,7 +655,8 @@ export default function App() {
 
       {fatal && <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#15200f] p-8 text-center text-red-200">This game needs WebGL2 and OffscreenCanvas. {fatal}</div>}
       {game && !game.ready && !onTitle && (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#15200f]">
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#15200f] bg-cover bg-center" style={{ backgroundImage: `linear-gradient(rgba(10,14,8,0.45), rgba(10,14,8,0.65)), url(${LOADING_ART})` }} data-testid="loading-screen">
+          {/* the owner, 2026-11-15: "a proper loading screen image" (the town and the club in autumn), darkened under the logo and the bar */}
           <img src={LOGO} alt={TITLE} className="block h-auto w-[min(420px,80vw)] drop-shadow-2xl" data-testid="loading-logo" />
           <div className="mt-1 text-sm uppercase tracking-[0.3em] text-amber-400/80">Build · Play · Run the club</div>
           <div className="mt-6 h-2 w-64 overflow-hidden rounded-full bg-white/10">

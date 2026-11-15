@@ -262,6 +262,45 @@
       "w": 836,
       "h": 471,
       "bytes": 818819
+    },
+    {
+      "slug": "range-road",
+      "state": "second-hand",
+      "file": "range-road-second-hand.webp",
+      "w": 1024,
+      "h": 576,
+      "bytes": 142524,
+      "width": 1024,
+      "quality": 80,
+      "version": 1,
+      "source": "art/theme-consistency/generated/scenes/range-road/range-road-second-hand-v1.png",
+      "sha256": "f40690e6aab669a1402a779761c9f3ff74e8289c80dfb4418b945bc133f3b570"
+    },
+    {
+      "slug": "pro-shop-inside",
+      "state": "second-hand",
+      "file": "pro-shop-inside-second-hand.webp",
+      "w": 1024,
+      "h": 576,
+      "bytes": 70604,
+      "width": 1024,
+      "quality": 80,
+      "version": 1,
+      "source": "art/theme-consistency/generated/scenes/pro-shop-inside/pro-shop-inside-second-hand-v1.png",
+      "sha256": "b9dc3d0d91ee8f9f2d454df3468b56a5f1f18e0d14eec2f49e8e8cca6e3b73c6"
+    },
+    {
+      "slug": "practice-green",
+      "state": "second-hand",
+      "file": "practice-green-second-hand.webp",
+      "w": 1024,
+      "h": 572,
+      "bytes": 157992,
+      "width": 1024,
+      "quality": 80,
+      "version": 1,
+      "source": "art/theme-consistency/generated/scenes/practice-green/practice-green-second-hand-v1.png",
+      "sha256": "f9aafd47a6d0ec74719d154006247f77cc0a21b6370d14c173649203b527cbf6"
     }
   ]
 }
