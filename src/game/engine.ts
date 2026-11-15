@@ -206,6 +206,7 @@ import { dressCourse } from './golf/dressing';
 import { noteMoment } from '../ui/golf/finevents';
 import { framePoints, tilesAround, type Box as SpotBox, type TileRect } from '../ui/spotlight/spot'; // J10 (#1269): the Show me spotlight's map side
 import { currentUiScale } from '../ui/uiScale';
+import type { BuildNowInfo, BuildNowPlace } from '../ui/build-now'; // #1325: the map's BUILD NOW button
 import { balanceBooks, cashLinesSum, book, assetsAtCost, debtOf, netWorthOf, deposit, isBankrupt, monthEnd, newFinance, repay, signBank, signMurabaha, withdraw, type FinanceSave, type Line, type MonthReport } from './golf/finance';
 import { settleRisk, noteEmergency, setInsurance, type Plan } from './golf/risk'; // J3
 import { weeklyFees, type Live } from './golf/reports'; // J3
@@ -6966,6 +6967,88 @@ export class Game {
     out.x = Math.min(ax, bx, cx, dx); out.y = Math.min(ay, by, cy, dy);
     out.w = Math.max(ax, bx, cx, dx) - out.x; out.h = Math.max(ay, by, cy, dy) - out.y;
     return true;
+  }
+  // ---------- #1325: the map's BUILD NOW button (ui/MapBuildNow.tsx; the owner, 2026-11-15: "add a button to the map ... beside the wireframe outline that says BUILD NOW", and the same for roads)
+  /** the ghost the plan view below was made for (the wizard caches its ghost, so a new object is a changed plan), and its corridor's points (tiles) */
+  private bnGhost: object | null = null; private bnView: Pt[] = [];
+  /** the planned route's verdict, worked out at most every 400 ms (and at once for another route, class or purse): whether finishRoute would build it, why not, and what it costs */
+  private bnRoad: { key: string; t: number; ok: boolean; why: string; price: number } | null = null;
+  /** what the BUILD NOW button says and does now, or null when there is nothing to build: New hole with its tee and green chosen (a click is the wizard's own Build), or the road tool
+   *  with a route of clicks waiting for Enter (a click is finishRoute, as Enter is; a drag builds on release as ever, and shows none) */
+  buildNowInfo(): BuildNowInfo | null {
+    if (this.startPick) return null;
+    const p = this.paint, w = p.wizard;
+    if (this.paintOn && p.planOpen && p.mode === 'plan' && w.step === 'shape' && !w.base) {
+      const c = w.check(), gh = c.ghost; if (!gh) return null;
+      // the price the panel's Build shows: the cells, the frame of trees and the earthworks
+      const extra = (p.frameTrees ? Math.max(0, this.wizardFrame()?.price ?? 0) : 0) + (p.groundCost()?.cost ?? 0);
+      return { id: 'hole', tile: 'golf-hole', price: `$${(gh.cost + extra).toLocaleString()}`, ok: c.ok, why: c.ok ? '' : c.id === 'same' ? 'No changes' : (c.why.split(':')[0] ?? c.why), build: () => { p.buildPlan(); } };
+    }
+    if (this.tool === 'road' && !this.routeDragging && this.route.length >= 2) {
+      const v = this.routeVerdict(); if (!v) return null;
+      const walk = this.cls.id === 'cart-walk';
+      return { id: 'road', tile: walk ? 'walking-path' : 'cart-path', price: `$${Math.max(0, v.price).toLocaleString()}`, ok: v.ok, why: v.why, build: () => { this.finishRoute(); } };
+    }
+    return null;
+  }
+  /** whether the route of clicks (not the pointer's preview) can be built, in finishRoute's own order of checks, with its cost; null when it has no length. Cached (a few checks are not
+   *  cheap): the button asks at every repaint */
+  private routeVerdict(): { ok: boolean; why: string; price: number } | null {
+    const r = this.route, last = r[r.length - 1]; if (!last) return null;
+    const key = `${r.length}|${last.x},${last.y}|${this.cls.id}|${Math.round(this.money)}`, now = performance.now(), c = this.bnRoad;
+    if (c && c.key === key && now - c.t < 400) return c;
+    const legs: Leg[] = [];
+    for (let i = 1; i < r.length; i++) if (r[i]!.x !== r[i - 1]!.x || r[i]!.y !== r[i - 1]!.y) legs.push({ a: r[i - 1]!, b: r[i]! });
+    if (!legs.length) return null;
+    const cuts = this.routeCuts(legs), block = checkLegs(this.net, legs, this.routeFrom, this.routeLast, this.cls, new Set(cuts.map(x => x.seg)), this.golfLand()) || (this.routeInWay(legs)?.why ?? '');
+    const st = this.structured(legs), price = Math.round(st.cost - this.piecesValue(cuts));
+    const comp = block ? 0 : this.lotsInLegs(st.parts).reduce((a, v) => a + compensation(v), 0);
+    let why = block;
+    if (!why && !this.classOpen(this.cls.id)) why = this.classLockWhy(this.cls.id);
+    if (!why && st.kinds.includes(SK.TUNNEL) && !this.tunnelsOpen()) { const lk = unlockOf('tunnel')!; why = `Tunnels unlock at ${lk.pop.toLocaleString()} residents`; }
+    if (!why && price + comp > this.money) why = 'Not enough money';
+    if (!why && st.err) why = st.err;
+    const v = { key, t: now, ok: !why, why, price: price + comp };
+    this.bnRoad = v;
+    return v;
+  }
+  /** the planned thing's box on the screen (css px over the map) into out, and the points the button must keep clear of (the tee and the green and the line between them; the
+   *  route's points and the stretches between): no allocation a frame (the plan's corridor is worked out once per ghost). False: nothing to place, or nothing on screen */
+  buildNowPlace(out: BuildNowPlace): boolean {
+    if (!(this.cssW > 0 && this.cssH > 0)) return false;
+    const c = this.cam, k = c.z, ox = this.cssW / 2 - c.X * k, oy = this.cssH / 2 - c.Y * k, pts = out.pts, cap = pts.length - 2;
+    let n = 0, x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    const p = this.paint, w = p.wizard;
+    if (this.paintOn && p.planOpen && w.step === 'shape' && w.plan && !w.base) {
+      const gh = w.ghost(); if (!gh) return false;
+      if (gh !== this.bnGhost) { this.bnGhost = gh; this.bnView = w.planView(); }
+      const V = this.bnView;
+      for (let i = 0; i < V.length; i++) { const sx = worldX(V[i]!.x, V[i]!.y) * k + ox, sy = worldY(V[i]!.x, V[i]!.y) * k + oy; if (sx < x0) x0 = sx; if (sx > x1) x1 = sx; if (sy < y0) y0 = sy; if (sy > y1) y1 = sy; }
+      const L = gh.geom.line, step = Math.max(1, Math.ceil(L.length / 40));
+      for (let i = 0; i < L.length && n < cap; i += step) { pts[n++] = worldX(L[i]!.x, L[i]!.y) * k + ox; pts[n++] = worldY(L[i]!.x, L[i]!.y) * k + oy; }
+      const tee = w.plan.tee, green = w.plan.green;
+      if (n < cap) { pts[n++] = worldX(tee.x, tee.y) * k + ox; pts[n++] = worldY(tee.x, tee.y) * k + oy; }
+      if (n < cap) { pts[n++] = worldX(green.x, green.y) * k + ox; pts[n++] = worldY(green.x, green.y) * k + oy; }
+      out.n = n; out.x = x0; out.y = y0; out.w = x1 - x0; out.h = y1 - y0;
+      return x1 > 0 && y1 > 0 && x0 < this.cssW && y0 < this.cssH;
+    }
+    const R = this.route;
+    if (this.tool === 'road' && R.length >= 2) {
+      // the box is the route's last point (the button stands beside the END of the route); the points are the whole route, sampled about every 24 px
+      const e = R[R.length - 1]!;
+      for (let i = 0; i < R.length && n < cap; i++) {
+        const ax = worldX(R[i]!.x, R[i]!.y) * k + ox, ay = worldY(R[i]!.x, R[i]!.y) * k + oy;
+        pts[n++] = ax; pts[n++] = ay;
+        if (i) {
+          const bx = worldX(R[i - 1]!.x, R[i - 1]!.y) * k + ox, by = worldY(R[i - 1]!.x, R[i - 1]!.y) * k + oy, m = Math.min(12, Math.floor(Math.hypot(ax - bx, ay - by) / 24));
+          for (let j = 1; j <= m && n < cap; j++) { pts[n++] = bx + ((ax - bx) * j) / (m + 1); pts[n++] = by + ((ay - by) * j) / (m + 1); }
+        }
+      }
+      x0 = worldX(e.x, e.y) * k + ox; y0 = worldY(e.x, e.y) * k + oy;
+      out.n = n; out.x = x0 - 6; out.y = y0 - 6; out.w = 12; out.h = 12;
+      return x0 > 0 && y0 > 0 && x0 < this.cssW && y0 < this.cssH;
+    }
+    return false;
   }
   /** the camera frames a tile rect in the free map (clear of the rail on the left, the top bar and the cards docked at the right): it eases there, or jumps under
    *  reduced motion, and the spotlight follows */

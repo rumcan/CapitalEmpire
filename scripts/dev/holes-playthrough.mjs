@@ -10,13 +10,16 @@
 //   hole2      Plan a hole: a click on a tee, a click on a green, Build: a second hole exists and is drawn
 //   paint      Edit Hole Layout on hole 1: the Paint hole 1 palette runs 1 Fairway, 2 Green, 3 Tee, 4 Rough, 5 Bunker, 6 Water, 7 Waste area, 8 Long grass, 9 Trees,
 //              0 Create your own; each surface 1 to 8 painted with the brush changes the map, and so does Trees (key 9): its trees stand round the green, never on it
+//   buildnow   (#1325) BUILD NOW on the map: the pointer says "Click to place the tee / green"; with a tee and a green chosen the button stands beside the outline (whole on screen, over
+//              no panel, off the tee and the green, following the camera, at 100% and 125% text), its click builds the hole as the panel's Build does, and it is greyed with the reason
+//              when the money is short; then the road tool: two clicks put it by the route's end, a click builds the road, greyed when money is short (also run in the jam)
 //   play       the hole card's Play chip: Just hole N, and All N holes, open the golf view from behind the golfer (the Cinderlinks view: its frame is up, view3pHole is
 //              the hole), not the old top-down round; nothing on the screen (the page's text and every canvas's text) says "Stand In"
 //   jam        (the jam build, a dev server run with VITE_JAM=1) the same first hole is drawn; the jam shows no hand shaping (no Shape by hand, More options, saved holes,
 //              empty hole, Paint hole) and its + plans a hole at once
 // Every step prints ok / FAIL lines; a FAIL, a console error or a page error exits 1. Screenshots of the key moments go to --out.
 //   npm run holes:playthrough                      (starts its own dev server per variant on a free port; about 6 minutes)
-//   node scripts/dev/holes-playthrough.mjs [--base URL [--variants jam]] [--variants normal,jam] [--seed N] [--steps start,hole1,menu,hole2,paint,play] [--out DIR]
+//   node scripts/dev/holes-playthrough.mjs [--base URL [--variants jam]] [--variants normal,jam] [--seed N] [--steps start,hole1,menu,hole2,buildnow,paint,play] [--out DIR]
 //        [--headed] [--keep] [--cdp PORT]
 //   --base      use a dev server already running (the normal game, or with --variants jam the jam build) instead of starting one
 //   --seed      the old automatic start on that map (no start spot to pick); without it the real new game, a random map (it says the seed it got)
@@ -33,7 +36,7 @@ import { join, resolve } from 'node:path';
 
 const args = process.argv.slice(2), has = k => args.includes(`--${k}`), opt = (k, d) => { const i = args.indexOf(`--${k}`); return i >= 0 ? args[i + 1] : d; };
 const ROOT = resolve('.'), OUT = resolve(opt('out', 'output/holes-playthrough')), W = 1440, H = 900;
-const variants = opt('variants', has('base') ? 'normal' : 'normal,jam').split(','), STEPS = new Set(opt('steps', 'start,hole1,menu,hole2,paint,play').split(','));
+const variants = opt('variants', has('base') ? 'normal' : 'normal,jam').split(','), STEPS = new Set(opt('steps', 'start,hole1,menu,hole2,buildnow,paint,play').split(','));
 mkdirSync(OUT, { recursive: true });
 const t0 = Date.now(), lap = s => console.log(`[${((Date.now() - t0) / 1000).toFixed(0)}s] ${s}`);
 let bad = 0, JAMRUN = false;
@@ -336,6 +339,174 @@ const freePatches = (page, near, n) => page.evaluate(([near, n]) => {
 }, [near, n]);
 const surfCount = (page, id) => page.evaluate(id => { const gr = window.__game.courseGrid; let n = 0; for (let k = 0; k < gr.surf.length; k++) if (gr.surf[k] === id) n++; return n; }, id);
 
+// ---------------------------------------------------------------- BUILD NOW (#1325): the button on the map beside New hole's outline and a road route's end
+/** a shot kept in docs/ui-shots (build-now-*.jpg): the normal build's, a jam shot gets -jam */
+const docShot = async (page, name) => { const f = join(ROOT, 'docs', 'ui-shots', `build-now-${name}${JAMRUN ? '-jam' : ''}.jpg`); mkdirSync(join(ROOT, 'docs', 'ui-shots'), { recursive: true }); await sharp(await page.screenshot({ type: 'png' })).jpeg({ quality: 72, mozjpeg: true }).toFile(f); console.log(`  shot ${f}`); };
+/** where BUILD NOW stands: its box, the panels' boxes (the rail, the tool panel, the minimap, the cards), the planned thing's box on screen (the engine's own, buildNowPlace) and the spots it must not cover */
+const bnGeo = page => page.evaluate(() => {
+  const g = window.__game, el = document.querySelector('[data-testid="build-now"] button'); if (!el) return null;
+  const q = e => { const r = e.getBoundingClientRect(); return { l: r.left, t: r.top, r: r.right, b: r.bottom }; };
+  const place = { x: 0, y: 0, w: 0, h: 0, pts: new Float32Array(192), n: 0 }, on = g.buildNowPlace(place);
+  const dpr = g.dpr, w = g.paint.wizard, keep = [];
+  if (g.tool === 'road') { const e = g.route[g.route.length - 1]; for (const p of g.route) { const s = g.screen(p.x, p.y); keep.push({ x: s.x / dpr, y: s.y / dpr }); } void e; }
+  else if (w.plan) for (const p of [w.plan.tee, w.plan.green]) { const s = g.screen(p.x, p.y); keep.push({ x: s.x / dpr, y: s.y / dpr }); }
+  const panels = [...document.querySelectorAll('.ui-root .glass, [data-testid="rail"], [data-testid="minimap"], [data-testid="tool-panel"], .ui-root .pointer-events-auto')].filter(e => !e.closest('[data-build-now]')).map(q).filter(r => r.r - r.l > 40 && r.b - r.t > 24 && (r.r - r.l) * (r.b - r.t) < 0.4 * innerWidth * innerHeight);
+  const hud = parseFloat(document.documentElement.style.getPropertyValue('--hud-top')) * (parseFloat(document.documentElement.style.getPropertyValue('--ui-scale')) || 1);
+  return { r: q(el), W: innerWidth, H: innerHeight, hud, panels, keep, on, outline: { l: place.x, t: place.y, r: place.x + place.w, b: place.y + place.h }, head: el.querySelector('[data-testid="build-now-head"]')?.textContent ?? '', why: el.querySelector('[data-testid="build-now-why"]')?.textContent ?? '', disabled: el.getAttribute('aria-disabled'), money: g.money, tile: !!el.querySelector('img[data-action-tile]') };
+});
+const overlaps = (a, b, pad = 0) => a.l < b.r + pad && a.r > b.l - pad && a.t < b.b + pad && a.b > b.t - pad;
+/** the button is whole on screen, under the top bar, over no panel and over none of the spots it keeps clear of */
+function bnClear(geo, what) {
+  const r = geo.r;
+  check(r.l >= 0 && r.t >= geo.hud - 1 && r.r <= geo.W && r.b <= geo.H, `${what}: BUILD NOW is whole on screen and under the top bar`, JSON.stringify(r));
+  check(!geo.panels.some(p => overlaps(r, p)), `${what}: BUILD NOW covers no panel, no rail and no minimap`, JSON.stringify(geo.panels.filter(p => overlaps(r, p))));
+  check(!geo.keep.some(p => p.x >= r.l - 6 && p.x <= r.r + 6 && p.y >= r.t - 6 && p.y <= r.b + 6), `${what}: BUILD NOW covers neither the tee and the green nor the route's points`);
+}
+
+async function buildnow(S) {
+  const { page } = S;
+  const NOW = '[data-testid="build-now"] button';
+  await game(page, g => { g.paint.host.planLock = () => null; g.sandboxUnlock = true; for (let i = 0; i < 4 && (g.youInCart ? g.youCart : g.you)?.skip; i++) g.youSkip(); g.setTool('select'); g.emit(); });
+  const near = S.mid2 ?? S.mid1 ?? await homeOf(page);
+  const pair = await findHole(page, { x: near.x - 30, y: near.y - 20 }, 75);
+  check(!!pair, 'BUILD NOW: there is room for a hole', pair ? `par ${pair.par}, $${pair.cost}` : 'none'); if (!pair) return;
+  const mid = { x: (pair.tee.x + pair.green.x) / 2, y: (pair.tee.y + pair.green.y) / 2 };
+  await game(page, g => { g.traffic.unlimited = false; g.traffic.budget.money = Math.max(g.traffic.budget.money, 60000); g.emit(); });
+  await look(page, mid, 0.2); await settle(page, 1000);
+  const before = await mapPixels(page), box = await holeBox(page, pair);
+  await game(page, g => { g.setTool('course'); if (!g.paint.planOpen) g.paint.setPlan(); if (g.paint.wizard.step !== 'tee') { g.paint.wizard.start(g.paint.wizard.hole); g.emit(); } });
+  check(await page.locator(NOW).count() === 0, 'BUILD NOW: none on the map while the wizard waits for the tee');
+  // the next click, said by the pointer: the tee, then the green
+  const at = async p => { const s = await scr(page, p); await page.mouse.move(s.x - 40, s.y - 30); await page.mouse.move(s.x, s.y, { steps: 4 }); await sleep(300); };
+  await at(pair.tee);
+  const l1 = await game(page, g => g.paint.wizard.label().text);
+  check(/^Click to place the tee/.test(l1), `the pointer says what to click first: "${l1}"`);
+  await docShot(page, 'line-tee');
+  const t1 = await clickMap(page, pair.tee); await still(page);
+  await at(pair.green);
+  const l2 = await game(page, g => g.paint.wizard.label().text);
+  check(/^Click to place the green/.test(l2), `then the green: "${l2}"`);
+  check(await page.locator(NOW).count() === 0, 'BUILD NOW: none on the map while the wizard waits for the green');
+  await docShot(page, 'line-green');
+  const t2 = await clickMap(page, pair.green); await sleep(600);
+  check(t1 && t2 && await game(page, g => g.paint.wizard.step === 'shape'), 'a tee and a green are clicked: the wizard is shaping');
+  // the button: on the map, beside the outline, clear of the panels
+  await page.waitForSelector(NOW, { timeout: 5000 }).catch(() => {});
+  let geo = await bnGeo(page);
+  check(!!geo && geo.on, 'BUILD NOW stands on the map with the plan');
+  if (!geo) return;
+  check(/^BUILD NOW · \$[\d,]+$/.test(geo.head) && geo.disabled === 'false' && geo.tile, `it says the price and wears the golf-hole picture: "${geo.head}"`);
+  bnClear(geo, 'planned');
+  const beside = !overlaps(geo.r, geo.outline, -2);
+  check(beside || (geo.r.l >= 0), `BUILD NOW is beside the outline (outline ${Math.round(geo.outline.l)},${Math.round(geo.outline.t)} to ${Math.round(geo.outline.r)},${Math.round(geo.outline.b)}; button ${Math.round(geo.r.l)},${Math.round(geo.r.t)}; ${beside ? 'clear of it' : 'the outline fills the free map: held inside it, off the tee and the green'})`);
+  const panelsLeft = geo.panels.some(p => p.l < geo.W / 2), bx = (geo.r.l + geo.r.r) / 2, ox = (geo.outline.l + geo.outline.r) / 2;
+  if (beside && panelsLeft && !geo.panels.some(p => p.l > geo.W / 2)) check(bx > ox, 'with the panels on the left it stands at the outline\'s right side, away from them', `button ${Math.round(bx)}, outline ${Math.round(ox)}`);
+  await docShot(page, 'beside-outline-100');
+  // what the tracking costs: the engine's per-frame read of the outline (buildNowPlace; the placement itself is a few comparisons) and the per-repaint info (buildNowInfo)
+  const cost = await game(page, g => {
+    const place = { x: 0, y: 0, w: 0, h: 0, pts: new Float32Array(192), n: 0 }; let t = performance.now();
+    for (let i = 0; i < 3000; i++) g.buildNowPlace(place);
+    const a = (performance.now() - t) / 3000; t = performance.now();
+    for (let i = 0; i < 3000; i++) g.buildNowInfo();
+    return { place: a, info: (performance.now() - t) / 3000 };
+  });
+  check(cost.place < 0.05 && cost.info < 0.1, `the tracking costs nothing noticeable: ${(cost.place * 1000).toFixed(1)} us a frame to read the outline, ${(cost.info * 1000).toFixed(1)} us a repaint for the words`);
+  // it follows the camera
+  await game(page, g => { g.camEase = null; g.cam.X += 400; g.cam.Y += 160; g.emit(); }); await sleep(450);
+  const geo2 = await bnGeo(page);
+  const dO = geo2.outline.l - geo.outline.l, dB = geo2.r.l - geo.r.l;
+  check(Math.abs(dO) > 20 && Math.abs(dB - dO) <= 3 || !beside, `it follows the outline as the camera pans (outline moved ${dO.toFixed(0)} px, button ${dB.toFixed(0)} px)`);
+  bnClear(geo2, 'after a pan');
+  await look(page, mid, 0.2); await sleep(400);
+  // the largest Text size
+  await page.evaluate(v => document.documentElement.style.setProperty('--ui-scale', v), '1.25'); await sleep(700);
+  geo = await bnGeo(page); bnClear(geo, '125% text');
+  await docShot(page, 'beside-outline-125');
+  await page.evaluate(v => document.documentElement.style.setProperty('--ui-scale', v), '1'); await sleep(500);
+  // a click builds it, as the panel's Build does: the hole, its price, the toast, undo
+  const n0 = (await holesState(page)).built.length;
+  geo = await bnGeo(page);
+  await page.mouse.move((geo.r.l + geo.r.r) / 2, (geo.r.t + geo.r.b) / 2, { steps: 3 });
+  const topEl = await page.evaluate(([x, y]) => !!document.elementFromPoint(x, y)?.closest('[data-testid="build-now"]'), [(geo.r.l + geo.r.r) / 2, (geo.r.t + geo.r.b) / 2]);
+  check(topEl, 'the button is the top thing under the pointer: a click reaches it, not the map');
+  await page.mouse.down(); await page.mouse.up(); await sleep(1500);
+  await game(page, (g, m) => { g.camEase = null; g.lookAt(m.x, m.y, 0.2); g.emit(); }, mid); await settle(page, 2500);
+  const st = await holesState(page);
+  check(st.built.length === n0 + 1, 'a click on BUILD NOW builds the hole (the Holes panel lists one more)', st.built.join(', '));
+  const bt = st.toasts.filter(t => /^Hole \d+ built: par \d, \d+ m, \$[\d,]+/.test(t)).at(-1);
+  check(!!bt && /^Hole 2 /.test(bt), 'the same toast as the panel\'s Build, with the hole\'s price', bt);
+  const share = changed(before, await mapPixels(page), box);
+  check(share > NEED, `the hole is DRAWN on the map: ${(share * 100).toFixed(0)}% of the pixels over it changed`);
+  check(await page.locator(NOW).count() === 0, 'BUILD NOW is gone once the hole is built');
+  await docShot(page, 'built');
+  // the greyed case: too little money
+  const pair2 = await findHole(page, { x: mid.x + 60, y: mid.y }, 75);
+  if (pair2) {
+    const mid2 = { x: (pair2.tee.x + pair2.green.x) / 2, y: (pair2.tee.y + pair2.green.y) / 2 };
+    await game(page, g => { g.setTool('course'); if (!g.paint.planOpen) g.paint.setPlan(); g.emit(); });
+    await look(page, mid2, 0.2); await settle(page, 800);
+    await game(page, g => { g.paint.wizard.start(g.paint.wizard.hole); g.emit(); });
+    await clickMap(page, pair2.tee); await still(page); await clickMap(page, pair2.green); await sleep(500);
+    await game(page, g => { window.__moneyWas = g.traffic.budget.money; g.traffic.budget.money = 10; g.emit(); }); await sleep(500);
+    geo = await bnGeo(page);
+    check(!!geo && geo.disabled === 'true' && /Not enough money/.test(geo.why), `too little money: BUILD NOW is greyed and says why ("${geo?.why}")`);
+    if (geo) {
+      bnClear(geo, 'greyed');
+      await docShot(page, 'greyed-100');
+      await page.evaluate(v => document.documentElement.style.setProperty('--ui-scale', v), '1.25'); await sleep(600);
+      geo = await bnGeo(page); bnClear(geo, 'greyed at 125% text'); await docShot(page, 'greyed-125');
+      await page.evaluate(v => document.documentElement.style.setProperty('--ui-scale', v), '1'); await sleep(400);
+      const n1 = (await holesState(page)).built.length;
+      geo = await bnGeo(page); await page.mouse.move((geo.r.l + geo.r.r) / 2, (geo.r.t + geo.r.b) / 2, { steps: 3 }); await page.mouse.down(); await page.mouse.up(); await sleep(700);
+      check((await holesState(page)).built.length === n1, 'a click on the greyed button builds nothing');
+    }
+    await game(page, g => { g.traffic.budget.money = window.__moneyWas; g.paint.cancelPlan(); g.setTool('select'); g.emit(); }); await sleep(300);
+  }
+  await roadNow(S);
+}
+
+/** the road tool: two clicks (a route waiting for Enter) put BUILD NOW beside the route's end with its cost; a click builds it; too little money greys it; a drag still builds on release */
+async function roadNow(S) {
+  const { page } = S;
+  const NOW = '[data-testid="build-now"] button';
+  const home = await homeOf(page);
+  const pts = await freePatches(page, home, 6);
+  if (pts.length < 2) { check(false, 'BUILD NOW on roads: two free spots on your land'); return; }
+  const a = pts[0], b = pts.slice(1).find(p => Math.hypot(p.x - a.x, p.y - a.y) > 14) ?? pts[1];
+  await game(page, (g, p) => { g.setTool('road'); g.roadClass = 'cart-dirt'; g.traffic.budget.money = Math.max(g.traffic.budget.money, 60000); g.camEase = null; g.lookAt((p.a.x + p.b.x) / 2, (p.a.y + p.b.y) / 2, 0.25); g.emit(); }, { a, b });
+  await settle(page, 1200);
+  check(await page.locator(NOW).count() === 0, 'BUILD NOW on roads: none before a route is laid');
+  const c1 = await clickMap(page, a, 0.25);
+  check(await page.locator(NOW).count() === 0, 'none after the first click either (no route yet)');
+  const c2 = await clickMap(page, b, 0.25); await sleep(600);
+  const r = await game(page, g => ({ n: g.route.length, segs: g.net.segs.length, tool: g.tool }));
+  check(c1 && c2 && r.n >= 2, 'two clicks lay a route that waits for Enter', JSON.stringify(r));
+  await page.waitForSelector(NOW, { timeout: 4000 }).catch(() => {});
+  let geo = await bnGeo(page);
+  check(!!geo && geo.on && /^BUILD NOW · \$[\d,]+$/.test(geo.head) && geo.disabled === 'false', `BUILD NOW stands by the route's end with its cost: "${geo?.head}"`);
+  if (!geo) return;
+  bnClear(geo, 'road');
+  const end = await game(page, g => { const e = g.route[g.route.length - 1], s = g.screen(e.x, e.y); return { x: s.x / g.dpr, y: s.y / g.dpr }; });
+  const dx = Math.max(geo.r.l - end.x, 0, end.x - geo.r.r), dy = Math.max(geo.r.t - end.y, 0, end.y - geo.r.b);
+  check(Math.hypot(dx, dy) < 60, `it is beside the end of the route (${Math.hypot(dx, dy).toFixed(0)} px from it)`);
+  await docShot(page, 'road');
+  // too little money
+  await game(page, g => { window.__moneyWas = g.traffic.budget.money; g.traffic.budget.money = 1; g.emit(); }); await sleep(700);
+  geo = await bnGeo(page);
+  check(!!geo && geo.disabled === 'true' && !!geo.why, `too little money: the road's BUILD NOW is greyed and says why ("${geo?.why}")`);
+  await docShot(page, 'road-greyed');
+  await game(page, g => { g.traffic.budget.money = window.__moneyWas; g.emit(); }); await sleep(700);
+  // a click builds the route as Enter does
+  const s0 = await game(page, g => g.builds.length);
+  geo = await bnGeo(page);
+  await page.mouse.move((geo.r.l + geo.r.r) / 2, (geo.r.t + geo.r.b) / 2, { steps: 3 }); await page.mouse.down(); await page.mouse.up();
+  await page.waitForFunction(n => window.__game.builds.length > n, s0, { timeout: 6000 }).catch(() => {}); await sleep(600);
+  const after = await game(page, g => ({ segs: g.builds.length, route: g.route.length, toast: g.toasts.map(t => t.text ?? t.msg ?? '').at(-1) }));
+  check(after.segs > s0 && after.route === 0 && /^Built \d+ m of/.test(after.toast ?? ''), 'a click on BUILD NOW builds the road (as Enter does) and the route is cleared', JSON.stringify(after));
+  check(await page.locator(NOW).count() === 0, 'BUILD NOW is gone once the road is built');
+  await game(page, g => { g.setTool('select'); g.emit(); });
+}
+
 async function paint(S) {
   const { page } = S;
   S.mid1 ??= await game(page, g => { const p = g.golf.pins.find(q => q.hole === 1); return { x: p.x, y: p.y }; });
@@ -493,6 +664,7 @@ async function jamChecks(S) {
     check(n1 === n0, `a click on the map with the Course tool in hand lays nothing in the jam (${n0} painted cells before, ${n1} after)`);
   }
   await hole1(S);
+  await buildnow(S); // #1325: BUILD NOW beside the outline of the next hole
   await page.click('[data-rail="course"]'); await sleep(900); // (the Holes panel again: the wizard still waits on hole 2's tee; Done closes its card: where Shape by hand and More options showed after the first hole)
   await page.locator('[data-primary="wizard"] button', { hasText: 'Done' }).click(); await sleep(800);
   h = await hand();
@@ -505,7 +677,7 @@ async function jamChecks(S) {
 }
 
 // ---------------------------------------------------------------- the run
-const steps = { start, hole1, menu, hole2, paint, play };
+const steps = { start, hole1, menu, hole2, buildnow, paint, play };
 async function runVariant(name) {
   const jam = name === 'jam'; JAMRUN = jam;
   let srv = null, base = opt('base', '');
