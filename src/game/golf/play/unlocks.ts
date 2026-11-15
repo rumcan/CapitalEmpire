@@ -43,8 +43,10 @@ export function earned(e: EarnIn): Earned {
   const s = e.skills, lv = e.bag?.lv ?? {}, level = (c: Club) => lv[c] ?? 0, mech = e.mech ?? [];
   const anyTour = Object.values(lv).some(v => (v ?? 0) >= EARN.curveLevel), driver = level('driver');
   const opens = drillOpens(e.drills);
-  const curve = (s.accuracy ?? 50) >= EARN.curveAcc || anyTour || opens.has('curve');
-  const flight = (s.touch ?? 50) >= EARN.flightTouch || (s.irons ?? 24) >= EARN.flightIrons || opens.has('flight');
+  // (the owner, 2026-11-15: "shot shape is ... locked ... I cant edit it at all when i play": draw/fade and high/low are every golfer's on the course too; how much he
+  // can bend or lift it is his handicap limit, the gold ring on the shot ball (the curve and flight scale by his skill), not a lock. EARN.curveAcc and flightTouch stay for the drills)
+  const curve = true || (s.accuracy ?? 50) >= EARN.curveAcc || anyTour || opens.has('curve');
+  const flight = true || (s.touch ?? 50) >= EARN.flightTouch || (s.irons ?? 24) >= EARN.flightIrons || opens.has('flight');
   const read = (s.putting ?? 26) >= EARN.readPutt || opens.has('read');
   const side = (s.touch ?? 50) >= EARN.sideTouch;
   const back = (s.short ?? 22) >= EARN.backShort || WEDGES.some(c => level(c) >= EARN.backLevel);

@@ -22,7 +22,8 @@ const sk = (v: number): GameSkills => ({ driving: v, irons: v, short: v, putting
 
 test('unlocks: a new save has earned nothing; skills, a Tour driver and the cards earn the extras', () => {
   const none = earned({ skills: START_SKILLS, bag: null, mech: [] });
-  for (const k of ['draw', 'fade', 'high', 'low', 'side', 'back', 'tour', 'boost'] as const) { assert.equal(none[k], false, k); assert.ok(none.why[k], `${k} says what unlocks it`); }
+  for (const k of ['side', 'back', 'tour', 'boost'] as const) { assert.equal(none[k], false, k); assert.ok(none.why[k], `${k} says what unlocks it`); }
+  for (const k of ['draw', 'fade', 'high', 'low'] as const) { assert.equal(none[k], true, `${k}: shaping is every golfer's (the owner, 2026-11-15)`); assert.equal(none.why[k], undefined); }
   assert.equal(none.charges, 0);
   const tour = earned({ skills: START_SKILLS, bag: { v: 1, lv: { driver: 2 } }, mech: ['boost'] });
   assert.ok(tour.boost && tour.charges === 1 && tour.draw, 'a Tour driver and Power Mash: the boost, and the curve (a Tour club)');
@@ -38,10 +39,10 @@ const base = (t: TurnMsg, club = t.suggested.club): ViewInput => ({ holeIdx: t.h
 
 test('play3p: what he has not earned is taken out before the model plays it; a boost spends a charge', () => {
   const none = earned({ skills: START_SKILLS, bag: null, mech: [] }), s = session(sk(0.5), none), t = firstTurn(s);
-  assert.equal(t.earned!.draw, false); assert.equal(t.charges, 0);
+  assert.equal(t.earned!.draw, true, 'shaping is open to every golfer (the owner, 2026-11-15)'); assert.equal(t.charges, 0);
   s.input({ ...base(t), shape: { curve: -1, flight: 1 }, spin: { x: 0.5, y: -0.8, pump: 3 }, swing: { power: 1, acc: 0, boost: 0.06, v: 2 } });
   const i = s.inputs[0]!;
-  assert.equal(i.shape, undefined, 'no shape'); assert.equal(i.spin, undefined, 'no spin'); assert.equal(i.swing!.boost, 0, 'no boost');
+  assert.deepEqual(i.shape, { curve: -1, flight: 1 }, 'the shape is his (open to all; the handicap ring limits how much it bends)'); assert.equal(i.spin, undefined, 'no spin'); assert.equal(i.swing!.boost, 0, 'no boost');
   const e = { ...ALL_EARNED, charges: 1 }, s2 = session(sk(0.5), e), t2 = firstTurn(s2);
   assert.equal(t2.charges, 1);
   const ms = s2.input({ ...base(t2), swing: { power: 1, acc: 0, boost: 0.06, v: 2 } });
