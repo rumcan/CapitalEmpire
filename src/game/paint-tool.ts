@@ -8,6 +8,7 @@ import { LOOK_KINDS, copyLook, copySet, defaultSet as defaultSetOf, holeOwner, l
 import { placeMyHole, type MyHole, type Placed } from './golf/myholes';
 import { CH_SIZE, CH_STEP, COURSE_CELL_M2 } from './ext/course-height';
 import { NO_GROUND, applyHoleGround, shapeHoleGround, type HoleGroundShape } from './ext/hole-ground';
+import { applyGreenContour, contourGreen, greenApproach, greenContourSeed } from './ext/green-contours';
 /** T256: a saved hole's ghost at the cursor: the hole number it takes (0: none free), where its cells land, those laid and left out, why it
  *  cannot go ('' when it can) or a note on the cells left out, its price ($: its cells and its frame trees) and the frame trees it plants */
 export interface MyGhost { n: number; placed: Placed; laid: { i: number; s: number }[]; out: number[]; why: string; note: string; cost: number; trees: number }
@@ -39,7 +40,7 @@ import { SURF_SURFACE, mergeMany, plantMonth, polyCells, surfOfSurface, type Gri
 import { unitBuildCost } from './golf/costs';
 import { GREEN_M2_STEP as GREEN_STEP, HoleWizard, decodePlans, encodePlans, withPlan, withoutPlan, type WizardGhost } from './ext/hole-wizard';
 import { drawWizard } from './ext/hole-wizard/draw';
-import { planClear, planInfo, type HolePlan } from './ext/hole-plan';
+import { planClear, planInfo, type HolePlan, type PlanGeom } from './ext/hole-plan';
 import type { Pin, TeeMark } from './golf/types';
 import type { TeeStepEdit } from './golf/teeplace';
 /** whether a painted area has completed its grow-in (sod or non-seed areas are mature at once) */  
@@ -229,6 +230,10 @@ export interface PaintHost { setLotGround(key: string, patches: LotPatch[] | nul
   courseHeight?(): CourseHeightField | null;
   /** the course height changed in this box: the engine re-flattens the roads there, saves and re-bakes */
   heightChanged?(box: CourseTileBox): void;
+  /** #1338: the game's seed (a built green's contours are seeded by it and the hole) */
+  gameSeed?(): number;
+  /** #1338: the land's heights under the course height (CH_SIZE², m), or null with no land: a built green's contours bound the slope of the ground the ball rolls on */
+  landHeights?(): Float32Array | null;
   /** the areas changed (an undo step was made, undone or redone): the engine re-fits the holes' pins and tee markers; pins: where a placed
    *  preset's flag stands, by hole (the pin goes there when it is on the green) */
   changed?(pins?: Map<number, { x: number; y: number }>): void;
@@ -1096,6 +1101,8 @@ export class PaintTool {
     // T263: Shape the ground (on by default): the hole's earthworks, in the same undo step (the height journal keeps the field as it was), paid
     // for after the grass; short of money, the hole is laid on the ground as it is
     const earth = this.shapeBuilt(shape);
+    // #1338: the green's natural contours (a tilt toward the front and a feature or two), free, in the same undo step
+    const contoured = this.contourBuilt(hole, plan, gh.geom);
     // T229: Frame with trees (on by default): the hole's frame goes in with it, in the same undo step, paid for by the host
     const fr = this.frameTrees && this.host.frameBuilt ? this.host.frameBuilt(hole, plan) : null; if (fr && this.tx) this.tx.spent += fr.spent;
     this.pinHint = new Map([[hole, { x: plan.green.x, y: plan.green.y }]]);
@@ -1107,7 +1114,7 @@ export class PaintTool {
     this.host.save();
     if (!editing) this.host.holeBuilt?.(hole);
     const ground = earth === 'short' ? '; not enough money to shape the ground: laid as it is' : earth ? `; ground shaped, ${Math.round(earth.m3).toLocaleString()} m³${earth.cost ? ` ($${earth.cost.toLocaleString()})` : ''}` : '';
-    this.host.toast(`Hole ${hole} ${editing ? 'replanned' : 'built'}: par ${gh.info.par}, ${gh.info.lengthM} m${gh.cost ? `, $${gh.cost.toLocaleString()}` : ''}${ground}${fr?.planted ? `; framed with ${fr.planted} trees ($${fr.spent.toLocaleString()})` : ''}${fr?.left ? `, ${fr.left} left out: not enough money` : ''}`, fr?.left || earth === 'short' ? 'warn' : undefined);
+    this.host.toast(`Hole ${hole} ${editing ? 'replanned' : 'built'}: par ${gh.info.par}, ${gh.info.lengthM} m${gh.cost ? `, $${gh.cost.toLocaleString()}` : ''}${ground}${fr?.planted ? `; framed with ${fr.planted} trees ($${fr.spent.toLocaleString()})` : ''}${fr?.left ? `, ${fr.left} left out: not enough money` : ''}${contoured ? '; green contoured' : ''}`, fr?.left || earth === 'short' ? 'warn' : undefined);
     this.host.emit(); return true;
   }
   /** T263 (#771): what New hole's Build would shape: the wizard's plan in the shape step (a new hole, not Edit Hole Layout), Shape the ground
@@ -1148,6 +1155,20 @@ export class PaintTool {
     if (cost > 0) { this.host.spend?.(cost); if (this.tx) this.tx.spent += cost; }
     this.groundVal = null;
     return { m3: shape.m3, cost };
+  }
+  /** #1338 (the owner, 2026-11-15: "when you build the holes it should add some slope automatically"): a new hole's green gets its natural
+   *  contours (ext/green-contours: a tilt toward the front and one or two soft features, the steepest under 4%), laid inside the open undo
+   *  step after T263's shaping, free (part of building the green). Never on Edit Hole Layout, a painted green or a green shaped by hand. True
+   *  when it laid any */
+  private contourBuilt(hole: number, plan: HolePlan, geom: PlanGeom): boolean {
+    const f = this.host.courseHeight?.(), g = this.courseGrid(); if (!f || !g) return false;
+    const roads = this.host.roadsNear?.(plan.green.x, plan.green.y, geom.greenR / 2 + 30) ?? [];
+    const c = contourGreen({ field: f, grid: g, hole, approach: greenApproach(geom, plan.green), pin: plan.green, seed: greenContourSeed(this.host.gameSeed?.() ?? 0, hole, plan.seed), land: this.host.landHeights?.() ?? null, roads });
+    if (!c.box) return false;
+    this.hj.touch(f, c.box);
+    const b = applyGreenContour(f, c); if (b) this.host.heightChanged?.(b);
+    this.groundVal = null;
+    return !!b;
   }
   /** T254 (#736): "Add tee" (the hole card): a new tee set's box (outline pts, tiles x0 y0 x1 y1 ...) painted into hole n as tee turf, priced like a
    *  tee (the cells that change, Seed or Sod as the brush), one undo step. Cells off your land, on the practice area or kept by another hole are left
