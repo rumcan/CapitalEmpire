@@ -97,7 +97,7 @@ test('the panel: the cards on screen are the count it says, in their groups, and
   t.setView('course'); t.setFocus('plants');
   let h = html(t);
   assert.equal(cardsIn(h), DECOR.filter(d => d.group === 'plants' && !d.hidden).length); assert.deepEqual(groupsIn(h), ['plants']);
-  assert.match(h, /Showing \d+ of \d+ props \(Plants only\)/);
+  assert.match(h, /Showing \d+ of \d+ props \(Shrubs &amp; flowers only\)/);
   t.setAll(true); h = html(t);
   assert.equal(cardsIn(h), all, 'the cards shown equal the placeable count');
   assert.deepEqual(groupsIn(h), DECOR_GROUPS.map(g => g.id), 'in their groups');

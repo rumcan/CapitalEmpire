@@ -43,7 +43,7 @@ export const PRACTICE_TILE: Readonly<Partial<Record<string, ToolTile>>> = { putt
 export const PROP_GROUP_TILE: Readonly<Partial<Record<string, ToolTile>>> = {
   // #1284: the natural groups (painted with the brush) and the man-made ones (placed one by one); a group with no painted tile wears its first card's picture (flyout-menu.ts)
   trees: 'trees-mixed', plants: 'autumn-shrubs', stone: 'rocks', desert: 'desert-oasis',
-  planters: 'flower-bed', water: 'fountain', furniture: 'street-furniture', signs: 'signs', lake: 'lake-props', clubhouses: 'clubhouse',
+  planters: 'flower-bed', water: 'fountain', furniture: 'patio-table', signs: 'signs', lake: 'lake-props', clubhouses: 'clubhouse',
   // (a stand-in for the golf kinds' group until its own is painted: the tournament dressing by the scoreboard stand)
   tournament: 'grandstand-scoreboard',
 };

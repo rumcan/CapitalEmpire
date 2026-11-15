@@ -150,7 +150,7 @@ test('R and [ ]: a rock in hand steps its shapes (never mirrored) and sizes 80% 
   assert.equal(LIBRARY[t.ghost!.item]!.id, KIT_BOULDERS.medium[1], 'the next shape');
   for (let k = 0; k < 6; k++) t.key(key('['));
   assert.equal(t.size, SIZE_MIN, 'held at 80%'); assert.match(t.ghost!.label, /80%/); assert.equal(t.ghost!.price, 280); assert.equal(t.ghost!.scale, 0.8);
-  t.down(10, 10);
+  t.down(10, 10); t.up(); // (#1284: a natural prop is painted: it is laid when the button comes up)
   const p = [...h.props][0]!;
   assert.equal(LIBRARY[p.item]!.id, KIT_BOULDERS.medium[1]); assert.equal(p.flip, false); assert.equal(p.scale, 0.8);
   assert.equal(p.decor, 'kit-boulder-m-b', 'the card of the shape placed'); assert.equal(1e6 - h.money(), 280); assert.equal(sellBack(DECOR_BY_KEY.get('kit-boulder-m-b')!, 0.8), 140);

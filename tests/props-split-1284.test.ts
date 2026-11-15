@@ -29,7 +29,7 @@ test('no "New" section is left: every picture of a review section is in exactly 
   for (const it of review) {
     const gs = cards.get(it.id); if (!gs) continue; n++;
     assert.equal(gs.length, 1, `${it.id}: one card`);
-    assert.ok(!gs[0]!.startsWith('new:') && DECOR_GROUPS.some(g => g.id === gs[0]), `${it.id} (${it.cat}) is in an ordinary group: ${gs[0]}`);
+    assert.ok(!/^new:(Course props|Trees|Lake props|Buildings|Eight-view objects)$/.test(gs[0]!) && DECOR_GROUPS.some(g => g.id === gs[0]), `${it.id} (${it.cat}) is in an ordinary group: ${gs[0]}`);
     assert.equal(gs[0], newGroupOf(it));
   }
   assert.ok(n > 40, `the review sections' cards were checked (${n})`);

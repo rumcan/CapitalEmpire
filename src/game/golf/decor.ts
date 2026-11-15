@@ -191,7 +191,7 @@ const REVIEW_GROUP: Readonly<Record<string, DecorGroup>> = {
   'flower-bed': 'planters', 'flower-planter': 'planters', 'flowering-tree': 'trees', 'small-tree': 'trees',
   'golf-cart': 'new:Vehicles', 'golf-cart-2': 'new:Vehicles', 'ride-mower-2': 'new:Vehicles',
   'log-footbridge': 'lake', 'plank-bridge': 'lake', 'stone-bridge': 'lake', 'white-footbridge': 'lake', 'wooden-footbridge': 'lake',
-  'marshal': 'tournament',
+  'marshal': 'tournament', 'rope-barrier': 'tournament', 'rope-barrier-corner': 'tournament', 'rope-walkway': 'tournament', 'direction-signpost': 'tournament', 'hole-12-sign': 'tournament',
 };
 /** #1284: a new picture's group: the review sections' pictures where they belong (the trees with the trees, the lake's docks and boats with the bridges, the course props by what
  *  they are, the new buildings with the town's or, a golf one, with the clubhouses), the tournament kit's in its own category's group */

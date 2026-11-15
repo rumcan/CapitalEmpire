@@ -76,11 +76,13 @@ test('no row of the golf Course flyout shows the maple leaf where a tile fits: t
   const at = (path: string) => tiles.get(path), root = 'course > Facilities > Decoration > Props';
   assert.equal(at(root), 'all-props', root);
   assert.equal(at(`${root} > All props`), 'all-props', `${root} > All props`);
-  assert.equal(at(`${root} > Desert & oasis`), 'desert-oasis', `${root} > Desert & oasis`);
-  assert.equal(at(`${root} > New: Trees`), 'trees-mixed', `${root} > New: Trees`);
-  assert.equal(at(`${root} > New: Lake props`), 'lake-props', `${root} > New: Lake props`);
-  // the golf kind that showed the leaf (Course furniture) wears a tile on every row of it
-  for (const row of ['All course furniture', 'Tournament dressing', 'New: Course props']) assert.ok(at(`course > Facilities > Course furniture > ${row}`), row);
+  // (#1284: Natural and Man-made, each a level of its own; the New sections went into the groups their pictures belong to)
+  assert.equal(at(`${root} > Natural`), 'natural-props'); assert.equal(at(`${root} > Man-made`), 'man-made-props');
+  assert.equal(at(`${root} > Natural > Desert & oasis`), 'desert-oasis', `${root} > Natural > Desert & oasis`);
+  assert.equal(at(`${root} > Natural > Trees`), 'trees-mixed', `${root} > Natural > Trees`);
+  assert.equal(at(`${root} > Man-made > Docks, boats & bridges`), 'lake-props', `${root} > Man-made > Docks, boats & bridges`);
+  // the golf kind that showed the leaf (Course furniture, now the tournament dressing alone) wears its tile
+  assert.ok(at('course > Facilities > Course furniture'), 'Course furniture');
 });
 
 /** the files of the UI (and of the guide's step lists, whose steps carry their own tile) that may name a tile */
