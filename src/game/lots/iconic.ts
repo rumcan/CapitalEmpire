@@ -23,6 +23,11 @@ export interface PlaceDef {
   art?: string;
   /** #1369: its footprint never turns (one-view art): the preset's w runs along the map's X and d along Y, whichever side of a street it takes */
   fixed?: boolean;
+  /** #1369 follow-up (the owner, 2026-11-16: "stadium clearly over the actual road"): the ground its picture covers, wider than its fitted field
+   *  (stands, a plaza, a light tower's foot; one-view art a little flatter than 2:1): x0, y0, x1, y1 in tiles from the footprint's centre, the map's
+   *  axes (scripts/assets/prep-sports-art.mjs: each column's lowest opaque pixel projected to the ground). Its land and its site keep all of it,
+   *  GROUND_MARGIN more, off the roads (drawnBox, setback) */
+  ground?: readonly [number, number, number, number];
 }
 /** a place on the map: its id, its front corner (the preset frame's origin: x = 0 at the street edge, world tiles) and its quarter turn q (the
  *  street's side: 0 on +y, 1 on +x, 2 on -y, 3 on -x; preset-frame.ts facingOf) */
@@ -38,7 +43,7 @@ export function placeDefsFrom(json: unknown): PlaceDef[] {
   if (!isObj(json) || !Array.isArray(json.places)) return out;
   for (const v of json.places) {
     if (!isObj(v)) continue;
-    const { id, name, kind, alone, pop, standIns, preset, group, tier, art, fixed } = v;
+    const { id, name, kind, alone, pop, standIns, preset, group, tier, art, fixed, ground } = v;
     if (typeof id !== 'string' || !id || typeof name !== 'string' || typeof kind !== 'string' || typeof pop !== 'number' || !Number.isFinite(pop) || pop < 0) continue;
     if (out.some(p => p.id === id)) continue;
     const p = parsePresets([preset]).presets[0];
@@ -47,7 +52,8 @@ export function placeDefsFrom(json: unknown): PlaceDef[] {
     if (isObj(standIns)) for (const [k, s] of Object.entries(standIns)) if (typeof s === 'string') si[k] = s;
     out.push({ id, name, kind, alone: typeof alone === 'string' ? alone : `The ${kind}`, pop, standIns: si, preset: p,
       ...(typeof group === 'string' && group ? { group, tier: typeof tier === 'number' && Number.isFinite(tier) ? tier : 0 } : {}),
-      ...(typeof art === 'string' && art ? { art } : {}), ...(fixed === true ? { fixed: true } : {}) });
+      ...(typeof art === 'string' && art ? { art } : {}), ...(fixed === true ? { fixed: true } : {}),
+      ...(Array.isArray(ground) && ground.length === 4 && ground.every(n => typeof n === 'number' && Number.isFinite(n)) ? { ground: ground as unknown as [number, number, number, number] } : {}) });
   }
   return out;
 }
@@ -81,6 +87,25 @@ const AWAY: readonly Pt[] = [{ x: 0, y: -1 }, { x: -1, y: 0 }, { x: 0, y: 1 }, {
 export function placeGeom(p: PlacedPlace, def: { preset: { w: number; d: number }; fixed?: boolean }): { o: Pt; u: Pt; n: Pt; w: number; d: number } {
   const n = AWAY[p.q]!, [w, d] = frameSize(def, p.q);
   return { o: { x: p.x, y: p.y }, u: { x: -n.y, y: n.x }, n: { x: n.x, y: n.y }, w, d };
+}
+/** #1369 follow-up: the tiles kept clear round a picture's drawn ground (from the roads above all: the verge's own SITE_GAP is a quarter tile) */
+export const GROUND_MARGIN = 1.5;
+type Sized = { preset: { w: number; d: number }; fixed?: boolean; ground?: readonly [number, number, number, number] };
+/** the ground a place's picture covers round a footprint box (world tiles), GROUND_MARGIN more; the box itself for a place without one */
+export function drawnOf(b: Box4, def: Sized): Box4 {
+  const g = def.ground; if (!g) return b;
+  const cx = (b[0] + b[2]) / 2, cy = (b[1] + b[3]) / 2, M = GROUND_MARGIN;
+  return [Math.min(b[0], cx + g[0]) - M, Math.min(b[1], cy + g[1]) - M, Math.max(b[2], cx + g[2]) + M, Math.max(b[3], cy + g[3]) + M];
+}
+/** #1369 follow-up: the ground a placed place's picture covers (drawnOf its footprint): what it keeps off the roads, lots and other places */
+export function drawnBox(p: PlacedPlace, def: Sized): Box4 { return drawnOf(placeBox(p, def), def); }
+/** how far a place's footprint stands back from its street's verge at quarter turn q, so its drawn ground (GROUND_MARGIN in) meets the verge:
+ *  the picture's overhang past the footprint on the street's side, and the margin; 0 for a place without a drawn ground */
+export function setback(def: Sized, q: number): number {
+  const g = def.ground; if (!g) return 0;
+  const hx = def.preset.w / 2, hy = def.preset.d / 2; // (fixed: w along X, d along Y)
+  const over = [g[3] - hy, g[2] - hx, -hy - g[1], -hx - g[0]][q]!; // the street on +y (q 0), +x, -y, -x
+  return Math.max(0, over) + GROUND_MARGIN;
 }
 /** a place's frame size at quarter turn q: along its street (w) and away from it (d); a fixed footprint's preset w stays along X, d along Y */
 export function frameSize(def: { preset: { w: number; d: number }; fixed?: boolean }, q: number): [number, number] {
@@ -128,7 +153,7 @@ export function findSite(def: PlaceDef, ctx: SiteCtx): PlacedPlace | null {
       // the away vector: across the line, to this side; the quarter it gives (the street on the other side)
       const n: Pt = alongX ? { x: 0, y: side } : { x: side, y: 0 };
       const q = AWAY.findIndex(a => a.x === n.x && a.y === n.y) as 0 | 1 | 2 | 3, u: Pt = { x: -n.y, y: n.x };
-      const edge = across + side * (s.off + SITE_GAP);
+      const edge = across + side * (s.off + SITE_GAP + setback(def, q));
       for (let t = lo - (1 - SITE_FRONT) * W; t <= hi - SITE_FRONT * W + 1e-9; t += SITE_STEP) {
         // the footprint: along [t, t + W], across from the verge edge D away
         const a0 = Math.round(t * 2) / 2, c0 = side > 0 ? edge : edge - D;
@@ -144,7 +169,7 @@ export function findSite(def: PlaceDef, ctx: SiteCtx): PlacedPlace | null {
   }
   spots.sort((a, b) => b.score - a.score || (a.tie < b.tie ? -1 : a.tie > b.tie ? 1 : 0));
   const n = Math.min(spots.length, SITE_TRIES);
-  for (let i = 0; i < n; i++) if (ctx.free(spots[i]!.box)) return spots[i]!.p;
+  for (let i = 0; i < n; i++) if (ctx.free(drawnOf(spots[i]!.box, def))) return spots[i]!.p;
   return null;
 }
 
@@ -152,9 +177,10 @@ export function findSite(def: PlaceDef, ctx: SiteCtx): PlacedPlace | null {
  *  the old one along the street, then flush with its start, then with its end (the engine takes the first whose land is free, the old place's
  *  own land counted free) */
 export function upgradeSpots(old: PlacedPlace, oldDef: PlaceDef, def: PlaceDef): PlacedPlace[] {
-  const g = placeGeom(old, oldDef), [w] = frameSize(def, old.q), out: PlacedPlace[] = [];
+  // (the drawn street edge stays: the footprint moves away from the street by the difference of the two setbacks)
+  const g = placeGeom(old, oldDef), [w] = frameSize(def, old.q), out: PlacedPlace[] = [], back = setback(def, old.q) - setback(oldDef, old.q);
   for (const t of [(g.w - w) / 2, 0, g.w - w]) {
-    const x = g.o.x + g.u.x * t, y = g.o.y + g.u.y * t;
+    const x = g.o.x + g.u.x * t + g.n.x * back, y = g.o.y + g.u.y * t + g.n.y * back;
     if (!out.some(p => p.x === x && p.y === y)) out.push({ id: def.id, x, y, q: old.q });
   }
   return out;
@@ -167,10 +193,11 @@ export function familyTop(def: PlaceDef, defs: readonly PlaceDef[] = PLACE_DEFS)
 /** #1369: the land a placed place holds (the town never builds there, nor another place): its footprint, or, with reserve (the normal build),
  *  its family's top tier's footprint centred on it along its street, on the same street edge, so each higher tier grows in place */
 export function placeLand(p: PlacedPlace, def: PlaceDef, reserve: boolean, defs: readonly PlaceDef[] = PLACE_DEFS): Box4 {
-  const top = reserve ? familyTop(def, defs) : def;
-  if (top === def) return placeBox(p, def);
-  const g = placeGeom(p, def), [W] = frameSize(top, p.q), t = (g.w - W) / 2;
-  return placeBox({ id: top.id, x: g.o.x + g.u.x * t, y: g.o.y + g.u.y * t, q: p.q }, top);
+  const top = reserve ? familyTop(def, defs) : def, own = drawnBox(p, def);
+  if (top === def) return own;
+  // the top tier where it will stand (upgradeSpots' first spot, from this one), its drawn ground; and this tier's own, should it reach further
+  const t = upgradeSpots(p, def, top)[0]!, b = drawnBox(t, top);
+  return [Math.min(b[0], own[0]), Math.min(b[1], own[1]), Math.max(b[2], own[2]), Math.max(b[3], own[3])];
 }
 /** #1369: a family place's site with its land kept (placeLand): with reserve, the site its top tier would take, the place centred in it; else
  *  its own site (findSite) */

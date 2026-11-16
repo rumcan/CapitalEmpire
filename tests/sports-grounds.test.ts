@@ -6,7 +6,7 @@
 // on them afterwards. npm test.
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { PLACE_DEFS, duePlaces, familyPlaced, findSite, frameSize, placeBox, placeDef, placeGeom, placeLand, placeTuples, placesFromTuples, reservedSite, upgradeSpots, type Box4, type PlaceDef, type PlacedPlace, type SiteSeg } from '../src/game/lots/iconic';
+import { PLACE_DEFS, duePlaces, familyPlaced, findSite, frameSize, placeBox, placeDef, placeGeom, drawnBox, drawnOf, GROUND_MARGIN, placeLand, placeTuples, placesFromTuples, reservedSite, SITE_GAP, upgradeSpots, type Box4, type PlaceDef, type PlacedPlace, type SiteSeg } from '../src/game/lots/iconic';
 import { LIBRARY } from '../src/game/library';
 import { SPORTS_ART, sportsArtId } from '../src/game/sports-library';
 import { earnedTarget } from '../src/game/golf/towngrowth';
@@ -121,7 +121,42 @@ describe('a sports ground\'s footprint', () => {
     assert.ok(site && site.q % 2 === 1, 'fronts a north-south street');
     const b = placeBox(site, d);
     assert.deepEqual([b[2] - b[0], b[3] - b[1]], [W, D]);
-    assert.ok(rb.some(r => Math.abs(r[2] + 0.25 - b[0]) < 1e-9 || Math.abs(r[0] - 0.25 - b[2]) < 1e-9), 'on the verge of its street (road access)');
+    // its drawn ground (the picture's, GROUND_MARGIN more) meets the verge: road access, and the picture off the road
+    const dr = drawnBox(site, d);
+    assert.ok(rb.some(r => Math.abs(r[2] + SITE_GAP - dr[0]) < 1e-9 || Math.abs(r[0] - SITE_GAP - dr[2]) < 1e-9), 'on the verge of its street (road access)');
+  });
+  it('keeps its whole drawn picture off the road, GROUND_MARGIN clear, every tier on every side of a street (the owner: "stadium clearly over the actual road")', () => {
+    for (const d of SPORTS) {
+      // the drawn ground holds the fitted field
+      const [x0, y0, x1, y1] = d.ground!, hx = d.preset.w / 2, hy = d.preset.d / 2;
+      assert.ok(x0 <= -hx && y0 <= -hy && x1 >= hx && y1 >= hy, `${d.id}: its drawn ground holds its field`);
+      for (const along of ['x', 'y'] as const) {
+        // one long street through (500, 500); the picture on either side of it
+        const seg: SiteSeg = along === 'x' ? { key: 's', ax: 100, ay: 500, bx: 900, by: 500, off: 4.5, order: 3 } : { key: 's', ax: 500, ay: 100, bx: 500, by: 900, off: 4.5, order: 3 };
+        const road = roadBoxes([seg])[0]!;
+        for (const side of [-1, 1]) {
+          const free = (b: Box4) => !overlap(road, b) && (along === 'x' ? (b[1] + b[3]) / 2 - 500 : (b[0] + b[2]) / 2 - 500) * side > 0;
+          const site = findSite(d, { segs: [seg], centre: { x: 500, y: 500 }, seed: 2, free })!;
+          assert.ok(site, `${d.id} along ${along}, side ${side}: a site`);
+          const pic = drawnOf(placeBox(site, d), { ...d, ground: d.ground }), dr = drawnBox(site, d);
+          assert.deepEqual(pic, dr);
+          assert.ok(!overlap(road, dr), `${d.id} q ${site.q}: its drawn picture is off the road`);
+          // the picture's own ground (the drawn box less its margin) stands GROUND_MARGIN + SITE_GAP from the verge
+          const gap = along === 'x' ? (side > 0 ? dr[1] - road[3] : road[1] - dr[3]) : (side > 0 ? dr[0] - road[2] : road[0] - dr[2]);
+          assert.ok(Math.abs(gap - SITE_GAP) < 1e-9, `${d.id} q ${site.q}: the drawn box meets the verge (${gap})`);
+          assert.ok(gap + GROUND_MARGIN >= GROUND_MARGIN + SITE_GAP - 1e-9 && GROUND_MARGIN >= 1, `${d.id}: the picture itself stands at least a tile and a half clear of the verge`);
+          // and each higher tier, grown in place, too
+          let cur = site, cd = d;
+          for (const up of SPORTS.filter(e => e.group === d.group && e.tier! > d.tier!).sort((a, b) => a.tier! - b.tier!)) {
+            const nx = upgradeSpots(cur, cd, up)[0]!, ub = drawnBox(nx, up);
+            assert.ok(!overlap(road, ub), `${up.id} grown from ${cd.id} at q ${nx.q}: off the road`);
+            const g2 = along === 'x' ? (side > 0 ? ub[1] - road[3] : road[1] - ub[3]) : (side > 0 ? ub[0] - road[2] : road[0] - ub[2]);
+            assert.ok(Math.abs(g2 - SITE_GAP) < 1e-9, `${up.id} q ${nx.q}: the same drawn street edge (${g2})`);
+            cur = nx; cd = up;
+          }
+        }
+      }
+    }
   });
   it('grows in place: the bigger tier on the same street edge, centred on the old one first', () => {
     for (const [lo, hi] of [['baseball-sandlot', 'baseball-field'], ['football-dirt', 'football-field'], ['football-field', 'football-stadium']] as const) {
@@ -129,7 +164,8 @@ describe('a sports ground\'s footprint', () => {
         const a = placeDef(lo)!, b = placeDef(hi)!, old: PlacedPlace = { id: lo, x: 300, y: 300, q }, spots = upgradeSpots(old, a, b);
         assert.equal(spots.length, 3);
         const ob = placeBox(old, a), front = (bx: Box4) => [bx[3], bx[2], bx[1], bx[0]][q]!; // the street-side edge (the place runs away from it): q 0 its y1, 1 x1, 2 y0, 3 x0
-        for (const s of spots) { assert.equal(s.id, hi); assert.equal(s.q, q); assert.equal(front(placeBox(s, b)), front(ob), `${hi} q ${q}: the same street edge`); }
+        // (the drawn street edge: the footprint stands back by its picture's overhang, #1369 follow-up)
+        for (const s of spots) { assert.equal(s.id, hi); assert.equal(s.q, q); assert.ok(Math.abs(front(drawnBox(s, b)) - front(drawnBox(old, a))) < 1e-9, `${hi} q ${q}: the same drawn street edge`); }
         const c = placeBox(spots[0]!, b), mid = (bx: Box4) => (q % 2 ? (bx[1] + bx[3]) / 2 : (bx[0] + bx[2]) / 2);
         assert.ok(Math.abs(mid(c) - mid(ob)) < 1e-9, 'centred along the street');
         assert.ok(overlap(c, ob) && c[2] - c[0] >= ob[2] - ob[0] && c[3] - c[1] >= ob[3] - ob[1]);
@@ -210,6 +246,9 @@ describe('on a grown town', () => {
       const b = placeLand(site!, def, reserve);
       assert.ok(overlap(b, placeBox(site!, def)) && b[0] <= placeBox(site!, def)[0] && b[2] >= placeBox(site!, def)[2], 'its land holds its footprint');
       assert.ok(!roads.some(r => overlap(r, b, -0.5)), `${def.id} is off the roads`);
+      // (#1369 follow-up: its whole drawn picture, not only its field, stays off every road tile)
+      const pic = drawnBox(site!, def);
+      assert.ok(!roads.some(r => overlap(r, pic)), `${def.id}: its drawn picture is off every road and verge`);
       assert.ok(!built.some(r => overlap(r, b, -0.6)), `${def.id} is off the built lots`);
       assert.ok(!overlap(golf, b), `${def.id} is off the golf land (the course and the range)`);
       const i = except ? places.indexOf(except) : -1; if (i >= 0) places.splice(i, 1);
@@ -232,11 +271,11 @@ describe('on a grown town', () => {
     // the grass tiers and the stadiums, on this town's land (the headless range start stops near 130 residents: its county road runs out of
     // frontage, so the tiers are asked for as the residents would): in place when they fit, else elsewhere; the lower tier goes
     for (const t of [1, 2]) for (const f of [BASE, FOOT]) {
-      const def = f[t]!, old = familyPlaced(def, places)!, was = placeBox(old, placeDef(old.id)!);
+      const def = f[t]!, old = familyPlaced(def, places)!, was = drawnBox(old, placeDef(old.id)!), wasField = placeBox(old, placeDef(old.id)!);
       assert.equal(old.id, f[t - 1]!.id);
-      const now = placeBox(check(def, old), def), q = old.q, front = (b: Box4) => [b[3], b[2], b[1], b[0]][q]!, along = (b: Box4) => (q % 2 ? b[1] + b[3] : b[0] + b[2]) / 2;
+      const site = check(def, old), now = drawnBox(site, def), nowField = placeBox(site, def), q = old.q, front = (b: Box4) => [b[3], b[2], b[1], b[0]][q]!, along = (b: Box4) => (q % 2 ? b[1] + b[3] : b[0] + b[2]) / 2;
       // the normal build kept its land: the higher tier stands on the same street edge, centred along it where the lower one was
-      if (reserve) { assert.ok(Math.abs(front(now) - front(was)) < 1e-6 && Math.abs(along(now) - along(was)) < 1e-6, `${def.id} grew in place`); assert.equal(places.at(-1)!.q, q); }
+      if (reserve) { assert.ok(Math.abs(front(now) - front(was)) < 1e-6 && Math.abs(along(nowField) - along(wasField)) < 1e-6, `${def.id} grew in place`); assert.equal(places.at(-1)!.q, q); }
       assert.ok(places.some(p => p.id === def.id) && !places.some(p => p.id === old.id), `${old.id} grew into ${def.id}`);
     }
     assert.equal(places.length, 2);
