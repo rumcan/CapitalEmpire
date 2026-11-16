@@ -205,13 +205,15 @@ export async function record(env) {
       // then years at the top speed as a time-lapse (C.townLapse frames, each C.townEvery frames of the clock), the club's cards put away as they come
       await shot('town-grow', async () => {
         await closeCards(); const c = await G(() => window.__game.golf.town ?? window.__game.golf.home ?? null); if (!c) throw new Error('no town');
-        const o = C.townGrowOff ?? [-30, -10], z = C.townGrowZoom ?? 0.1;
+        const o = C.townGrowOff ?? [-12, -4], z = C.townGrowZoom ?? 0.17; // (close enough that a new house reads)
         await cam(c.x + o[0], c.y + o[1], z); await wait(2500); await speed(1);
         await start('town-grow'); await wait(2500);
         await speed(20);
-        const frames = C.townLapse ?? 600, every = C.townEvery ?? 16;
+        // (each picture: the page one frame on, so the clouds and the light roll as in play; the sim worker C.townEvery frames on, so the town grows fast. The
+        // owner, 2026-11-16: with both 16 frames on, the cloud patches jumped five wavelengths a picture and flashed)
+        const frames = C.townLapse ?? 900, every = C.townEvery ?? 16;
         for (let i = 0; i < frames; i += 30) {
-          await rec.tick(Math.min(30, frames - i), every);
+          await rec.tick(Math.min(30, frames - i), 1, every);
           await G(() => { const g = window.__game; if (g.seasonReport) g.seasonReport = null; }); await closeCards(); // (the season's report card: closed as a player closes it)
           if (await G(() => window.__game.speed !== 20)) await speed(20);
         }
@@ -275,7 +277,7 @@ export async function record(env) {
       }
       await page.keyboard.press('Escape'); await wait(400); await closeCards(); await glide(1800, 980, 400);
       // grown in: a time-lapse, the same camera
-      await speed(20); await rec.tick(C.growFrames ?? 240, C.growEvery ?? 6); await speed(1); await closeCards(); await wait(1200); await stop();
+      await speed(20); await rec.tick(C.growFrames ?? 240, 1, C.growEvery ?? 6); // (the page a frame a picture: the clouds roll; the sim 6) await speed(1); await closeCards(); await wait(1200); await stop();
     });
     await shot('golf-new', async () => {
       if (!newHole) throw new Error('no new hole');
