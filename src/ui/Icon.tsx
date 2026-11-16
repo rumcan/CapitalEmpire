@@ -21,8 +21,8 @@ const CLOSE = <path fill="none" stroke="currentColor" strokeWidth={2.4} strokeLi
 /** an icon at size px (square); decorative, so it has no alt text: the button around it carries the title */
 export function Icon({ name, size = 24, className = '' }: { name: IconName; size?: number; className?: string }) {
   if (name === 'close') return <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false" data-glyph="close" className={`ui-glyph pointer-events-none shrink-0 select-none ${className}`}>{CLOSE}</svg>;
-  // (a fixed square box: the cut icons are not all square, and the page's img rule, height auto, let a wide one come out short; 2026-11-16)
-  return <img src={URLS[`../assets/ui/icons/${name}.webp`]} width={size} height={size} alt="" draggable={false} style={{ width: size, height: size }} className={`pointer-events-none shrink-0 select-none object-contain ${className}`} />;
+  // (a fixed square box, the cut filling it: each icon is a 64 px square on a wider or taller clear canvas, and the page's img rule, height auto, drew a wide one short and small; 2026-11-16)
+  return <img src={URLS[`../assets/ui/icons/${name}.webp`]} width={size} height={size} alt="" draggable={false} style={{ width: size, height: size }} className={`pointer-events-none shrink-0 select-none object-cover ${className}`} />;
 }
 
 /** #1304: an icon's painted tile URL (undefined: none mapped, or its file not cut yet). Icon no longer draws it (2026-11-16, below) */
