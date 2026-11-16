@@ -164,7 +164,7 @@ import { LotMap, endReach, ringClear } from './lots/lots';
 import * as ES from './golf/estate'; // T353 (#995): house lots
 import { BuildDust, armTick, disarm, drawDust, dustAllowed, grewTo } from './build-dust';
 import { EstateTool } from './golf/estatetool';
-import { PLACE_DEFS, duePlaces, familyPlaced, placeBox, placeDef, placeGeom, placeLand, placeName, placeTuples, placesFromTuples, reservedSite, upgradeSpots, type PlaceDef, type PlacedPlace, type SiteSeg } from './lots/iconic';
+import { PLACE_DEFS, duePlaces, familyPlaced, placeBox, placeDef, placeGeom, placeLand, placeName, placeTuples, placesFromTuples, reservedSite, upgradeSpots, type PlaceDef, type PlacedPlace, type SiteSeg, drawnBox } from './lots/iconic';
 import { TOWN_BLOCKS, TOWN_POP, townCentres, townGrid } from './lots/seedtowns';
 import { Names, RoadNames } from './ext/names';
 import { FARM_MODEL, FarmMap, animalAt, animalBox, claimedLots, composeFarm, farmAnimals, farmSeason, farmStandIns, parcelCorners, type AnimalView, type FarmAnimal, type FarmModel, type FarmParcel } from './ext/farms';
@@ -1702,7 +1702,7 @@ export class Game {
       out.push({ name: def?.name?.toLowerCase() ?? 'tournament structure', rect: structureRect(s), refund: s.mode === 'buy' && def?.buy ? Math.round(def.buy * 0.5) : 0,
         ref: () => { const list = this.golf?.structures; const i = list ? list.findIndex(q => q.id === s.id) : -1; if (i < 0 || !list) return; const prop = this.golfStructureProps.get(s.id); if (prop) this.removeProp(prop); this.golfStructureProps.delete(s.id); list.splice(i, 1); } });
     }
-    for (const p of this.places) { const d = placeDef(p.id); if (!d) continue; const b = placeBox(p, d); out.push({ name: 'landmark', rect: [b[0], b[1], b[2] - b[0], b[3] - b[1]], ref: () => { this.places = this.places.filter(q => q.id !== p.id); } }); }
+    for (const p of this.places) { const d = placeDef(p.id); if (!d) continue; const b = drawnBox(p, d); out.push({ name: 'landmark', rect: [b[0], b[1], b[2] - b[0], b[3] - b[1]], ref: () => { this.places = this.places.filter(q => q.id !== p.id); } }); }
     return out.filter(k => k.rect[2] > 0 && k.rect[3] > 0);
   }
   /** the world as the planner reads it, from the game's live collections (nothing copied but the small lists) */
@@ -4834,8 +4834,9 @@ export class Game {
     const def = placeDef(pl.id); if (!def) return;
     const fresh = !this.placeProps.has(pl.id); // (build-dust.ts: a new place puffs)
     this.dropPlace(pl.id);
-    const box = placeBox(pl, def), key = 'place:' + pl.id, ps: Prop[] = [], seen = new Set<string>();
-    const hits = new Set<Prop>(); this.propGrid.query(box, hits);
+    // (box: its footprint, the picture's ground point at its centre; land: the ground its picture covers, #1369 follow-up)
+    const box = placeBox(pl, def), land = drawnBox(pl, def), key = 'place:' + pl.id, ps: Prop[] = [], seen = new Set<string>();
+    const hits = new Set<Prop>(); this.propGrid.query(land, hits);
     for (const p of hits) if (p.auto && !p.auto.startsWith('place:') && !p.auto.startsWith('lot:') && LIBRARY[p.item]?.kind === 'tree') { this.removeProp(p); if (this.autoByKey.get(p.auto) === p) this.autoByKey.delete(p.auto); }
     // #1369: a place of one picture (a sports ground) is that picture at its footprint's centre, never turned or mirrored, on the ground as it is
     const art = def.art !== undefined ? LIB_INDEX.get(def.art) : undefined;
@@ -4849,8 +4850,8 @@ export class Game {
     }
     this.placeProps.set(pl.id, ps); this.setLotGround(key, c?.ground ?? null);
     if (fresh && this.dustOk()) this.dust.rect(performance.now(), box[0]!, box[1]!, box[2]!, box[3]!, 'foot');
-    this.dropTownTrees(box[0], box[1], box[2], box[3]);
-    for (const l of this.traffic.lots.values()) { const b = lotBoxOf(l.o, l.u, l.n, l.w, l.d); if (b[0]! < box[2] && b[2]! > box[0] && b[1]! < box[3] && b[3]! > box[1]) this.lotQueue.add(l.key); }
+    this.dropTownTrees(land[0], land[1], land[2], land[3]);
+    for (const l of this.traffic.lots.values()) { const b = lotBoxOf(l.o, l.u, l.n, l.w, l.d); if (b[0]! < land[2] && b[2]! > land[0] && b[1]! < land[3] && b[3]! > land[1]) this.lotQueue.add(l.key); }
   }
   /** the iconic places' names over their centres (world labels of the first rank, as the businesses', on a dark plate), from the district zoom in */
   private drawPlaceNames() {
@@ -5541,7 +5542,7 @@ export class Game {
   /** the iconic places (T219) as named footprints: no road or ring crosses one (T224); "the Drive-In" in a town with no name, else the town's own */
   private placeStructures(): Structure[] {
     const out: Structure[] = [], town = this.townName(0);
-    for (const p of this.places) { const d = placeDef(p.id); if (d) out.push({ name: inSentence(placeName(d, town)), box: placeBox(p, d) }); }
+    for (const p of this.places) { const d = placeDef(p.id); if (d) out.push({ name: inSentence(placeName(d, town)), box: drawnBox(p, d) }); }
     return out;
   }
   /** the first thing in the way of a route of the class in hand, why, and its outline (null: nothing): what is in the way, or a big placed prop

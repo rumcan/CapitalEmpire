@@ -66,6 +66,22 @@ export function sportsGeometry(s, p) {
   return { w: r3(w), h: r3(p.h * k), ax: r3(w / 2), ay: r3(ay), k, nearErr: r3(nearErr), fit: r3(p.w / (s.L + s.D)) };
 }
 
+/** #1369 follow-up (the owner, 2026-11-16: "stadium clearly over the actual road"): the ground the picture covers, in tiles from its ground point
+ *  (the footprint's centre), the map's axes: each column's lowest opaque pixel (the ground it stands on: stands, a plaza, a light tower's foot)
+ *  projected to the ground (the game's 2:1: a tile is 64 display px across and 32 down), with the fitted footprint; rounded outward to 0.01 */
+export function groundExtents(s, p, g) {
+  const k = g.w / p.w, hx = s.L / 4, hy = s.D / 4;
+  let x0 = -hx, x1 = hx, y0 = -hy, y1 = hy;
+  for (let x = 0; x < p.w; x++) {
+    let low = -1; for (let y = p.h - 1; y >= 0; y--) if (p.rgba[(y * p.w + x) * 4 + 3] > 128) { low = y; break; }
+    if (low < 0) continue;
+    const dx = (x + 0.5) * k - g.ax, dy = (low + 1) * k - g.ay, wx = (dx / 64 + dy / 32) / 2, wy = (dy / 32 - dx / 64) / 2;
+    x0 = Math.min(x0, wx); x1 = Math.max(x1, wx); y0 = Math.min(y0, wy); y1 = Math.max(y1, wy);
+  }
+  const lo = v => Math.floor(v * 100) / 100, hi = v => Math.ceil(v * 100) / 100;
+  return [lo(x0), lo(y0), hi(x1), hi(y1)];
+}
+
 const found = [], lines = [];
 for (const s of SPORTS) {
   const src = newest(s.name), master = path.join(MASTERS, `${s.name}.webp`), oldMeta = readMeta()[s.name];
@@ -80,10 +96,11 @@ for (const s of SPORTS) {
   // packed at its own pixels, at most a page less its gutters
   const room = PAGE - 2 * GUT, f = Math.min(1, room / p.w, room / p.h), pw = Math.round(p.w * f), ph = Math.round(p.h * f);
   const crop = f === 1 ? Buffer.from(p.rgba) : await sharp(p.rgba, { raw: { width: p.w, height: p.h, channels: 4 } }).resize(pw, ph, { kernel: 'lanczos3', fit: 'fill' }).raw().toBuffer();
-  const g = sportsGeometry(s, p);
-  found.push({ s, p, crop, pw, ph, g, isPlaceholder, src: { file, v, sha256: h, rect: p.rect, keyed: raw.keyed } });
+  const g = sportsGeometry(s, p), ground = groundExtents(s, p, g);
+  found.push({ s, p, crop, pw, ph, g, ground, isPlaceholder, src: { file, v, sha256: h, rect: p.rect, keyed: raw.keyed } });
   lines.push(`  ${s.name}: ${isPlaceholder ? 'PLACEHOLDER' : `${file}${raw.keyed ? ' (keyed)' : ''}`} trimmed ${p.w}x${p.h} px -> ${g.w}x${g.h} display px (${s.L} x ${s.D} m), `
-    + `${g.fit} px/m fitted vs the guide's ${s.guide} (${((g.fit / s.guide - 1) * 100).toFixed(0)}%), ground point ${g.ax},${g.ay}, near corner off by ${g.nearErr} display px; packed ${pw}x${ph}`);
+    + `${g.fit} px/m fitted vs the guide's ${s.guide} (${((g.fit / s.guide - 1) * 100).toFixed(0)}%), ground point ${g.ax},${g.ay}, near corner off by ${g.nearErr} display px; packed ${pw}x${ph}; `
+    + `drawn ground ${JSON.stringify(ground)} tiles (the field ±${s.L / 4} x ±${s.D / 4})`);
 }
 function readMeta() { try { const t = fs.readFileSync(LIB, 'utf8'), m = /\/\*META\*\/(.*)\/\*META\*\//.exec(t); return m ? Object.fromEntries(JSON.parse(m[1]).map(e => [e.name, e])) : {}; } catch { return {}; } }
 
@@ -149,4 +166,10 @@ export function appendSports(library: LibItem[], pages: string[][]) {
 }
 `;
 fs.writeFileSync(LIB, ts);
+// the drawn ground into the place file (lots/sports-grounds.json "ground"): the town keeps it, and a margin, off the roads (lots/iconic.ts drawnBox)
+{
+  const PLACES = path.join(root, 'src/game/lots/sports-grounds.json'), j = JSON.parse(fs.readFileSync(PLACES, 'utf8'));
+  for (const pl of j.places) { const it = found.find(f => `sports:${f.s.name}` === pl.art); if (it) pl.ground = it.ground; }
+  fs.writeFileSync(PLACES, JSON.stringify(j, null, 1) + '\n');
+}
 console.log(`packed ${found.length} picture(s) on ${pages.length} page(s): ${(bytes / 1048576).toFixed(2)} MB of webp (${bytes} bytes, ${MIPS} mips, q${QUALITY}); ${path.relative(root, LIB)} written`);
