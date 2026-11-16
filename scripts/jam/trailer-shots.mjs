@@ -206,8 +206,12 @@ export async function record(env) {
       // the town growing (the owner: "see a beginning and later stages of the town"): one camera on the town by the county road, a few seconds as it is,
       // then years at the top speed as a time-lapse (C.townLapse frames, each C.townEvery frames of the clock), the club's cards put away as they come
       await shot('town-grow', async () => {
-        await closeCards(); const c = await G(() => window.__game.golf.town ?? window.__game.golf.home ?? null); if (!c) throw new Error('no town');
-        const o = C.townGrowOff ?? [-12, -4], z = C.townGrowZoom ?? 0.17; // (close enough that a new house reads)
+        await closeCards();
+        // (the camera on the town's lots near its seed, built or not yet: where the houses will come; the seed itself can sit in an empty field)
+        const c = await G(() => { const g = window.__game, t = g.golf.town ?? g.golf.home; if (!t) return null; const pts = []; for (const l of g.traffic.lots.values()) if (l.o && Math.hypot(l.o[0] - t.x, l.o[1] - t.y) < 160) pts.push(l.o);
+          return pts.length ? { x: pts.reduce((s, p) => s + p[0], 0) / pts.length, y: pts.reduce((s, p) => s + p[1], 0) / pts.length, n: pts.length } : t; });
+        if (!c) throw new Error('no town'); console.log('   town lots', JSON.stringify(c));
+        const o = C.townGrowOff ?? [0, 0], z = C.townGrowZoom ?? 0.14; // (close enough that a new house reads)
         await cam(c.x + o[0], c.y + o[1], z); await wait(2500); await speed(1);
         await start('town-grow'); await wait(2500);
         await speed(20);
@@ -295,9 +299,11 @@ export async function record(env) {
       await closeCards(); await cam(...TC); await wait(2000);
       await start('texture'); await glide(1150, 760, 300);
       await buildCard('texture'); await cam(...TC); await wait(400);
-      const P2 = C.texture ?? { a: [[1420, 430], [1530, 450], [1560, 510], [1470, 540], [1390, 500], [1440, 460], [1510, 480]], b: [[1600, 600], [1700, 620], [1760, 680], [1660, 700], [1590, 650], [1650, 640]] };
+      const P2 = C.texture ?? { a: [[1420, 430], [1530, 450], [1560, 510], [1470, 540], [1390, 500], [1440, 460], [1510, 480]], b: [[1170, 340], [1280, 350], [1310, 410], [1220, 440], [1150, 400], [1200, 370]] }; // (both on the rough: the range's outfield is not painted)
       for (const [surf, look, pts] of [['Fairway', 'Fescue', P2.a], ['Bunker', 'Worn path', P2.b]]) {
         await surface(surf);
+        // (a round 4x4 brush: the paint and its dust read at this zoom; a 1-cell brush leaves a thin line and a wisp)
+        await clickSel('[data-testid="tool-panel"] button:has-text("Round")', 300).catch(() => {}); await clickSel('[data-testid="tool-panel"] button:has-text("4×4")', 300).catch(() => {});
         await clickSel('[data-testid="tool-panel"] button[aria-haspopup]', 500); await wait(700); // (Main texture: the looks, as pictures)
         await clickSel(`[data-testid="tool-panel"] button:has-text("${look}")`, 600); await wait(600);
         await stroke(pts.map(([x, y]) => ({ x, y })), 1500); await wait(700);
