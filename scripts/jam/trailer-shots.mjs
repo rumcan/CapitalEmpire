@@ -27,7 +27,9 @@ export async function record(env) {
     console.log('shot', name);
     try { await fn(); } catch (e) { console.log(`  ${name} failed: ${String(e?.message ?? e).split('\n')[0]}`); try { await rec?.stop(); } catch { /* none */ } done.push({ name, error: String(e?.message ?? e).split('\n')[0] }); }
   };
-  const start = async n => { await rec.start(n); };
+  /** the construction dust's state (build-dust.ts: armed, the town's lot queue, the particles alive), logged with each shot */
+  const dustState = () => page.evaluate(() => { const g = window.__game; return g?.dust ? { armed: g.dust.arm.armed, quiet: Math.round(g.dust.arm.quietUntil - performance.now()), queue: g.lotQueue?.size ?? null, alive: g.dust.pool.n } : null; }).catch(() => null);
+  const start = async n => { await rec.start(n); console.log(`   dust at ${n}:`, JSON.stringify(await dustState())); };
   /** a wait: while a shot records (step mode) it is that many frames of the clip, else real time */
   const wait = async ms => { if (rec?.on) await rec.tick(Math.max(1, Math.round(ms / FR))); else await realWait(ms); };
   /** until fn (in the page) is true: frame by frame while recording, else polled; false after ms */
@@ -35,7 +37,7 @@ export async function record(env) {
     if (rec?.on) { for (let i = 0; i < ms / FR; i++) { if (await page.evaluate(fn, arg)) return true; await rec.tick(1); } return false; }
     return page.waitForFunction(fn, arg, { timeout: ms }).then(() => true, () => false);
   };
-  const stop = async () => { const r = await rec.stop(); if (r) { console.log('  ', JSON.stringify(r)); done.push(r); } return r; };
+  const stop = async () => { const d = await dustState(); const r = await rec.stop(); if (r) r.dust = d; if (r) { console.log('  ', JSON.stringify(r)); done.push(r); } return r; };
 
   // ---------- helpers on the current page
   const G = fn => page.evaluate(fn);
@@ -149,7 +151,7 @@ export async function record(env) {
   const ballRest = async (prev = null, ms = 30000) => { await wait(1500); for (let k = 0; k < ms / 250; k++) { const s = await turnNow().catch(() => null); if (s && (prev === null || s.stroke !== prev)) return s; if (k > 8 && await F('return typeof holed !== "undefined" && !!holed').catch(() => false)) return null; /* (in the cup) */ await wait(250); } return null; };
 
   const C = WORLD.view ?? {};
-  const takes = +opt('takes', 3);
+  const takes = +opt('takes', 3), golfTakes = +opt('takes-golf', takes); // (--takes-golf: the tee shot and the par 3 apart, the takes the cut picks from)
   try {
     // ---------------- the title card over the living menu scene, then a new game: the range placed and built up in stages
     if (want('menu') || want('range-build') || want('town-grow')) {
@@ -204,14 +206,20 @@ export async function record(env) {
       // the town growing (the owner: "see a beginning and later stages of the town"): one camera on the town by the county road, a few seconds as it is,
       // then years at the top speed as a time-lapse (C.townLapse frames, each C.townEvery frames of the clock), the club's cards put away as they come
       await shot('town-grow', async () => {
-        await closeCards(); const c = await G(() => window.__game.golf.town ?? window.__game.golf.home ?? null); if (!c) throw new Error('no town');
-        const o = C.townGrowOff ?? [-30, -10], z = C.townGrowZoom ?? 0.1;
+        await closeCards();
+        // (the camera on the town's lots near its seed, built or not yet: where the houses will come; the seed itself can sit in an empty field)
+        const c = await G(() => { const g = window.__game, t = g.golf.town ?? g.golf.home; if (!t) return null; const pts = []; for (const l of g.traffic.lots.values()) if (l.o && Math.hypot(l.o[0] - t.x, l.o[1] - t.y) < 160) pts.push(l.o);
+          return pts.length ? { x: pts.reduce((s, p) => s + p[0], 0) / pts.length, y: pts.reduce((s, p) => s + p[1], 0) / pts.length, n: pts.length } : t; });
+        if (!c) throw new Error('no town'); console.log('   town lots', JSON.stringify(c));
+        const o = C.townGrowOff ?? [0, 0], z = C.townGrowZoom ?? 0.14; // (close enough that a new house reads)
         await cam(c.x + o[0], c.y + o[1], z); await wait(2500); await speed(1);
         await start('town-grow'); await wait(2500);
         await speed(20);
-        const frames = C.townLapse ?? 600, every = C.townEvery ?? 16;
+        // (each picture: the page one frame on, so the clouds and the light roll as in play; the sim worker C.townEvery frames on, so the town grows fast. The
+        // owner, 2026-11-16: with both 16 frames on, the cloud patches jumped five wavelengths a picture and flashed)
+        const frames = C.townLapse ?? 900, every = C.townEvery ?? 16;
         for (let i = 0; i < frames; i += 30) {
-          await rec.tick(Math.min(30, frames - i), every);
+          await rec.tick(Math.min(30, frames - i), 1, every);
           await G(() => { const g = window.__game; if (g.seasonReport) g.seasonReport = null; }); await closeCards(); // (the season's report card: closed as a player closes it)
           if (await G(() => window.__game.speed !== 20)) await speed(20);
         }
@@ -275,7 +283,7 @@ export async function record(env) {
       }
       await page.keyboard.press('Escape'); await wait(400); await closeCards(); await glide(1800, 980, 400);
       // grown in: a time-lapse, the same camera
-      await speed(20); await rec.tick(C.growFrames ?? 240, C.growEvery ?? 6); await speed(1); await closeCards(); await wait(1200); await stop();
+      await speed(20); await rec.tick(C.growFrames ?? 240, 1, C.growEvery ?? 6); // (the page a frame a picture: the clouds roll; the sim 6) await speed(1); await closeCards(); await wait(1200); await stop();
     });
     await shot('golf-new', async () => {
       if (!newHole) throw new Error('no new hole');
@@ -291,9 +299,11 @@ export async function record(env) {
       await closeCards(); await cam(...TC); await wait(2000);
       await start('texture'); await glide(1150, 760, 300);
       await buildCard('texture'); await cam(...TC); await wait(400);
-      const P2 = C.texture ?? { a: [[1420, 430], [1530, 450], [1560, 510], [1470, 540], [1390, 500], [1440, 460], [1510, 480]], b: [[1600, 600], [1700, 620], [1760, 680], [1660, 700], [1590, 650], [1650, 640]] };
+      const P2 = C.texture ?? { a: [[1420, 430], [1530, 450], [1560, 510], [1470, 540], [1390, 500], [1440, 460], [1510, 480]], b: [[1170, 340], [1280, 350], [1310, 410], [1220, 440], [1150, 400], [1200, 370]] }; // (both on the rough: the range's outfield is not painted)
       for (const [surf, look, pts] of [['Fairway', 'Fescue', P2.a], ['Bunker', 'Worn path', P2.b]]) {
         await surface(surf);
+        // (a round 4x4 brush: the paint and its dust read at this zoom; a 1-cell brush leaves a thin line and a wisp)
+        await clickSel('[data-testid="tool-panel"] button:has-text("Round")', 300).catch(() => {}); await clickSel('[data-testid="tool-panel"] button:has-text("4×4")', 300).catch(() => {});
         await clickSel('[data-testid="tool-panel"] button[aria-haspopup]', 500); await wait(700); // (Main texture: the looks, as pictures)
         await clickSel(`[data-testid="tool-panel"] button:has-text("${look}")`, 600); await wait(600);
         await stroke(pts.map(([x, y]) => ({ x, y })), 1500); await wait(700);
@@ -329,7 +339,7 @@ export async function record(env) {
     });
     // ---------------- the golf view
     await shot('golf-tee', async () => {
-      for (let k = 0; k < takes; k++) {
+      for (let k = 0; k < golfTakes; k++) {
         const t = await play(1, 'golden'); if (!t) throw new Error('no turn on hole 1');
         await wait(1500); await start(`golf-tee-${k}`); await wait(800);
         await swing({ boost: +opt('boost', 4), spin: { key: 'ArrowUp', n: 3, after: 1300 }, lead: 0 }); await ballRest(t.stroke); await wait(1200); await stop(); // (boost taps on: #1368 was the robot's late release, fixed above)
@@ -350,7 +360,7 @@ export async function record(env) {
       return strokes;
     };
     await shot('golf-draw', async () => {
-      for (let k = 0; k < takes; k++) {
+      for (let k = 0; k < golfTakes; k++) {
         const t = await play(4, 'day'); if (!t) throw new Error('no turn on hole 4');
         await wait(1200); await start(`golf-par3-${k}`); await cursor(true); await wait(500);
         // the shot shape: the ball button, then the dot dragged to the left (a draw)

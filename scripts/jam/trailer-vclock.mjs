@@ -45,23 +45,24 @@ function vclock(preludeSrc) {
   };
   Wrapped.prototype = RW.prototype; W.Worker = Wrapped;
   const runRafs = () => { const list = S.rafs; S.rafs = []; for (const r of list) { try { r.cb(S.t + r.off); } catch (e) { console.error('[vt] raf', e); } } };
-  W.__vtOn = () => { if (S.on) return; S.t = rp(); S.t0 = S.t; S.d0 = rd(); S.on = true; for (const w of S.workers) w.postMessage({ __vt: 'on', t: S.t }); };
+  W.__vtOn = () => { if (S.on) return; S.t = rp(); S.t0 = S.t; S.wt = S.t; S.d0 = rd(); S.on = true; for (const w of S.workers) w.postMessage({ __vt: 'on', t: S.t }); };
   W.__vtOff = () => {
     if (!S.on) return; S.on = false;
     const rafs = S.rafs; S.rafs = []; for (const r of rafs) r.rraf(r.cb);
     for (const tm of S.timers.values()) { const left = Math.max(0, tm.at - S.t); if (tm.rep) tm.rsi(tm.fn, tm.ms, ...tm.a); else tm.rst(tm.fn, left, ...tm.a); }
     S.timers.clear(); for (const w of S.workers) w.postMessage({ __vt: 'off' });
   };
-  /** n steps of dt ms; then, with settle (ms), the ground's bakes in flight waited for in real time and the frame drawn once more at the same moment */
-  W.__vtStep = async (n, dt, settle) => {
+  /** n steps of dt ms (the sim worker's clock simMul times as far: a time-lapse whose town runs fast while the page, its clouds and its light, moves on a
+   *  frame at a time); then, with settle (ms), the ground's bakes in flight waited for in real time and the frame drawn once more at the same moment */
+  W.__vtStep = async (n, dt, settle, simMul = 1) => {
     for (let i = 0; i < n; i++) {
-      S.t += dt;
+      S.t += dt; S.wt = (S.wt ?? S.t) + dt * simMul;
       for (let k = 0; k < 5000; k++) { // the timers due, earliest first (a timer may set another)
         let best = null; for (const tm of S.timers.values()) if (tm.at <= S.t && (!best || tm.at < best.at)) best = tm;
         if (!best) break; if (best.rep) best.at += Math.max(1, best.ms); else S.timers.delete(best.id);
         try { best.fn(...best.a); } catch (e) { console.error('[vt] timer', e); }
       }
-      await Promise.all(S.workers.map(w => new Promise(res => { const to = rst(() => { S.ackMiss = (S.ackMiss || 0) + 1; S.acks.delete(w); const k = S.workers.indexOf(w); if (k >= 0) S.workers.splice(k, 1); res(); }, 1500); /* (no answer: a worker gone, left out from now on) */ S.acks.set(w, () => { rct(to); res(); }); w.postMessage({ __vt: 'tick', t: S.t }); })));
+      await Promise.all(S.workers.map(w => new Promise(res => { const to = rst(() => { S.ackMiss = (S.ackMiss || 0) + 1; S.acks.delete(w); const k = S.workers.indexOf(w); if (k >= 0) S.workers.splice(k, 1); res(); }, 1500); /* (no answer: a worker gone, left out from now on) */ S.acks.set(w, () => { rct(to); res(); }); w.postMessage({ __vt: 'tick', t: S.wt }); })));
       await new Promise(r => rst(r, 0)); // (the worker's answers, posted before its ack, are handled before the frame is drawn)
       runRafs();
     }

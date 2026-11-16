@@ -55,10 +55,10 @@ export class Recorder {
     await this.cdp.send('Page.startScreencast', { format: 'jpeg', quality: this.q, maxWidth: this.w, maxHeight: this.h, everyNthFrame: 1 });
   }
   /** step mode: n frames, each 1/FPS s on the clock (two half steps: the golf view moves on per animation frame, 60 a second), each one's picture written */
-  async tick(n = 1, every = 1) { // (every k: a time-lapse, k frames of the clock to each picture)
+  async tick(n = 1, every = 1, simMul = 1) { // (every k: a time-lapse, k frames of the clock to each picture; simMul m: the sim worker m frames to each of the page's)
     const shot = this.shot; if (!this.on || !shot) return;
     for (let i = 0; i < n; i++) {
-      const r = await this.page.evaluate(([k, s]) => window.__vtStep(2 * k, 1000 / 60, s), [every, this.settle]);
+      const r = await this.page.evaluate(([k, s, m]) => window.__vtStep(2 * k, 1000 / 60, s, m), [every, this.settle, simMul]);
       shot.waited += r?.wait ?? 0;
       const { data } = await this.cdp.send('Page.captureScreenshot', { format: 'jpeg', quality: this.q, optimizeForSpeed: true });
       const f = `${String(shot.frames.length).padStart(5, '0')}.jpg`; writeFileSync(join(shot.raw, f), Buffer.from(data, 'base64')); shot.frames.push([f, shot.frames.length / FPS]);
