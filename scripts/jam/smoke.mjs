@@ -281,12 +281,15 @@ try {
     if (/New game|Load|Download|Save$|^Settings$/.test(b.label)) continue; // (they replace or download the game; the gear itself)
     // (J11: the Music and Effects mutes have test ids, and an aria-label that is not their text: found by id; each is pressed twice, so the sound is left as it was)
     const loc = b.id ? page.locator(`[data-testid="${b.id}"]`).first() : page.locator('button').filter({ hasText: b.label }).first();
-    await click('settings', b.id ?? b.label, loc, { same: /100%|USD/.test(b.label) ? 'already the setting' : undefined });
+    await click('settings', b.id ?? b.label, loc, { same: /90%|USD/.test(b.label) ? 'already the setting' : undefined });
     if (b.id && /^sound-.*-mute$/.test(b.id)) await click('settings', `${b.id} (back on)`, loc);
   }
   await esc();
   // (#1354: Settings' Exit to main menu opens the title card over the HUD: Continue goes back to the game before the radio, which stands in the HUD)
+  // (#1360: Exit to main menu saves, then the page reloads as the main menu over the living scene: wait for the card, Continue, and the game back)
+  await page.locator('[data-testid="title-card"]').waitFor({ state: 'visible', timeout: 60000 }).catch(() => {});
   if (await page.locator('[data-testid="title-card"]').isVisible().catch(() => false)) { await page.locator('[data-testid="title-continue"]').click(); await page.waitForTimeout(800); }
+  await page.locator('[data-testid="radio-play"]').waitFor({ state: 'visible', timeout: 120000 }).catch(() => {}); await page.waitForTimeout(1500);
   // ---- J11: the radio: off until turned on; its pill (play), its card (previous, play, next, the music's mute), off again
   await click('radio', 'Radio (play)', page.locator('[data-testid="radio-play"]'), { wait: 800 });
   await click('radio', 'Radio card (the drop)', page.locator('[data-testid="radio-more"]'));

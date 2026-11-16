@@ -23,14 +23,14 @@
 
 **Golf Manager 2026: build the club. Play the course.**
 
-Start with an empty valley and $75,000. **Pick your spot** and drop your driving range: the land, the road, your home and an old range with a dirt car park and an outfield full of junk. Golfers start rolling in, buying buckets and hitting balls, and a little town grows across the road.
+Start with an empty valley and $75,000. **Pick your spot** and drop your driving range: the land, the road, your home and an old range with a dirt car park and an outfield full of junk. Golfers start rolling in, buying buckets and hitting balls, and a little town grows across the road, laying new streets as your club does well.
 
 **Build your course, your way**
 - **New hole:** click a tee, click a green, hit BUILD NOW. Every green gets natural contours.
 - **Shape it by hand:** paint fairways, greens, bunkers and water; repaint the ground with the Texture Painter; plant trees and flower beds; place props.
 - **Real courses:** import a real golf course and play it.
 - **Grow the range:** clear the junk, upgrade the ball room, paint the outfield, set the bucket price, and watch golfers walk your paths.
-- **A picture on every button:** a Build menu of painted cards, each with its price and when it pays for itself.
+- **A Build menu of painted cards**, each with its price and when it pays for itself.
 
 **Then play it from the tee**
 - Hold to swing, **tap to boost** the power, and **spin the ball in the air** with the arrow keys.
@@ -43,7 +43,7 @@ Start with an empty valley and $75,000. **Pick your spot** and drop your driving
 **Run the money**
 Your takings pay for every hole. Click your cash for the Bank: borrow (the payment and the total interest shown before you sign), repay early, or save. Each month ends with a statement of what came in, what went out and what your club is worth.
 
-**And a radio:** eleven free tunes, from bossa nova to chiptune, in the top bar.
+**And a radio:** eleven free tunes, from bossa nova to chiptune, bottom left.
 
 ### Controls
 - **Builder:** the mouse. Tool rail on the left, cards on the right; click to place, **R** to turn, the wheel to zoom, drag to pan. Click your cash for the Bank. "Pick a spot for me" places your range for you.
