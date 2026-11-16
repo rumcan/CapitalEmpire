@@ -8,6 +8,7 @@ import type { Earn } from '../../game/golf/cards';
 import { Icon } from '../Icon';
 import { PullBanner } from './CardsCard';
 import { money as fmtMoney } from './money';
+import { RangeInput } from '../BrushSlider';
 
 const money = (n: number) => fmtMoney(Math.abs(n));
 const hcpT = (h: number) => h < 0 ? `+${(-h).toFixed(1)}` : h.toFixed(1);
@@ -34,7 +35,7 @@ export function ChallengeBox({ o, onChallenge }: { o: MatchOffer; onChallenge: (
         </div>
         <div className="flex items-center gap-2">
           <span className="text-slate-400">Stake:</span>
-          <input type="range" min={MIN_STAKE} max={o.max} step={STAKE_STEP} value={Math.min(stake, o.max)} onChange={e => setStake(Number(e.target.value))} className="flex-1 accent-amber-300" data-testid="match-stake" />
+          <RangeInput min={MIN_STAKE} max={o.max} step={STAKE_STEP} value={Math.min(stake, o.max)} onChange={e => setStake(Number(e.target.value))} className="flex-1 accent-amber-300" data-testid="match-stake" />
           <b className="w-14 text-right tabular-nums text-white" data-testid="match-stake-val">{money(Math.min(stake, o.max))}</b>
         </div>
         <div className="text-[11px] text-slate-500">Up to {money(o.max)}: {Number.isFinite(o.money) ? `you have ${money(o.money)}, ` : ''}{f} carries {money(o.purse)}.</div>

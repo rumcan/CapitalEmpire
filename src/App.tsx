@@ -78,6 +78,7 @@ import { MapBuildNow } from './ui/MapBuildNow';
 import { LEADS, keysToReveal } from './ui/spotlight/leads';
 import { showGuide, showHint, showPrep, showTip, showTour } from './ui/spotlight/shows';
 import { ClubTitleText } from './ui/ClubTitle';
+import { RangeInput } from './ui/BrushSlider';
 import { GrassManagementPanel } from './ui/GrassManagementPanel';
 import { GREENKEEPING, JAM } from './game/features';
 import { BEND_45 } from './game/route-legs';
@@ -859,7 +860,7 @@ export default function App() {
                     )}
                     <label className="flex items-center gap-2 px-2 py-2 text-sm" data-tip="The contact shadows under every building, car, tree and prop (TrickOrTreat's town-builder shadows). 100% = the builder's, 0 = off">
                       <span className="w-16 shrink-0">Shadows</span>
-                      <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.05} value={game.shadowStrength} onChange={e => { game.setShadowStrength(+e.target.value); bump(); }} />
+                      <RangeInput className="min-w-0 flex-1" min={0} max={2} step={0.05} value={game.shadowStrength} onChange={e => { game.setShadowStrength(+e.target.value); bump(); }} />
                       <span className="w-10 text-right tabular-nums">{Math.round(game.shadowStrength * 100)}%</span>
                     </label>
                     {dev && (
@@ -874,7 +875,7 @@ export default function App() {
                     </label>
                     <label className="flex items-center gap-2 px-2 py-2 text-sm" data-tip="How strongly raised and lowered ground (the Height tool) catches the sun at the upper right: lit, textured slopes facing it, soft cool shade facing away (T126). 100% = the default, 0 = off">
                       <span className="w-16 shrink-0">Slope light</span>
-                      <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.05} value={game.slopeLight} onChange={e => { game.setSlopeLight(+e.target.value); bump(); }} />
+                      <RangeInput className="min-w-0 flex-1" min={0} max={2} step={0.05} value={game.slopeLight} onChange={e => { game.setSlopeLight(+e.target.value); bump(); }} />
                       <span className="w-10 text-right tabular-nums">{Math.round(game.slopeLight * 100)}%</span>
                     </label>
                     {game.landInfo() && (
@@ -894,18 +895,18 @@ export default function App() {
                     {game.sunLook.on && (
                       <label className="flex items-center gap-2 px-2 py-1 text-xs" data-tip="How bright the patches of sun are (and from 100%, how fully the overcast hides the drop shadows). 100% = the default">
                         <span className="w-16 shrink-0">Strength</span>
-                        <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.05} value={game.sunLook.strength} onChange={e => { game.setSunLook({ strength: +e.target.value }); bump(); }} />
+                        <RangeInput className="min-w-0 flex-1" min={0} max={2} step={0.05} value={game.sunLook.strength} onChange={e => { game.setSunLook({ strength: +e.target.value }); bump(); }} />
                         <span className="w-10 text-right tabular-nums">{Math.round(game.sunLook.strength * 100)}%</span>
                       </label>
                     )}
                     <label className="flex items-center gap-2 px-2 py-2 text-sm" data-tip={game.desertTheme ? 'Desert litter baked into the ground: drifts of sand, pebbles and dry brush under the palms, along the fences, walls and houses, kerbs and gutters, and a scatter over the yards, sidewalks and roads (T384). 100% = the default, 0 = only what there was before' : 'Fallen leaves baked into the ground: carpets under the trees, drifts along the fences, walls and houses, a scatter over the yards and sidewalks, and leaves in the gutters under the street trees (T220). 100% = the default, 0 = only the leaves there were before'}>
                       <span className="w-16 shrink-0">{game.desertTheme ? 'Desert litter' : 'Fallen leaves'}</span>
-                      <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.1} value={game.leafDensity} onChange={e => { game.setLeafDensity(+e.target.value); bump(); }} />
+                      <RangeInput className="min-w-0 flex-1" min={0} max={2} step={0.1} value={game.leafDensity} onChange={e => { game.setLeafDensity(+e.target.value); bump(); }} />
                       <span className="w-10 text-right tabular-nums">{Math.round(game.leafDensity * 100)}%</span>
                     </label>
                     <label className="flex items-center gap-2 px-2 py-2 text-sm" data-tip="How many of the town's house lots have rough yards: patches of golden fescue, bare dirt and desert instead of a mown lawn, mostly in the back yard (T222). About 40% of them in a new town, falling to about 10% by 3,000 residents; upgraded homes are always mown. 100% = that schedule, 0 = every yard mown">
                       <span className="w-16 shrink-0">Rough yards</span>
-                      <input type="range" className="min-w-0 flex-1" min={0} max={2} step={0.1} value={game.roughYards} onChange={e => { game.setRoughYards(+e.target.value); bump(); }} />
+                      <RangeInput className="min-w-0 flex-1" min={0} max={2} step={0.1} value={game.roughYards} onChange={e => { game.setRoughYards(+e.target.value); bump(); }} />
                       <span className="w-10 text-right tabular-nums">{Math.round(game.roughYards * 100)}%</span>
                     </label>
                     <label className="flex cursor-pointer items-center gap-2 px-2 pt-2 text-sm" data-tip="This game's world as a desert (T341, T342: chosen when the game starts, saved with it): every world tree drawn as a palm or a rock, the bushes and flower beds as desert plants and rocks, the open ground desert sand, dirt and pale sand, damp dirt along the rivers, the lot lawns golden fescue. New holes plant desert plants; the plants you placed on the course stay as they are. Off: the autumn look">
@@ -925,7 +926,7 @@ export default function App() {
                     {game.cast.on && ([['Sun side', 'angle', 0, 360, 5, `${Math.round(game.cast.angle)}°`], ['Length', 'length', 0.1, 1.5, 0.05, `${Math.round(game.cast.length * 100)}%`], ['Darkness', 'strength', 0, 1, 0.02, `${Math.round(game.cast.strength * 100)}%`]] as const).map(([label, k, lo, hi, step, show]) => (
                       <label key={k} className="flex items-center gap-2 px-2 py-1 text-xs" data-tip={k === 'angle' ? 'The way the shadows fall on screen: 0 right, 90 down, 180 left, 270 up' : undefined}>
                         <span className="w-16 shrink-0">{label}</span>
-                        <input type="range" className="min-w-0 flex-1" min={lo} max={hi} step={step} value={game.cast[k]} onChange={e => { game.setCast({ [k]: +e.target.value }); bump(); }} />
+                        <RangeInput className="min-w-0 flex-1" min={lo} max={hi} step={step} value={game.cast[k]} onChange={e => { game.setCast({ [k]: +e.target.value }); bump(); }} />
                         <span className="w-10 text-right tabular-nums">{show}</span>
                       </label>
                     ))}
@@ -2301,7 +2302,7 @@ function SignalsDetail({ game, n }: { game: Game; n: Node }) {
           {greens.map((g, k) => (
             <label key={k} className="flex items-center gap-2">
               <span className="w-16 shrink-0 text-slate-300">{phaseLabel(n, plan.armPhase, k)}</span>
-              <input type="range" min={MIN_GREEN} max={GREEN_CAP} step={1} value={g} className="flex-1" onChange={e => { const d = [...greens]; d[k] = +e.target.value; setDraft(d); }} onPointerUp={release} onKeyUp={release} />
+              <RangeInput min={MIN_GREEN} max={GREEN_CAP} step={1} value={g} className="flex-1" onChange={e => { const d = [...greens]; d[k] = +e.target.value; setDraft(d); }} onPointerUp={release} onKeyUp={release} />
               <span className="w-10 text-right tabular-nums text-slate-200">{g} s</span>
             </label>
           ))}

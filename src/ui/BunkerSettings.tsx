@@ -10,6 +10,7 @@ import { bunkerTexture, bunkerTextureGroups, ownTextures } from '../game/ext/bun
 import { addOwnTexture, removeOwnTexture } from '../game/ext/bunker-look/uploads';
 import { SideMenuRow } from './SideMenuRow';
 import type { BunkerTextureEntry } from '../game/ext/bunker-look/stage-materials';
+import { RangeInput } from './BrushSlider';
 
 const fieldOf = (key: BunkerSettingKey) => BUNKER_SETTING_FIELDS.find(field => field.key === key)!;
 /** the bunker's shape, as the card lays it out */
@@ -48,7 +49,7 @@ function NumberControl({ field, value, scope, onChange }: {
         <span>{label}</span><span className="sub-line">{unit}</span>
       </label>
       <div className="mt-1 flex flex-nowrap items-center gap-2">
-        <input type="range" min={min} max={max} step={step} value={displayed}
+        <RangeInput min={min} max={max} step={step} value={displayed}
           aria-label={`${accessibleLabel} slider`} aria-valuetext={`${displayNumber(displayed)} ${unit}`.trim()}
           onChange={event => onChange(Number(event.target.value) / scale)}
           className="min-w-0 flex-1 disabled:opacity-40" />
