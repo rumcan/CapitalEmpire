@@ -19,6 +19,7 @@ import { SideMenuRow } from '../SideMenuRow';
 import { ActionTile } from '../ActionTile'; // #1296: the Trees swatch wears the painted `trees` tile, as its neighbours wear their surface's picture
 import { PLANT_R } from '../../game/plant';
 import { PLANT_TILE } from '../tool-tiles';
+import { BrushSlider } from '../BrushSlider';
 
 /** a k x k grid of dots, the size pills' glyph */
 export function SizeGlyph({ k }: { k: number }) {
@@ -161,10 +162,8 @@ export function TreesBrush({ game }: { game: Game }) {
   const p = game.paint, s = p.plant.trees;
   return (
     <div className="mt-2" data-testid="trees-brush">
-      <div className="flex items-center gap-2">
-        <input type="range" aria-label="Trees brush size" min={PLANT_R[0]} max={PLANT_R[1]} step={0.5} value={s.r} onChange={e => p.setPlantSet({ r: +e.target.value })} className="min-w-0 flex-1" />
-        <span className="w-16 text-right" title={`${s.r} tiles across the radius ([ ] size)`}>{`${Math.round(4 * s.r)} m`}</span>
-      </div>
+      <BrushSlider label="Size" show={`${Math.round(4 * s.r)} m`} aria="Trees brush size" title={`${s.r} tiles across the radius ([ ] size)`}
+        value={s.r} min={PLANT_R[0]} max={PLANT_R[1]} step={0.5} onChange={v => p.setPlantSet({ r: v })} />
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
         <button className={`chip ${p.rubOut ? 'chip-on' : ''}`} aria-pressed={p.rubOut} data-testid="trees-rub" title="Rub out takes the trees under the brush (hold Alt for a moment while brushing)" onClick={() => { p.rubOut = !p.rubOut; game.emit(); }}>Rub out</button>
       </div>
@@ -190,10 +189,8 @@ export function BrushShape({ game, brush, arm }: { game: Game; brush: boolean; a
         <button className={`chip ${brush && round ? 'chip-on' : ''}`} aria-pressed={brush && round} title="Round: a circle on the map, for round greens and bunkers (the slider sizes it)" onClick={go(() => p.setBrushShape('round'))}><ShapeGlyph round />Round</button>
       </div>
       {round ? (
-        <div className="mt-2 flex items-center gap-2" data-testid="round-size">
-          <input type="range" aria-label="Round brush size" min={0.5} max={20} step={0.5} value={r} onChange={e => { if (!brush) arm?.(); p.setBrushR(+e.target.value); }} className="min-w-0 flex-1" />
-          <span className="w-16 text-right" title={`${r} tiles across the radius ([ ] size)`}>{`${Math.round(4 * r)} m`}</span>
-        </div>
+        <BrushSlider label="Size" show={`${Math.round(4 * r)} m`} aria="Round brush size" title={`${r} tiles across the radius ([ ] size)`} testId="round-size"
+          value={r} min={0.5} max={20} step={0.5} onChange={v => { if (!brush) arm?.(); p.setBrushR(v); }} />
       ) : (
         <div className="mt-2 flex flex-wrap items-center gap-1.5" role="group" aria-label="Brush size">
           {SQUARE_SIZES.map(k => (
@@ -245,13 +242,12 @@ export function GroundHeight({ game, on, arm, note = '' }: { game: Game; on: boo
       <div className="mt-1.5 flex flex-wrap gap-1.5" role="group" aria-label="Ground height">
         {(['raise', 'lower', 'smooth', 'flatten'] as const).map(m => <button key={m} className={`chip ${on && p.heightMode === m ? 'chip-on' : ''}`} aria-pressed={on && p.heightMode === m} onClick={set({ mode: m })}>{m[0]!.toUpperCase() + m.slice(1)}</button>)}
       </div>
-      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-        <button className="chip" title="[" onClick={set({ r: p.heightR - 2 })}>Smaller</button>
-        <button className="chip" title="]" onClick={set({ r: p.heightR + 2 })}>Bigger</button>
-        <span>{`${p.heightR} tiles`}</span>
-        <button className="chip" onClick={set({ level: p.heightLevel - 1 })}>Gentler</button>
-        <button className="chip" onClick={set({ level: p.heightLevel + 1 })}>Stronger</button>
-        <span>{`Strength ${p.heightLevel}/5`}</span>
+      {/* the owner, 2026-11-16: "this should be sliders?": the size (1 to 32 tiles, [ ] keys) and strength (1 to 5) as sliders */}
+      <div className="mt-1" data-testid="ground-height-sliders">
+        <BrushSlider label="Size" show={`${p.heightR} tiles`} aria="Ground height brush size" title="The brush's radius in tiles ([ ] size)" testId="height-size"
+          value={p.heightR} min={1} max={32} step={1} onChange={v => set({ r: v })()} />
+        <BrushSlider label="Strength" show={`${p.heightLevel}/5`} aria="Ground height brush strength" title="How much one pass raises, lowers or evens the ground" testId="height-strength"
+          value={p.heightLevel} min={1} max={5} step={1} onChange={v => set({ level: v })()} />
       </div>
       <div className="sub-line mt-1.5">{`Drag to ${p.heightMode} the ground (subtle: ±3 m at most). Smooth evens out bumps, Flatten brings it back to level. Roads stay flat. [ ] size.${game.golfMode ? ` Earthworks cost $${EARTHWORK_PER_M3} a m³.` : ''}${note ? ` ${note}` : ''}`}</div>
     </div>

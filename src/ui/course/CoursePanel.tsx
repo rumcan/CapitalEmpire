@@ -18,6 +18,7 @@ import { ActionTile, TILE_BIG, TILE_SMALL } from '../ActionTile'; // J8 (#1261):
 import { JAM } from '../../game/features';
 import { UnlockBar } from '../UnlockBar'; // #1305: a locked New hole shows how far the range is toward it
 import { showHint } from '../spotlight/shows';
+import { BrushSlider } from '../BrushSlider';
 
 /** the paint modes that live under More options (the brush is Shape by hand's; plan is New hole's) */
 const MORE_MODES = new Set(['draw', 'piece', 'height', 'plant', 'hole']);
@@ -210,11 +211,11 @@ function MoreOptions({ game, looks, onLooks }: { game: Game; looks: boolean; onL
                 </div>
                 <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                   {fine('pieceAngle') && <button className="chip" title="R (Shift+R turns back)" onClick={() => p.setPieceOpts({ angle: p.pieceAngle + 15 })}>{`Turn ${p.pieceAngle}°`}</button>}
-                  {fine('pieceScale') && <button className="chip" title="[" onClick={() => p.setPieceOpts({ scale: p.pieceScale - 0.25 })}>Smaller</button>}
-                  {fine('pieceScale') && <button className="chip" title="]" onClick={() => p.setPieceOpts({ scale: p.pieceScale + 0.25 })}>Bigger</button>}
-                  {fine('pieceScale') && <span>{`${p.pieceScale}×`}</span>}
                   {fine('snapToggle') && <button className={`chip ${p.pieceSnap ? 'chip-on' : ''}`} title="Snap to the piece it touches" onClick={() => p.setPieceOpts({ snap: !p.pieceSnap })}>Snap</button>}
                 </div>
+                {/* the owner, 2026-11-16: Smaller / Bigger "should be sliders": the piece's scale, 0.5× to 2.5× in quarters ([ ] keys) */}
+                {fine('pieceScale') && <BrushSlider label="Size" show={`${p.pieceScale}×`} aria="Piece size" title="The piece's size ([ ] size)" testId="piece-size"
+                  value={p.pieceScale} min={0.5} max={2.5} step={0.25} onChange={v => p.setPieceOpts({ scale: v })} />}
               </>
             )}
             {(p.mode === 'draw' || p.mode === 'piece') && <div className="sub-line mt-1.5">{help}</div>}

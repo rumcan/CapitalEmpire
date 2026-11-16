@@ -12,6 +12,7 @@ import { PLANT_FILTERS, PLANT_KINDS, PLANT_R, PLANT_SIZE, PLANT_SPACING } from '
 import { Thumb } from './ui/Thumb';
 import { exposureAtStops, exposureLabel, exposureOf, exposureStops, toneOfExposure } from './game/exposure';
 import { TexturePicker, type TextureOption } from './ui/TexturePicker';
+import { BrushSlider } from './ui/BrushSlider';
 import { ownTextures } from './game/ext/bunker-look/texture-library';
 import { addOwnTexture } from './game/ext/bunker-look/uploads';
 
@@ -118,26 +119,15 @@ export function PlantControls({ game }: { game: Game }) {
   const togglePick = (id: string) => { const next = new Set(plantPicked); if (next.has(id)) next.delete(id); else next.add(id); p.setPlantSet({ ids: pool.map(x => x.id).filter(x => next.has(x)) }); };
   return (
     <>
-      <div className="mt-2 text-[12px] text-slate-400">Brush size</div>
-      <div className="flex items-center gap-2">
-        <input type="range" min={PLANT_R[0]} max={PLANT_R[1]} step={0.5} value={ps.r} onChange={e => p.setPlantSet({ r: +e.target.value })} className="flex-1" />
-        <span className="w-16 text-right text-xs text-slate-200">{`${ps.r} tiles`}</span>
-      </div>
-      <div className="mt-2 text-[12px] text-slate-400">Spacing (the gap between plants)</div>
-      <div className="flex items-center gap-2">
-        <input type="range" min={PLANT_SPACING[0]} max={PLANT_SPACING[1]} step={0.5} value={ps.spacing} onChange={e => p.setPlantSet({ spacing: +e.target.value })} className="flex-1" />
-        <span className="w-16 text-right text-xs text-slate-200">{`${ps.spacing * 2} m`}</span>
-      </div>
-      <div className="mt-2 text-[12px] text-slate-400">Smallest plant (of its normal size)</div>
-      <div className="flex items-center gap-2">
-        <input type="range" min={PLANT_SIZE[0]} max={PLANT_SIZE[1]} step={0.05} value={ps.lo} onChange={e => p.setPlantSet({ lo: Math.min(+e.target.value, ps.hi) })} className="flex-1" />
-        <span className="w-16 text-right text-xs text-slate-200">{`${Math.round(ps.lo * 100)}%`}</span>
-      </div>
-      <div className="mt-2 text-[12px] text-slate-400">Largest plant</div>
-      <div className="flex items-center gap-2">
-        <input type="range" min={PLANT_SIZE[0]} max={PLANT_SIZE[1]} step={0.05} value={ps.hi} onChange={e => p.setPlantSet({ hi: Math.max(+e.target.value, ps.lo) })} className="flex-1" />
-        <span className="w-16 text-right text-xs text-slate-200">{`${Math.round(ps.hi * 100)}%`}</span>
-      </div>
+      {/* the plant brush's settings as the brush panels' sliders (BrushSlider: name and value, then the slider; the owner, 2026-11-16) */}
+      <BrushSlider label="Size" show={`${ps.r} tiles`} aria="Plant brush size" title="The brush's radius in tiles ([ ] size)" testId="plant-size"
+        value={ps.r} min={PLANT_R[0]} max={PLANT_R[1]} step={0.5} onChange={v => p.setPlantSet({ r: v })} />
+      <BrushSlider label="Spacing" show={`${ps.spacing * 2} m`} aria="Plant spacing" title="Spacing: the gap between plants"
+        value={ps.spacing} min={PLANT_SPACING[0]} max={PLANT_SPACING[1]} step={0.5} onChange={v => p.setPlantSet({ spacing: v })} />
+      <BrushSlider label="Smallest" show={`${Math.round(ps.lo * 100)}%`} aria="Smallest plant" title="Smallest plant (of its normal size)"
+        value={ps.lo} min={PLANT_SIZE[0]} max={PLANT_SIZE[1]} step={0.05} onChange={v => p.setPlantSet({ lo: Math.min(v, ps.hi) })} />
+      <BrushSlider label="Largest" show={`${Math.round(ps.hi * 100)}%`} aria="Largest plant" title="Largest plant (of its normal size)"
+        value={ps.hi} min={PLANT_SIZE[0]} max={PLANT_SIZE[1]} step={0.05} onChange={v => p.setPlantSet({ hi: Math.max(v, ps.lo) })} />
       <div className="mt-1 flex flex-wrap gap-1">
         <button className={`chip ${p.rubOut ? 'chip-on' : ''}`} onClick={() => { p.rubOut = !p.rubOut; game.emit(); }}>Rub out</button>
       </div>
