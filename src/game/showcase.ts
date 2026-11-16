@@ -54,7 +54,9 @@ export const SHOW_GOLFERS = 80;
 /** the calendar month the scene's farms show (0 = January): September, the golden harvest (the saved world's own month is wherever its build stopped) */
 export const SHOW_FARM_MONTH = 8;
 /** the frame time (ms, the engine's mean of its last 60 frames, SLOW_AFTER_MS after the first view is showing) above which the machine is too slow for the scene: it gives way to its still picture */
-export const SLOW_FRAME_MS = 42, SLOW_AFTER_MS = 4000;
+// (2026-11-16: on itch.io the scene froze to its still: the first seconds there stream the art over the network, so a 4 s / 42 ms gate judged the
+//  download, not the machine. Judged later and only for a really slow machine now)
+export const SLOW_FRAME_MS = 80, SLOW_AFTER_MS = 15000;
 /** the scene rests after this much play (ms of frames actually drawn, a hidden tab's pause not counted): a menu left open for the afternoon neither burns the GPU nor lets the prepared world's season
  *  clock run on past its end (a season is 24 minutes at the normal speed); the engine stops drawing and the last picture stays under the card */
 export const REST_AFTER_MS = 10 * 60 * 1000;
