@@ -127,7 +127,7 @@ describe('T238: the brush shape and Edit hole\'s paint', () => {
     h = render(fakeGame({ ...stage2, cells: 0 }));
     assert.match(h, /data-shape="round"><button class="chip " aria-pressed="false"[^>]*>[\s\S]*?Square<\/button><button class="chip chip-on" aria-pressed="true"/);
     assert.match(h, /aria-label="Round brush size"[^>]*value="5"/, 'the fairway brush\'s radius, 5 tiles');
-    assert.match(h, />20 m</, 'shown as 20 m across');
+    assert.match(h, />Size 20 m</, 'shown as 20 m across (the slider row: "Size 20 m")');
     assert.doesNotMatch(h, /aria-label="Brush size"/, 'the square\'s pills step aside');
     assert.match(h, /data-section="more"[\s\S]*aria-expanded="false"/, 'More options stays shut with Round in hand');
   });
