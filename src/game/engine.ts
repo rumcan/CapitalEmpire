@@ -14118,7 +14118,7 @@ export class Game {
     this.labels.begin(ctx, this.dpr);
     this.drawBalls(ctx);
     if (this.range.scene) { const o = { x: 0, y: 0 }, cx = this.cw / 2, cy = this.ch / 2; this.range.drawOver(ctx, (x, y) => { o.x = (worldX(x, y) - this.cam.X) * ze + cx; o.y = (worldY(x, y) - this.cam.Y) * ze + cy; return o; }, ze, this.cam.z, this.dpr, this.cw, this.ch, this.labels); }
-    drawDust(ctx, this.dust.pool, this.dustProj, ze, HW, HH); // (build-dust.ts: the road's and every new thing's dust, lit from the upper right)
+    drawDust(ctx, this.dust.pool, this.dustProj, ze, HW, HH, 9 * this.dpr); // (build-dust.ts: the road's and every new thing's dust, lit from the upper right)
     this.drawNight(ctx, now);
   }
   private drawOverlay(now: number) {
@@ -14209,7 +14209,7 @@ export class Game {
         }
       });
     }
-    drawDust(ctx, this.dust.pool, this.dustProj, ze, HW, HH); // (build-dust.ts: the road's and every new thing's dust, lit from the upper right)
+    drawDust(ctx, this.dust.pool, this.dustProj, ze, HW, HH, 9 * this.dpr); // (build-dust.ts: the road's and every new thing's dust, lit from the upper right)
     this.drawNight(ctx, now);
     // T147: the money floats over everything on the map (the night too), under the HUD
     // (T151: each float's column clear of the placed world labels)

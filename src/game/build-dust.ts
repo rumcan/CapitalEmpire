@@ -180,12 +180,15 @@ export class BuildDust {
 const DUST_FILL = 'rgb(214,190,150)', DUST_LIT = 'rgb(240,226,198)';
 /** draws the live dust on the 2D overlay: (x, y) tiles to screen by `proj` (into its out), ze the zoom times the pixel ratio, hw and hh the tile's half
  *  sizes. Each puff is the road dust's sand ellipse with a smaller lit one toward the upper right */
-export function drawDust(ctx: CanvasRenderingContext2D, pool: DustPool, proj: (x: number, y: number, out: { x: number; y: number }) => void, ze: number, hw: number, hh: number) {
+export function drawDust(ctx: CanvasRenderingContext2D, pool: DustPool, proj: (x: number, y: number, out: { x: number; y: number }) => void, ze: number, hw: number, hh: number, minR = 0) {
   const n = pool.n; if (!n) return;
   const it = pool.items, o = scr, a0 = ctx.globalAlpha;
   for (let i = 0; i < n; i++) {
     const p = it[i]!; proj(p.x, p.y, o);
-    const a = (1 - p.age / p.life) * 0.5, r = p.r * hw * ze, y = o.y - p.z * hh * ze * 1.5;
+    // (the owner, 2026-11-16: "I did not see the construction dust": at the zooms people play at a puff was 1-4 px; minR (device px) keeps it a
+    //  visible cloud zoomed out, its rise scaled with it, and a little denser once enlarged)
+    const r0 = p.r * hw * ze, k = minR > 0 ? Math.max(1, (minR * (0.6 + p.r)) / Math.max(r0, 1e-6)) : 1, r = r0 * k;
+    const a = (1 - p.age / p.life) * (k > 1 ? 0.62 : 0.5), y = o.y - p.z * hh * ze * 1.5 * k;
     ctx.globalAlpha = a; ctx.fillStyle = DUST_FILL; ctx.beginPath(); ctx.ellipse(o.x, y, r, r * 0.7, 0, 0, Math.PI * 2); ctx.fill();
     ctx.globalAlpha = a * 0.7; ctx.fillStyle = DUST_LIT; ctx.beginPath(); ctx.ellipse(o.x + r * 0.22, y - r * 0.18, r * 0.55, r * 0.4, 0, 0, Math.PI * 2); ctx.fill();
   }
