@@ -48,6 +48,7 @@ async function buildClub(spec) {
   const g = window.__game, log = [];
   g.sandboxUnlock = true; g.setSpeed(0);
   g.traffic.spend('bank', -5000000); // (the set's cash: never filmed)
+  g.traffic.spend('business', -(spec.earned ?? 250000)); // (money made, as takings: the town's room follows it, towngrowth.ts earnedTarget; with the jam's own streets, #jam-town-streets, it lays new streets as it grows)
   if (g.golf.range.forSale) log.push(['buyRange', g.buyRange()]);
   let n = 0; while ((g.golf.range.junk || []).length && n++ < 30) g.clearJunk(0);
   for (const id of ['teeturf', 'grass', 'greens', 'targets', 'gravel', 'pave', 'bays8', 'bays12', 'covered', 'dispenser']) log.push([id, g.range.buy(id)]);

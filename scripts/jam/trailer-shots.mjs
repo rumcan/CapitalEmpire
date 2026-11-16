@@ -211,7 +211,10 @@ export async function record(env) {
         const c = await G(() => { const g = window.__game, t = g.golf.town ?? g.golf.home; if (!t) return null; const pts = []; for (const l of g.traffic.lots.values()) if (l.o && Math.hypot(l.o[0] - t.x, l.o[1] - t.y) < 160) pts.push(l.o);
           return pts.length ? { x: pts.reduce((s, p) => s + p[0], 0) / pts.length, y: pts.reduce((s, p) => s + p[1], 0) / pts.length, n: pts.length } : t; });
         if (!c) throw new Error('no town'); console.log('   town lots', JSON.stringify(c));
-        const o = C.townGrowOff ?? [0, 0], z = C.townGrowZoom ?? 0.14; // (close enough that a new house reads)
+        const o = C.townGrowOff ?? [0, 0], z = C.townGrowZoom ?? 0.1; // (wide enough for the gravel streets the town lays as it grows, close enough that a house reads)
+        // (the town's room follows the club's money made (towngrowth.ts earnedTarget): a club that has earned this much, booked as takings, real game state;
+        // the lead, 2026-11-16. Booked before the shot: the money chip is the only place it shows)
+        if (C.townEarned ?? 250000) await ev(n => window.__game.traffic.spend('business', -n), C.townEarned ?? 250000);
         await cam(c.x + o[0], c.y + o[1], z); await wait(2500); await speed(1);
         await start('town-grow'); await wait(2500);
         await speed(20);
