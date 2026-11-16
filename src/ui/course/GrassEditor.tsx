@@ -20,6 +20,7 @@ import { borderLabel, courseBorderAt, courseBorderPos, GrassLength, shadowLabel,
 import { grassPuckImage, useSwatchPucks } from './swatch-puck';
 import { SurfaceMark } from './SurfaceMark';
 import { GRASS_KIND } from '../../game/golf/grasses';
+import { RangeInput } from '../BrushSlider';
 
 /** a puck image, or the surface's marked disc where there is none (plain node, a picture still loading) */
 function Puck({ game, g, css }: { game: Game; g: CustomGrass; css: number }) {
@@ -81,7 +82,7 @@ export function GrassCard({ game, onClose }: { game: Game; onClose: () => void }
           // a painted grass is never turned (its light stays at the upper right); any other texture turns
           ...(!isGrassFamily(d.family) ? [{ id: 'angle', label: `Angle ${Math.round(d.angle ?? 0)}°`, panel: (
             <div className="flex items-center gap-2">
-              <input type="range" aria-label="Angle" min={-90} max={90} step={5} value={d.angle ?? 0} onChange={e => set({ angle: +e.target.value })} className="flex-1" />
+              <RangeInput aria-label="Angle" min={-90} max={90} step={5} value={d.angle ?? 0} onChange={e => set({ angle: +e.target.value })} className="flex-1" />
               <span className="w-10 text-right text-xs text-slate-200">{`${Math.round(d.angle ?? 0)}°`}</span>
             </div>) }] : [])]} />
       <ExposureRow label="Exposure" f={x} set={f => set(toneOfExposure(f))} title="The texture itself made darker or lighter, keeping its detail and colour: the middle is none, the ends one stop darker or lighter (double-click: none)" />
@@ -95,7 +96,7 @@ export function GrassCard({ game, onClose }: { game: Game; onClose: () => void }
       <h4 className="sub-head mt-3">Border</h4>
       <div className="flex items-center gap-2 text-[12px] text-slate-400" title={`A first cut band round it: none, a hairline, up to ${BORDER_MAX_M} m`}>
         <span className="w-12 shrink-0">Border</span>
-        <input type="range" aria-label="Border: a first cut band round it" min={0} max={BORDER_STEPS} step={1} value={courseBorderPos(d.border)} onChange={e => set({ border: courseBorderAt(+e.target.value) })} className="min-w-0 flex-1" />
+        <RangeInput aria-label="Border: a first cut band round it" min={0} max={BORDER_STEPS} step={1} value={courseBorderPos(d.border)} onChange={e => set({ border: courseBorderAt(+e.target.value) })} className="min-w-0 flex-1" />
         <span className="w-16 text-right text-xs text-slate-200" data-border={d.border > 0 ? 'on' : 'none'}>{d.border > 0 ? borderLabel(d.border) : 'none'}</span>
       </div>
       {/* the band's own texture, scale, angle and exposure (the owner, 2026-10-31: "you cant set a border in the create your own section");
@@ -112,7 +113,7 @@ export function GrassCard({ game, onClose }: { game: Game; onClose: () => void }
               </div>) },
             ...(!isGrassFamily(d.btex) ? [{ id: 'angle', label: `Angle ${Math.round(d.bangle ?? 0)}°`, panel: (
               <div className="flex items-center gap-2">
-                <input type="range" aria-label="Border angle" min={-90} max={90} step={5} value={d.bangle ?? 0} onChange={e => set({ bangle: +e.target.value })} className="flex-1" />
+                <RangeInput aria-label="Border angle" min={-90} max={90} step={5} value={d.bangle ?? 0} onChange={e => set({ bangle: +e.target.value })} className="flex-1" />
                 <span className="w-10 text-right text-xs text-slate-200">{`${Math.round(d.bangle ?? 0)}°`}</span>
               </div>) }] : [])] : []} />
         {d.btex && <ExposureRow label="Border exposure" f={exposureOf(d.btone ?? 0, d.btoneAmt ?? 0.35)} set={f => { const t = toneOfExposure(f); set({ btone: t.tone, btoneAmt: t.toneAmt }); }} title="The border's texture itself made darker or lighter: the middle is none, the ends one stop darker or lighter (double-click: none)" />}
@@ -123,12 +124,12 @@ export function GrassCard({ game, onClose }: { game: Game; onClose: () => void }
       </label>
       <div className={`mt-1 flex items-center gap-2 text-[12px] ${d.round ? 'text-slate-400' : 'text-slate-600'}`} title="Smoothness: how far the outline is smoothed">
         <span className="w-[4.5rem] shrink-0">Smoothness</span>
-        <input type="range" aria-label="Smoothness" min={0} max={100} step={1} disabled={!d.round} value={Math.round(d.smooth * 100)} onChange={e => set({ smooth: +e.target.value / 100 })} className="min-w-0 flex-1" />
+        <RangeInput aria-label="Smoothness" min={0} max={100} step={1} disabled={!d.round} value={Math.round(d.smooth * 100)} onChange={e => set({ smooth: +e.target.value / 100 })} className="min-w-0 flex-1" />
         <span className="w-20 whitespace-nowrap text-right text-xs text-slate-200">{d.round ? smoothLabel(d.smooth) : 'off'}</span>
       </div>
       <div className="mt-1 flex items-center gap-2 text-[12px] text-slate-400" title="The shadow of its edge where it stands above the grass round it: none, a hairline, up to strong">
         <span className="w-12 shrink-0">Shadow</span>
-        <input type="range" aria-label="Shadow" min={0} max={100} step={1} value={Math.round(d.shadow * 100)} onChange={e => set({ shadow: +e.target.value / 100 })} className="min-w-0 flex-1" />
+        <RangeInput aria-label="Shadow" min={0} max={100} step={1} value={Math.round(d.shadow * 100)} onChange={e => set({ shadow: +e.target.value / 100 })} className="min-w-0 flex-1" />
         <span className="w-16 text-right text-xs text-slate-200">{shadowLabel(d.shadow)}</span>
       </div>
 

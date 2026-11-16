@@ -12,7 +12,7 @@ import { PLANT_FILTERS, PLANT_KINDS, PLANT_R, PLANT_SIZE, PLANT_SPACING } from '
 import { Thumb } from './ui/Thumb';
 import { exposureAtStops, exposureLabel, exposureOf, exposureStops, toneOfExposure } from './game/exposure';
 import { TexturePicker, type TextureOption } from './ui/TexturePicker';
-import { BrushSlider } from './ui/BrushSlider';
+import { BrushSlider, RangeInput } from './ui/BrushSlider';
 import { ownTextures } from './game/ext/bunker-look/texture-library';
 import { addOwnTexture } from './game/ext/bunker-look/uploads';
 
@@ -56,7 +56,7 @@ export function ExposureRow({ label, f, set, title }: { label: string; f: number
       </div>
       <div className="flex items-center gap-2" title={title}>
         <span className="text-[11px] text-slate-500" aria-hidden>darker</span>
-        <input type="range" aria-label={label} min={-1} max={1} step={0.02} value={stops} onChange={e => set(exposureAtStops(+e.target.value))} onDoubleClick={() => set(1)} className="min-w-0 flex-1" data-exposure={label} />
+        <RangeInput aria-label={label} min={-1} max={1} step={0.02} value={stops} onChange={e => set(exposureAtStops(+e.target.value))} onDoubleClick={() => set(1)} className="min-w-0 flex-1" data-exposure={label} />
         <span className="text-[11px] text-slate-500" aria-hidden>lighter</span>
       </div>
     </>
@@ -186,7 +186,7 @@ export function ScaleRow({ v, set }: { v: number; set: (v: number) => void }) {
 export function AngleRow({ v, set, on = true, edge }: { v: number; set: (v: number) => void; on?: boolean; edge?: number[] }) {
   return (<>
     <div className="flex items-center gap-2">
-      <input type="range" min={-90} max={90} step={5} value={v} onChange={e => set(+e.target.value)} className="flex-1" />
+      <RangeInput min={-90} max={90} step={5} value={v} onChange={e => set(+e.target.value)} className="flex-1" />
       <span className="w-10 text-right text-xs text-slate-200">{`${Math.round(v)}°`}</span>
     </div>
     <div className="mt-1 flex flex-wrap gap-1">
@@ -268,7 +268,7 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
           {([['Share', 'mshare', 0, 1, 0.01, (v: number) => `${Math.round(v * 100)}%`, 0.5], ['Softness', 'msoft', 0.01, 0.5, 0.01, (v: number) => v.toFixed(2), 0.12], ['Patch size', 'mpatch', 0.25, 4, 0.05, (v: number) => `${v.toFixed(2)}x`, 1]] as const).map(([label, key, lo, hi, step, fmt, def]) => (
             <div key={key} className="mt-1 flex items-center gap-2 text-[12px] text-slate-400">
               <span className="w-16 shrink-0">{label}</span>
-              <input type="range" min={lo} max={hi} step={step} value={s[key] ?? def} onChange={e => p.setStyle({ [key]: +e.target.value })} className="min-w-0 flex-1" />
+              <RangeInput min={lo} max={hi} step={step} value={s[key] ?? def} onChange={e => p.setStyle({ [key]: +e.target.value })} className="min-w-0 flex-1" />
               <span className="w-12 text-right text-xs text-slate-200">{fmt(s[key] ?? def)}</span>
             </div>
           ))}
@@ -287,13 +287,13 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
       {grid ? <CourseEdges game={game} /> : (<>
         <div className="flex items-center gap-2 text-[12px] text-slate-400" title="The border band inside the area's edge: none, a hairline, up to 8 m">
           <span className="w-12 shrink-0">Border</span>
-          <input type="range" aria-label="Border width" min={0} max={BORDER_STEPS} step={1} value={paintBorderPos(s.border)} onChange={e => p.setStyle({ border: paintBorderAt(+e.target.value) })} className="min-w-0 flex-1" />
+          <RangeInput aria-label="Border width" min={0} max={BORDER_STEPS} step={1} value={paintBorderPos(s.border)} onChange={e => p.setStyle({ border: paintBorderAt(+e.target.value) })} className="min-w-0 flex-1" />
           <span className="w-16 text-right text-xs text-slate-200">{s.border > 0 ? borderLabel(2 * borderW(s.border)) : 'none'}</span>
         </div>
         {/* T136: the area's edge shade, so it reads as slightly raised under the sun at the upper right (0 none, the look before it) */}
         <div className="mt-1 flex items-center gap-2 text-[12px] text-slate-400" title="The area's edge shade: a soft shade inside its edges turned away from the sun and a little light on those turned to it, so it reads as slightly raised">
           <span className="w-12 shrink-0">Shadow</span>
-          <input type="range" aria-label="Area shadow" min={0} max={100} step={1} value={Math.round((s.shadow ?? 0) * 100)} onChange={e => p.setStyle({ shadow: +e.target.value / 100 })} className="min-w-0 flex-1" />
+          <RangeInput aria-label="Area shadow" min={0} max={100} step={1} value={Math.round((s.shadow ?? 0) * 100)} onChange={e => p.setStyle({ shadow: +e.target.value / 100 })} className="min-w-0 flex-1" />
           <span className="w-16 text-right text-xs text-slate-200">{`${Math.round((s.shadow ?? 0) * 100)}%`}</span>
         </div>
       </>)}
@@ -311,7 +311,7 @@ export function StyleEditor({ game, gridOnly = false }: { game: Game; gridOnly?:
       {!grid && (<>
       <div className="mt-2 text-[12px] text-slate-400">Corners</div>
       <div className="flex items-center gap-2">
-        <input type="range" min={0} max={RADIUS_MAX} step={0.25} value={s.radius} onChange={e => p.setStyle({ radius: +e.target.value })} className="flex-1" />
+        <RangeInput min={0} max={RADIUS_MAX} step={0.25} value={s.radius} onChange={e => p.setStyle({ radius: +e.target.value })} className="flex-1" />
         <span className="w-14 text-right text-xs text-slate-200">{s.radius === 0 ? 'Sharp' : `${s.radius * 2} m`}</span>
       </div>
       </>)}

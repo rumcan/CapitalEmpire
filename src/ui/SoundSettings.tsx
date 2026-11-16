@@ -8,6 +8,7 @@ import { TRACKS } from '../game/sound/radio';
 import { voice } from '../game/sound/voice';
 import { ActionTile, TILE_SMALL } from './ActionTile';
 import type { ToolTile } from './tool-tiles';
+import { RangeInput } from './BrushSlider';
 
 /** the sound settings now, and a re-render when they change */
 export function useSoundPrefs() { return useSyncExternalStore(fn => sound.subscribe(fn), () => sound.get(), () => sound.get()); }
@@ -16,7 +17,7 @@ export function useSoundPrefs() { return useSyncExternalStore(fn => sound.subscr
  *  the percent and Mute; the slider the full width under them); without one (the radio's card) it is one */
 export function VolumeRow({ label, kind, tip, tile }: { label: string; kind: 'music' | 'sfx'; tip: string; tile?: ToolTile }) {
   const p = useSoundPrefs(), v = kind === 'music' ? p.music : p.sfx, muted = p.muted || (kind === 'music' ? p.musicMuted : p.sfxMuted);
-  const slider = <input type="range" className={tile ? 'mt-1 w-full' : 'min-w-0 flex-1'} min={0} max={1} step={0.05} value={v} aria-label={`${label} volume`} data-testid={`sound-${kind}-slider`}
+  const slider = <RangeInput className={tile ? 'mt-1 w-full' : 'min-w-0 flex-1'} min={0} max={1} step={0.05} value={v} aria-label={`${label} volume`} data-testid={`sound-${kind}-slider`}
     onChange={e => sound.setVolume(kind, +e.target.value)} />;
   const pct = <span className="w-9 shrink-0 text-right tabular-nums">{Math.round(v * 100)}%</span>;
   const mute = (

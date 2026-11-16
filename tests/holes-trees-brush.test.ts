@@ -132,7 +132,9 @@ test('8. Paint hole n, Shape by hand and the Texture Painter all offer Trees, an
   assert.match(panel, /trees=\{\{ on: trees, pick: \(\) => p\.setHoleTrees\(\) \}\}/); assert.match(panel, /trees=\{\{ on: p\.treesInHand, pick: \(\) => p\.setHoleTrees\(\) \}\}/);
   assert.equal((panel.match(/9 trees · 0 your own/g) ?? []).length, 2);
 });
-test('9. the jam shows none of it: no Shape by hand, More options, Paint hole or tee sets (docs/JAM.md "Future development")', () => {
-  assert.match(panel, /const hand = shape && !JAM;/); assert.match(panel, /!plan && hand && <ShapeByHand/); assert.match(panel, /!plan && hand && <MoreOptions/);
-  assert.match(wiz, /!JAM && <EditPaint game=\{game\} \/>/); assert.match(wiz, /!JAM && <EditTees/);
+test('9. the jam paints by hand too (2026-11-15: Shape by hand, More options, Paint hole and the tee sets in every build, the Trees brush with them)', () => {
+  assert.match(panel, /const hand = shape;/); assert.doesNotMatch(panel, /const hand = shape && !JAM;/);
+  assert.match(panel, /!plan && hand && <ShapeByHand/); assert.match(panel, /!plan && hand && <MoreOptions/);
+  assert.match(wiz, /w\.step === 'shape' && <EditPaint game=\{game\} \/>/); assert.match(wiz, /w\.step === 'shape' && <EditTees/);
+  assert.doesNotMatch(wiz, /!JAM && <EditPaint/); assert.doesNotMatch(wiz, /!JAM && <EditTees/);
 });

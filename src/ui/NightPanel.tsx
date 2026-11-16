@@ -5,6 +5,7 @@ import { LIGHT_TYPES, NIGHT_DEFAULT, type LightKey, type NightSettings } from '.
 import { SHINE_GROUPS, SHINE_LOOK } from '../game/grass-shine';
 import { SPEC_OVAL } from '../game/lamp-reflect';
 import { WATER_MOTION } from '../game/water-motion';
+import { RangeInput } from './BrushSlider';
 
 const hour = (h: number) => `${String(Math.floor(h) % 24).padStart(2, '0')}:${h % 1 ? '30' : '00'}`;
 
@@ -12,7 +13,7 @@ function Row({ label, value, min, max, step, show, set, title }: { label: string
   return (
     <label className="flex items-center gap-2 px-2 py-1 text-xs" title={title}>
       <span className="w-24 shrink-0">{label}</span>
-      <input type="range" className="min-w-0 flex-1" min={min} max={max} step={step} value={value} onChange={e => set(+e.target.value)} />
+      <RangeInput className="min-w-0 flex-1" min={min} max={max} step={step} value={value} onChange={e => set(+e.target.value)} />
       <span className="w-12 text-right tabular-nums">{show}</span>
     </label>
   );

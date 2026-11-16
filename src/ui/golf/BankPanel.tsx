@@ -11,6 +11,7 @@ import { Icon } from '../Icon';
 import { ActionTile, TILE_ROW, TILE_SMALL } from '../ActionTile'; // J8 (#1261): the Bank's header and each of its actions wear a painted tile
 import { ProtectionSection } from './ProtectionSection'; // J3
 import { JAM } from '../../game/features';
+import { RangeInput } from '../BrushSlider';
 
 const money = (v: number) => `${v < 0 ? '−' : ''}$${Math.abs(Math.round(v)).toLocaleString('en-US')}`;
 const pct = (v: number) => `${v.toFixed(1)}%`;
@@ -91,7 +92,7 @@ export function BankPanel({ game }: { game: Game }) {
           <span>Amount</span>
           <b className="tabular-nums text-sm" data-testid="bank-amount">{money(amount)}</b>
         </label>
-        <input type="range" className="w-full" min={BANK_MIN} max={BANK_MAX} step={BANK_STEP} value={amount} onChange={e => setAmount(Number(e.target.value))} aria-label="Loan amount" data-testid="bank-slider" />
+        <RangeInput className="w-full" min={BANK_MIN} max={BANK_MAX} step={BANK_STEP} value={amount} onChange={e => setAmount(Number(e.target.value))} aria-label="Loan amount" data-testid="bank-slider" />
         <Terms term={term} setTerm={setTerm} price={t => { const x = quoteBank(f, amount, t); return x.ok ? `${money(x.payment)}/mo` : '–'; }} />
         {q.ok ? (
           <div className="space-y-0.5 tabular-nums" data-testid="bank-quote">

@@ -11,6 +11,7 @@ import type { BrushKind } from '../../game/paint';
 import { finishOf, mowShown } from '../../game/course-finish';
 import { paintedSurfaces } from '../../game/painted-surfaces-live';
 import { CROSS_RANGE, MOW_KINDS, MOW_PATTERNS, MOW_RANGES, type MowKind, type MowOpts, type MowPattern } from '../../game/mow-lines';
+import { RangeInput } from '../BrushSlider';
 
 /** the patterns whose Angle means something: straight (the direction), the checkerboard and the diamond (the turn from the hole's line), the crosscut
  *  (the angle its two sets cross at); the others follow the hole's line of play */
@@ -47,17 +48,17 @@ export function MowingLines({ game, kind }: { game: Game; kind: MowKind }) {
           {MOW_PATTERNS.map(q => <button key={q.id} className={`chip ${v.pattern === q.id ? 'chip-on' : ''}`} aria-pressed={v.pattern === q.id} title={q.note} onClick={() => set({ pattern: q.id })} data-mow-pattern-chip={q.id}>{q.name}</button>)}
         </div>
         {!split && (
-          <Row label="Band width" title={`How wide one ${kind === 'green' ? 'stripe' : 'band'} is: ${MOW_RANGES.width[0] * 2} to ${MOW_RANGES.width[1] * 2} m`} value={`${Math.round(v.width * 20) / 10} m`} testId="mow-width">            <input type="range" aria-label="Mowing band width" min={MOW_RANGES.width[0] * 2} max={MOW_RANGES.width[1] * 2} step={0.5} value={Math.round(v.width * 4) / 2} onChange={e => set({ width: +e.target.value / 2 })} className="min-w-0 flex-1" />          </Row>
+          <Row label="Band width" title={`How wide one ${kind === 'green' ? 'stripe' : 'band'} is: ${MOW_RANGES.width[0] * 2} to ${MOW_RANGES.width[1] * 2} m`} value={`${Math.round(v.width * 20) / 10} m`} testId="mow-width">            <RangeInput aria-label="Mowing band width" min={MOW_RANGES.width[0] * 2} max={MOW_RANGES.width[1] * 2} step={0.5} value={Math.round(v.width * 4) / 2} onChange={e => set({ width: +e.target.value / 2 })} className="min-w-0 flex-1" />          </Row>
         )}
         <div className="mt-1 text-[12px] text-slate-400" title={`Contrast: the texture made lighter in the light ${name} and darker in the dark ones, keeping its detail and colour: never a flat wash`}>Contrast</div>
         <Row label="Light" title={`How much lighter the light ${name} are: none, up to the full lift`} value={pct(v.light)} testId="mow-light">
-          <input type="range" aria-label="Light bands" min={0} max={100} step={1} value={Math.round(v.light * 100)} onChange={e => set({ light: +e.target.value / 100 })} className="min-w-0 flex-1" />
+          <RangeInput aria-label="Light bands" min={0} max={100} step={1} value={Math.round(v.light * 100)} onChange={e => set({ light: +e.target.value / 100 })} className="min-w-0 flex-1" />
         </Row>
         <Row label="Dark" title={`How much darker the dark ${name} are: none, up to the full multiply`} value={pct(v.dark)} testId="mow-dark">
-          <input type="range" aria-label="Dark bands" min={0} max={100} step={1} value={Math.round(v.dark * 100)} onChange={e => set({ dark: +e.target.value / 100 })} className="min-w-0 flex-1" />
+          <RangeInput aria-label="Dark bands" min={0} max={100} step={1} value={Math.round(v.dark * 100)} onChange={e => set({ dark: +e.target.value / 100 })} className="min-w-0 flex-1" />
         </Row>
         <Row label={cross ? 'Crossing' : 'Angle'} title={cross ? 'The angle the two sets of stripes cross at: 90 degrees for square diamonds on the hole, 45 for long ones along it' : v.pattern === 'straight' ? 'The way the lines run, in degrees on the ground (like a texture\'s angle)' : angled ? 'How far the squares are turned from the hole\'s line of play' : 'This pattern follows the hole\'s line of play: pick Straight, Checkerboard, Diamond or Crosscut to set an angle'} value={angled ? `${v.angle}°` : 'follows'} testId="mow-angle">
-          <input type="range" aria-label="Mowing angle" disabled={!angled} min={cross ? CROSS_RANGE[0] : MOW_RANGES.angle[0]} max={cross ? CROSS_RANGE[1] : MOW_RANGES.angle[1]} step={5} value={v.angle} onChange={e => set({ angle: +e.target.value })} className="min-w-0 flex-1" />
+          <RangeInput aria-label="Mowing angle" disabled={!angled} min={cross ? CROSS_RANGE[0] : MOW_RANGES.angle[0]} max={cross ? CROSS_RANGE[1] : MOW_RANGES.angle[1]} step={5} value={v.angle} onChange={e => set({ angle: +e.target.value })} className="min-w-0 flex-1" />
         </Row>
         {o && <button className="chip mt-1.5" title="Back to the course finish's own lines (the Studio's Course finish)" onClick={() => p.setStyle({ mow: undefined })} data-mow="reset">Reset the mowing lines</button>}
       </>) : <div className="sub-line mt-1">{`The ${kind} is mown plain.`}</div>}

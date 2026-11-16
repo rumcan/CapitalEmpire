@@ -4,6 +4,7 @@ import { BORDER_KINDS } from '../../game/paint-tool';
 import { BRUSH_PRESETS, borderStep, borderW } from '../../game/paint';
 import { HEIGHT_RANGE, ROCK_FROM, ROCK_STEEP_H, SHADOW_HAIRLINE, STAIR_MIN_H } from '../../game/ext/course-walls';
 import { roundCornerM } from '../../game/ext/course-blobs';
+import { RangeInput } from '../BrushSlider';
 
 /** the Border slider's steps: its position (0..STEPS) maps to a width on a square curve, so the hairline end has fine control and the far
  *  end reaches several metres */
@@ -42,7 +43,7 @@ export function GrassLength({ value, onChange, label, tip, className = 'mt-1' }:
       </div>
       <div className="mt-0.5 flex items-center gap-2">
         <span className="shrink-0 text-[11px]">Short</span>
-        <input type="range" aria-label={label} min={1} max={5} step={1} value={value} onChange={e => onChange(+e.target.value)} className="min-w-0 flex-1" />
+        <RangeInput aria-label={label} min={1} max={5} step={1} value={value} onChange={e => onChange(+e.target.value)} className="min-w-0 flex-1" />
         <span className="shrink-0 text-[11px]">Long</span>
       </div>
     </div>
@@ -67,7 +68,7 @@ export function CourseEdges({ game }: { game: Game }) {
       {band && bw !== null ? (<>
         <div className="flex items-center gap-2 text-[12px] text-slate-400" title={`The ${band.band} round every ${name.toLowerCase()}: none, a hairline, up to ${BORDER_MAX_M} m`}>
           <span className="w-12 shrink-0">Border</span>
-          <input type="range" aria-label={`Border: the ${band.band} round every ${name.toLowerCase()}`} min={0} max={STEPS} step={1} value={courseBorderPos(bw)} onChange={e => p.setCourseBorder(courseBorderAt(+e.target.value))} className="min-w-0 flex-1" />
+          <RangeInput aria-label={`Border: the ${band.band} round every ${name.toLowerCase()}`} min={0} max={STEPS} step={1} value={courseBorderPos(bw)} onChange={e => p.setCourseBorder(courseBorderAt(+e.target.value))} className="min-w-0 flex-1" />
           <span className="w-16 text-right text-xs text-slate-200" data-border={bw > 0 ? 'on' : 'none'}>{bw > 0 ? borderLabel(bw) : 'none'}</span>
         </div>
         {!(bw > 0) && <div className="text-[11px] text-slate-500">{`No ${band.band} round the ${plural(name)}: slide right to lay one.`}</div>}
@@ -88,14 +89,14 @@ export function CourseEdges({ game }: { game: Game }) {
         </label>
         <div className={`mt-1 flex items-center gap-2 text-[12px] ${rd.on ? 'text-slate-400' : 'text-slate-600'}`} title="Smoothness: how far the outline is smoothed, from just the steps gone to broad rounded corners (about how round a corner comes out)">
           <span className="w-[4.5rem] shrink-0">Smoothness</span>
-          <input type="range" aria-label={`Smoothness of every ${name.toLowerCase()}`} min={0} max={100} step={1} disabled={!rd.on} value={Math.round(rd.smooth * 100)} onChange={e => p.setRoundOff({ smooth: +e.target.value / 100 })} className="min-w-0 flex-1" />
+          <RangeInput aria-label={`Smoothness of every ${name.toLowerCase()}`} min={0} max={100} step={1} disabled={!rd.on} value={Math.round(rd.smooth * 100)} onChange={e => p.setRoundOff({ smooth: +e.target.value / 100 })} className="min-w-0 flex-1" />
           <span className="w-20 text-right text-xs text-slate-200 whitespace-nowrap" data-smooth={Math.round(rd.smooth * 100)}>{rd.on ? smoothLabel(rd.smooth) : 'off'}</span>
         </div>
       </>)}
       {sh !== null && (
         <div className="mt-1 flex items-center gap-2 text-[12px] text-slate-400" title={`The shadow of every ${name.toLowerCase()}'s raised or sunken edge: none, a hairline contact line, up to a strong cast shadow`}>
           <span className="w-12 shrink-0">Shadow</span>
-          <input type="range" aria-label={`Shadow of every ${name.toLowerCase()}`} min={0} max={100} step={1} value={Math.round(sh * 100)} onChange={e => p.setCourseShadow(+e.target.value / 100)} className="min-w-0 flex-1" />
+          <RangeInput aria-label={`Shadow of every ${name.toLowerCase()}`} min={0} max={100} step={1} value={Math.round(sh * 100)} onChange={e => p.setCourseShadow(+e.target.value / 100)} className="min-w-0 flex-1" />
           <span className="w-16 text-right text-xs text-slate-200">{shadowLabel(sh)}</span>
         </div>
       )}
@@ -107,7 +108,7 @@ export function CourseEdges({ game }: { game: Game }) {
       {ht !== null && hr && (
         <div className="mt-1 flex items-center gap-2 text-[12px] text-slate-400" title={kind === 'tee' ? `How high every tee box stands: low on a grass bank, from ${ROCK_FROM} m on rocky sides with stairs up from the nearest cart path, higher a steep rock face` : `How high every ${name.toLowerCase()} stands on its gentle grass bank`}>
           <span className="w-12 shrink-0">Height</span>
-          <input type="range" aria-label={`Height of every ${name.toLowerCase()}`} min={Math.round(hr[0] * 100)} max={Math.round(hr[1] * 100)} step={5} value={Math.round(ht * 100)} onChange={e => p.setSurfaceHeight(+e.target.value / 100)} className="min-w-0 flex-1" />
+          <RangeInput aria-label={`Height of every ${name.toLowerCase()}`} min={Math.round(hr[0] * 100)} max={Math.round(hr[1] * 100)} step={5} value={Math.round(ht * 100)} onChange={e => p.setSurfaceHeight(+e.target.value / 100)} className="min-w-0 flex-1" />
           <span className="w-24 text-right text-xs text-slate-200 whitespace-nowrap">{heightLabel(ht, kind === 'tee')}</span>
         </div>
       )}
