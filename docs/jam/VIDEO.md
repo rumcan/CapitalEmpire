@@ -17,7 +17,7 @@ node scripts/jam/trailer.mjs build --base http://127.0.0.1:5480/        # -> sho
 
 # 2. the shots, from the jam build (served by vite preview on a free port; or --base a dev server for a quick look)
 npm run build:jam
-node scripts/jam/trailer.mjs record [--only menu,range-build,...] [--takes 3]   # -> shots/<shot>.mp4, raw/<shot>/ frames
+node scripts/jam/trailer.mjs record [--only menu,range-build,...] [--takes 1] [--takes-golf 2]   # -> shots/<shot>.mp4, raw/<shot>/ frames (--takes-golf: the tee shot and the par 3)
 
 # 3. the cut
 node scripts/jam/trailer.mjs edit [--link "Play free at <url>"]          # -> trailer.mp4 (scripts/jam/trailer-cut.json says what goes where)

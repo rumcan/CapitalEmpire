@@ -151,7 +151,7 @@ export async function record(env) {
   const ballRest = async (prev = null, ms = 30000) => { await wait(1500); for (let k = 0; k < ms / 250; k++) { const s = await turnNow().catch(() => null); if (s && (prev === null || s.stroke !== prev)) return s; if (k > 8 && await F('return typeof holed !== "undefined" && !!holed').catch(() => false)) return null; /* (in the cup) */ await wait(250); } return null; };
 
   const C = WORLD.view ?? {};
-  const takes = +opt('takes', 3);
+  const takes = +opt('takes', 3), golfTakes = +opt('takes-golf', takes); // (--takes-golf: the tee shot and the par 3 apart, the takes the cut picks from)
   try {
     // ---------------- the title card over the living menu scene, then a new game: the range placed and built up in stages
     if (want('menu') || want('range-build') || want('town-grow')) {
@@ -339,7 +339,7 @@ export async function record(env) {
     });
     // ---------------- the golf view
     await shot('golf-tee', async () => {
-      for (let k = 0; k < takes; k++) {
+      for (let k = 0; k < golfTakes; k++) {
         const t = await play(1, 'golden'); if (!t) throw new Error('no turn on hole 1');
         await wait(1500); await start(`golf-tee-${k}`); await wait(800);
         await swing({ boost: +opt('boost', 4), spin: { key: 'ArrowUp', n: 3, after: 1300 }, lead: 0 }); await ballRest(t.stroke); await wait(1200); await stop(); // (boost taps on: #1368 was the robot's late release, fixed above)
@@ -360,7 +360,7 @@ export async function record(env) {
       return strokes;
     };
     await shot('golf-draw', async () => {
-      for (let k = 0; k < takes; k++) {
+      for (let k = 0; k < golfTakes; k++) {
         const t = await play(4, 'day'); if (!t) throw new Error('no turn on hole 4');
         await wait(1200); await start(`golf-par3-${k}`); await cursor(true); await wait(500);
         // the shot shape: the ball button, then the dot dragged to the left (a draw)
