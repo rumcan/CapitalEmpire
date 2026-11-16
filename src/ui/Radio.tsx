@@ -2,18 +2,16 @@
 // music plays, under its cloth when it is off: the play and pause key, so a first-time player turns the music on with one click), its right half a drop for the details: the track
 // and who made it, Previous, Play / Pause, Next, and the Music volume with its mute (the same settings as Settings' own Music row). It opens upward and to the left (over the map, never over the rail or the minimap, and clear of the cards at the right), and the
 // top bar (J8's one row at the largest Text size) is untouched. The radio is OFF until the player turns it on and nothing is downloaded before
-// (game/sound/radio.ts). The pictures are the owner's painted ones: the radio tiles of J8 (src/assets/ui/tiles: radio, radio-off, boombox) with the icon set's play, pause,
-// rewind and skip for the transport keys; RADIO_PIC is the one place a different picture goes.
+// (game/sound/radio.ts). The owner, 2026-11-16 ("put the radio back to what it was"; controls are plain UI, not pictures): the pill is J11's first one again, a chip
+// with the play / pause glyph and the word Radio, and the card's header its words alone; no painted radio, boombox or jukebox tiles. RADIO_PIC names the glyphs.
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { radio } from '../game/sound/radio';
-import { ActionTile, TILE_ROW } from './ActionTile';
 import { Icon, type IconName } from './Icon';
-import type { ToolTile } from './tool-tiles';
 import { VolumeRow } from './SoundSettings';
 
-/** the radio's pictures: the pill's key (on or off), the card's header, and the transport keys (the icon set's) */
-const RADIO_PIC: { key: (on: boolean) => ToolTile; head: ToolTile; station: ToolTile; play: (playing: boolean) => IconName; prev: IconName; next: IconName; more: IconName } =
-  { key: on => (on ? 'radio' : 'radio-off'), head: 'boombox', station: 'jukebox', play: playing => (playing ? 'pause' : 'play'), prev: 'rewind', next: 'skip', more: 'up' };
+/** the radio's glyphs (plain controls, Icon.tsx CONTROL_GLYPH): play / pause (the pill's key and the card's), Previous, Next, and the drop's chevron */
+const RADIO_PIC: { play: (playing: boolean) => IconName; prev: IconName; next: IconName; more: IconName } =
+  { play: playing => (playing ? 'pause' : 'play'), prev: 'rewind', next: 'skip', more: 'up' };
 
 export function useRadio() { return useSyncExternalStore(fn => radio.subscribe(fn), () => radio.get(), () => radio.get()); }
 
@@ -31,11 +29,10 @@ export function RadioPill({ up = true }: { up?: boolean }) {
   const t = v.track;
   return (
     <div ref={box} className="relative" data-testid="radio" role="group" aria-label="Radio">
-      <div className={`glass flex items-center gap-0.5 p-1 ${v.on ? 'ring-1 ring-amber-300/60' : ''}`}>
-        <button type="button" className={`rounded-lg p-0.5 hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-300 ${v.on ? 'bg-amber-300/10' : ''}`} aria-pressed={v.on}
-          aria-label={v.on ? 'Turn the radio off' : 'Turn the radio on'} data-testid="radio-play" data-sound="none"
+      <div className={`glass flex items-center gap-0.5 p-1 ${v.on ? 'ring-1 ring-amber-300/50' : ''}`}>
+        <button type="button" className={`chip ${v.on ? 'chip-on' : ''}`} aria-pressed={v.on} aria-label={v.on ? 'Turn the radio off' : 'Turn the radio on'} data-testid="radio-play" data-sound="none"
           data-tip={v.on ? `The radio is on${t ? `: ${t.title}, ${t.artist}` : ''}. Click to turn it off` : 'The radio: music for your club. Off until you turn it on'} onClick={() => radio.toggle()}>
-          <ActionTile tile={RADIO_PIC.key(v.on)} size={TILE_ROW} />
+          <Icon name={RADIO_PIC.play(v.on && v.playing)} size={16} /><span>Radio</span>
         </button>
         <button type="button" className="btn-icon !px-1" aria-expanded={open} aria-label="Radio: the track, volume and more" data-testid="radio-more" data-tip="The track, next and the music volume" onClick={() => setOpen(o => !o)}>
           <Icon name={RADIO_PIC.more} size={16} className={open ? 'rotate-180' : ''} />
@@ -43,12 +40,9 @@ export function RadioPill({ up = true }: { up?: boolean }) {
       </div>
       {open && (
         <div className={`glass absolute right-0 z-30 flex w-80 max-w-[calc(100vw-1.5rem)] flex-col gap-1 p-3 text-sm ${up ? 'bottom-full mb-2' : 'top-full mt-2'}`} data-testid="radio-card">
-          <div className="flex items-center gap-2.5">
-            <ActionTile tile={RADIO_PIC.head} size={TILE_ROW} />
-            <div className="min-w-0 flex-1">
-              <div className="label-caps">Fairway Radio</div>
-              <div className="text-[12px] text-slate-400" role="status" data-testid="radio-status">{status}</div>
-            </div>
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="label-caps">Fairway Radio</span>
+            <span className="text-[12px] text-slate-400" role="status" data-testid="radio-status">{status}</span>
           </div>
           {t ? (
             <div className="min-w-0" data-testid="radio-track">
@@ -61,7 +55,6 @@ export function RadioPill({ up = true }: { up?: boolean }) {
           {v.stations > 1 && (
             <button type="button" className="chip w-full justify-start gap-2.5 py-1 text-left" aria-label={`Station: ${v.station.name}. Change station`} data-testid="radio-station"
               data-tip="Turn the dial to the next station" onClick={() => radio.nextStation()}>
-              <ActionTile tile={RADIO_PIC.station} size={TILE_ROW} />
               <span className="min-w-0 flex-1"><span className="block truncate font-semibold text-white" data-testid="radio-station-name">{v.station.name}</span>
                 <span className="block text-[12px] text-slate-400">Station · click to change</span></span>
             </button>

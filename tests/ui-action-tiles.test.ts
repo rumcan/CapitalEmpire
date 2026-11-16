@@ -21,6 +21,7 @@ const DIR = 'src/assets/ui/tiles', ALL = new Set<string>([...TOOL_TILES, ...ACTI
 const NOT_YET: readonly string[] = [
   'fences', 'texture-painter', 'clear-plants', 'nursery-plants', // (#1284: natural-props, signs and fountain are worn by the Props flyout)
   'walking-path', // (#1297, the owner, 2026-11-14: the guide's Lay a walking path step went: its tile, the step's only wearer, waits for another use)
+  'game-speed', 'zoom', 'select-tool', 'find-me', // (the owner, 2026-11-16: "these picture icons dont work at all": the speed bar's and the zoom buttons' pictures, the rail's Select and the top bar's Me went; small spots draw line icons)
 ];
 
 test('every tile id has its WebP, a small 144 px picture, and no picture lacks an id', async () => {

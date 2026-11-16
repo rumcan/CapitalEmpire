@@ -175,7 +175,7 @@ export function Minimap({ game }: { game: Game }) {
           </div>
         )}
       </div>
-      {/* J11 (#1270): the music radio: the painted radio is its play key, the drop above it holds the track, next and the music volume; off until the player turns it on */}
+      {/* J11 (#1270): the music radio: its Radio chip is the play key (2026-11-16: J11's first plain look again), the drop above it holds the track, next and the music volume; off until the player turns it on */}
       <RadioPill up />
     </div>
   );

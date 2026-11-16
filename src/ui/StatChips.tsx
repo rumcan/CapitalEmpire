@@ -6,8 +6,6 @@
 // town's population, jobs, day and daily income) opens under it on hover.
 import type { ReactNode } from 'react';
 import { Icon } from './Icon';
-import { ActionTile } from './ActionTile'; // J8 (#1261): the Cash chip wears the bank's painted tile
-import { tileUrl } from './tool-tiles';
 import type { StatChipView } from './stat-chips';
 
 /** the words under a figure: from 2200 px only (T135, as App's WIDE) */
@@ -19,7 +17,7 @@ const TONE = { up: 'stat-up', down: 'stat-down', flat: 'stat-flat' } as const;
 export function StatChip({ c, onClick }: { c: StatChipView; onClick?: () => void }) {
   const say = `${c.label ?? 'Money'}: ${c.value}${c.unit ?? ''}${c.sub ? `, ${c.sub}` : ''}`;
   const body = <>
-    <span className="stat-chip-icon">{c.tile && tileUrl(c.tile) ? <ActionTile tile={c.tile} size={32} className="!h-[32px] !w-[32px]" /> : <Icon name={c.icon} size={22} />}</span>
+    <span className="stat-chip-icon"><Icon name={c.icon} size={20} />{/* (2026-11-16: the line icon, never J8's painted bank tile: "at this size it does not translate to an icon") */}</span>
     <span className="stat-chip-text">
       <span className={`stat-chip-value ${c.tone ? TONE[c.tone] : ''}`}>
         {c.short ? <><span className={MID}>{c.value}</span><span className={NARROW}>{c.short}</span></> : c.value}
