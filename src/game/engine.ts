@@ -8469,7 +8469,8 @@ export class Game {
   private applySandbox(): void {
     const sb = this.benchMode ? null : this.sandboxMode;
     this.sandboxUnlock = !!sb || this.devUnlock;
-    this.traffic.sandbox(this.sandboxGrow, this.sandboxMoney, !!sb?.townRoads);
+    // (the owner, 2026-11-16: "where are the new streets??": the jam build has no road tool, so its town lays its own gravel streets as it grows, as a sandbox-town game does)
+    this.traffic.sandbox(this.sandboxGrow, this.sandboxMoney, !!sb?.townRoads || (JAM && !this.benchMode));
   }
   /** a new sandbox game's fresh books get SANDBOX_MONEY (no ledger line, no float: the treasury simply starts there) */
   private sandboxFunds(): void { if (this.sandboxMode) { const n = sandboxTopUp(this.traffic.budget.money); if (n > 0) this.traffic.fund(n); } }

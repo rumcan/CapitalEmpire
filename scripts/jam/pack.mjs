@@ -7,7 +7,7 @@ import { execFileSync } from 'node:child_process';
 
 export const LIMITS = { files: 1000, totalBytes: 500 * 1024 * 1024, fileBytes: 200 * 1024 * 1024, pathChars: 240 };
 const dist = resolve(process.argv[2] ?? 'dist-jam');
-const zip = resolve(process.argv[3] ?? 'F:/ClaudeTemp/jam/fairway-fortune-web.zip');
+const zip = resolve(process.argv[3] ?? 'F:/ClaudeTemp/jam/golf-manager-2026-web.zip');
 const mb = n => (n / 1048576).toFixed(1) + ' MB';
 
 function walk(dir, out = []) {
