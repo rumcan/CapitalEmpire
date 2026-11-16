@@ -21,7 +21,10 @@ export function BrushSlider({ label, show, value, min, max, step, onChange, aria
     <div className="brush-slider" data-testid={testId} title={title}>
       <span className="brush-slider-text">{`${label} ${show}`}</span>
       <input type="range" aria-label={aria ?? label} min={min} max={max} step={step} value={value} disabled={disabled} aria-valuetext={show}
-        className="brush-range" style={{ '--fill': `${fill.toFixed(1)}%` } as CSSProperties} onChange={e => onChange(+e.target.value)} />
+        className="brush-range" style={{ '--fill': `${fill.toFixed(1)}%` } as CSSProperties} onChange={e => onChange(+e.target.value)}
+        // a mouse drag lets go of the focus, so the tools' keys ([ ] size, 1-9 surfaces) work straight after (a focused input keeps them);
+        // a keyboard player who tabbed in keeps it and steps with the arrows
+        onPointerUp={e => e.currentTarget.blur()} />
     </div>
   );
 }
