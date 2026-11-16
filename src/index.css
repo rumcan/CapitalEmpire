@@ -395,6 +395,7 @@ button.stat-chip:hover { background: rgba(255, 255, 255, 0.06); }
 
 /* The owner, 2026-11-15: "remove the rounded edges from the game UI. its not working in alot of places": square corners everywhere, Tailwind's rounded-*
    classes and inline border radii alike. Real circles stay round: rounded-full, .keep-round, and inline 50% / 9999px radii (dots, swatches, round buttons) */
-*:not(.rounded-full):not(.keep-round):not([style*="50%"]):not([style*="9999"]),
-*:not(.rounded-full):not(.keep-round)::before, *:not(.rounded-full):not(.keep-round)::after { border-radius: 0 !important; }
-::-webkit-scrollbar-thumb, ::-webkit-scrollbar-track { border-radius: 0 !important; }
+/* The owner, 2026-11-16: "add a 3 px border radius all over the game on the uix corners": one small radius everywhere instead of square */
+*:not(.rounded-full):not(.keep-round):not([style*="50%"]):not([style*="9999"]):not(canvas),
+*:not(.rounded-full):not(.keep-round)::before, *:not(.rounded-full):not(.keep-round)::after { border-radius: 3px !important; }
+::-webkit-scrollbar-thumb, ::-webkit-scrollbar-track { border-radius: 3px !important; }
