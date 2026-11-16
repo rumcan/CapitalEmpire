@@ -83,8 +83,12 @@ way (Chrome's screencast). Run recordings inside `bash E:/ClaudeTemp/heavy.sh` s
 `node scripts/jam/trailer-voice.mjs --voice am_michael --speed 0.95` reads `F:/ClaudeTemp/jam/voice/script.md` (17 numbered lines, each tagged with its shot),
 says each with Kokoro-82M (Apache-2.0, local) and normalises it to -16 LUFS: `F:/ClaudeTemp/jam/voice/am_michael/NN.wav` and `lines.json`. In the cut, a part
 with `"vo": N` starts line N (0.25 s in); the parts up to the next line are stretched to the line plus 0.45 s (slower first, then more of the clip, then the
-last frame held), so a shot is never shorter than its line. The music is ducked 10 dB under each line with 0.25 s ramps. The owner chose am_michael
-(Michael, US) at 0.95.
+last frame held), so a shot is never shorter than its line. The owner chose am_michael (Michael, US) at 0.95. (With a music bed, `"music": "<track>"`, it
+is ducked 10 dB under each line with 0.25 s ramps; the final trailer has none.)
+
+Found 2026-11-16 (#1383): the jam town lays no new streets (`TOWN_BUILDS_ROADS` is off and the jam has no sandbox or road tool), so town-grow shows what it
+does grow: houses filling the lots along its roads and buildings upgrading. A time-lapse picture moves the page (its clouds and its light) one frame and the
+sim worker N frames (`rec.tick(n, 1, N)`, trailer-vclock.mjs simMul): with both N frames on, the cloud patches jumped and flashed.
 
 Found while recording (2026-11-15): #1368 (the tap boost); the Texture Painter and placing a real course into a running club are not reachable in the jam UI (the Course flyout is off there; the lead is opening it), Props only by key Z; town events (the Mayor's Cup, the Club Championship) leave a leaderboard on the map for months of game time, so the club is run on past it before filming.
 
@@ -92,12 +96,13 @@ Found while recording (2026-11-15): #1368 (the tap boost); the Texture Painter a
 
 `trailer-cut.json`: the parts in order, each `{ shot, from, to, speed, caption }` (a time-lapse is `speed` > 1), the title part (`title: true`: the
 logo `src/assets/ui/brand/logo.webp` over the menu scene, or the name in Georgia when there is no logo), the end card (the logo or the name, the jam,
-the play line: `--link` sets it) and the music. Captions are Bahnschrift, bottom left, fading in and out.
+the play line: `--link` sets it) and the music (`null`: none). Captions are Bahnschrift, bottom left, fading in and out. Previews: `edit --upto N`
+(the parts to voice line N, no end card, no phone copy) with `--music <track> --music-from <s> --file <name>`.
 
 Output: `trailer.mp4` (1920x1080, 30 fps), `trailer-720p.mp4` (under 30 MB, for a phone) and `trailer-voice.json` (where each line falls).
 
-Music: **Sunny Side Up 2** by Pro Sensory (Alex McCulloch), CC0 1.0, from OpenGameArt, the game's own radio track (docs/jam/AUDIO-CREDITS.md). CC0
-allows any use, a video included; the credit is a courtesy.
+Sound: the voice alone, no music bed (the owner, 2026-11-16, after previews with three of the game's CC0 radio tracks; draft 2 used Sunny Side Up 2).
+The recording has no game sound: its frames are pictures.
 
 ## Re-recording against the final build
 

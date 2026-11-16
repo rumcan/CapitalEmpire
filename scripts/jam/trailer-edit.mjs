@@ -83,7 +83,10 @@ export async function edit({ OUT, FPS, opt }) {
   const dur = probe(join(E, 'video.mp4'));
   // the music: one radio track under the whole cut, in at once, out over the end card; with a voice, each line at its part's start and the music
   // ducked 10 dB under it (0.25 s ramps either side)
-  const music = resolve(cut.music ?? 'public/audio/music/sunny-side-up-2.mp3');
+  // (the owner, 2026-11-16: no music bed: "music": null gives a silent bed, so the trailer is the voice alone; the recording has no game sound, its frames are pictures)
+  const noMusic = cut.music === null || cut.music === 'none', music = noMusic ? null : resolve(cut.music ?? 'public/audio/music/sunny-side-up-2.mp3');
+  const musicIn = noMusic ? ['-f', 'lavfi', '-t', (dur + 1).toFixed(2), '-i', 'anullsrc=r=48000:cl=stereo'] : ['-i', music];
+  if (noMusic) cut.musicFrom = 0;
   const final = join(OUT, cut.out ?? 'trailer.mp4');
   const lines = []; { let t = 0; for (const p of parts) { if (VO && p.vo) { const l = VO.lines.find(q => q.n === p.vo); if (l) lines.push({ at: t + (cut.voiceLead ?? 0.25), ...l }); } t += p.len; } }
   const RAMP = 0.25, duckK = 1 - Math.pow(10, -(cut.duckDb ?? 10) / 20);
@@ -94,7 +97,7 @@ export async function edit({ OUT, FPS, opt }) {
   const fc = `[1:a]atrim=${(cut.musicFrom ?? 0).toFixed(2)}:${((cut.musicFrom ?? 0) + dur).toFixed(2)},asetpts=PTS-STARTPTS,aresample=48000,afade=t=in:st=0:d=0.4,afade=t=out:st=${(dur - 2.5).toFixed(2)}:d=2.5,volume='${cut.musicVol ?? 0.9}*(1-${duckK.toFixed(3)}*(${duck}))':eval=frame[m]` +
     (lines.length ? `;${vmix};${lines.map((_, k) => `[v${k}]`).join('')}amix=inputs=${lines.length}:normalize=0:duration=longest[vo];[m][vo]amix=inputs=2:normalize=0:duration=first,alimiter=limit=0.95[a]` : ';[m]anull[a]');
   writeFileSync(join(E, 'mix.txt'), fc);
-  ff(['-i', 'video.mp4', '-i', music, ...vin, '-/filter_complex', 'mix.txt', '-map', '0:v', '-map', '[a]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-t', dur.toFixed(3), '-movflags', '+faststart', final], E);
+  ff(['-i', 'video.mp4', ...musicIn, ...vin, '-/filter_complex', 'mix.txt', '-map', '0:v', '-map', '[a]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-t', dur.toFixed(3), '-movflags', '+faststart', final], E);
   if (lines.length) writeFileSync(join(OUT, (cut.out ?? 'trailer.mp4').replace(/.mp4$/, '-voice.json')), JSON.stringify(lines.map(l => ({ n: l.n, at: +l.at.toFixed(2), secs: l.secs, text: l.text })), null, 1));
   if (!cut.noPhone) {
   // a 720p copy for a phone, held under 30 MB (two-pass at the bitrate that fits, audio 128k)

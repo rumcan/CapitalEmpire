@@ -2,8 +2,8 @@
   "_": "The trailer's cut (scripts/jam/trailer-edit.mjs): parts in order. from/to: seconds in shots/<shot>.mp4 (a negative from, or a to of 0 or less, counts back from the clip's end: a range stage's result is its last seconds). speed > 1 plays it faster (a time-lapse). caption: the words over it. title: the logo (or the name) over the part. end: the end card. Set by looking at the recorded clips (docs/jam/VIDEO.md).",
   "name": "Golf Manager 2026",
   "logo": "src/assets/ui/brand/logo.webp",
-  "music": "public/audio/music/sunny-side-up-2.mp3",
-  "out": "trailer-draft2.mp4",
+  "music": null,
+  "out": "trailer.mp4",
   "parts": [
     {
       "shot": "menu",

@@ -27,7 +27,9 @@ export async function record(env) {
     console.log('shot', name);
     try { await fn(); } catch (e) { console.log(`  ${name} failed: ${String(e?.message ?? e).split('\n')[0]}`); try { await rec?.stop(); } catch { /* none */ } done.push({ name, error: String(e?.message ?? e).split('\n')[0] }); }
   };
-  const start = async n => { await rec.start(n); };
+  /** the construction dust's state (build-dust.ts: armed, the town's lot queue, the particles alive), logged with each shot */
+  const dustState = () => page.evaluate(() => { const g = window.__game; return g?.dust ? { armed: g.dust.arm.armed, quiet: Math.round(g.dust.arm.quietUntil - performance.now()), queue: g.lotQueue?.size ?? null, alive: g.dust.pool.n } : null; }).catch(() => null);
+  const start = async n => { await rec.start(n); console.log(`   dust at ${n}:`, JSON.stringify(await dustState())); };
   /** a wait: while a shot records (step mode) it is that many frames of the clip, else real time */
   const wait = async ms => { if (rec?.on) await rec.tick(Math.max(1, Math.round(ms / FR))); else await realWait(ms); };
   /** until fn (in the page) is true: frame by frame while recording, else polled; false after ms */
@@ -35,7 +37,7 @@ export async function record(env) {
     if (rec?.on) { for (let i = 0; i < ms / FR; i++) { if (await page.evaluate(fn, arg)) return true; await rec.tick(1); } return false; }
     return page.waitForFunction(fn, arg, { timeout: ms }).then(() => true, () => false);
   };
-  const stop = async () => { const r = await rec.stop(); if (r) { console.log('  ', JSON.stringify(r)); done.push(r); } return r; };
+  const stop = async () => { const d = await dustState(); const r = await rec.stop(); if (r) r.dust = d; if (r) { console.log('  ', JSON.stringify(r)); done.push(r); } return r; };
 
   // ---------- helpers on the current page
   const G = fn => page.evaluate(fn);
