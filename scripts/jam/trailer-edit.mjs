@@ -12,6 +12,10 @@ const probe = f => { const r = spawnSync('ffprobe', ['-v', 'error', '-show_entri
 
 export async function edit({ OUT, FPS, opt }) {
   const cut = JSON.parse(readFileSync(resolve(opt('cut', 'scripts/jam/trailer-cut.json')), 'utf8'));
+  // a preview (the music choice): --upto N keeps the parts up to voice line N (the parts after it until the next line too), no end card, no phone copy;
+  // --music a track (--music-from s into it), --file the output file
+  const upto = +opt('upto', 0); if (upto) { const k = cut.parts.findIndex(p => p.vo > upto); if (k >= 0) cut.parts = cut.parts.slice(0, k); cut.noEnd = true; cut.noPhone = true; }
+  if (opt('music', null)) cut.music = opt('music', null); if (opt('music-from', null)) cut.musicFrom = +opt('music-from', 0); if (opt('file', null)) cut.out = opt('file', null);
   const E = join(OUT, 'edit'); rmSync(E, { recursive: true, force: true }); mkdirSync(join(E, 'fonts'), { recursive: true });
   // the fonts beside the work (drawtext reads a relative path: no drive colons to escape)
   for (const f of ['bahnschrift.ttf', 'georgiab.ttf', 'segoeui.ttf']) if (existsSync(`C:/Windows/Fonts/${f}`)) copyFileSync(`C:/Windows/Fonts/${f}`, join(E, 'fonts', f));
@@ -63,7 +67,7 @@ export async function edit({ OUT, FPS, opt }) {
     parts.push({ out, len, shot: p.shot, caption: p.caption ?? (p.title ? '(title)' : ''), vo: p.vo ?? null });
   }
   // the end card: a still of the club, darkened, the logo (or the name), the jam and the play line
-  const endSrc = join(OUT, 'shots', `${cut.end?.still ?? 'alive'}.mp4`), endLen = Math.max(cut.end?.len ?? 4.5, VO && cut.end?.vo ? voLen(cut.end.vo) + 1.2 : 0);
+  if (!cut.noEnd) { const endSrc = join(OUT, 'shots', `${cut.end?.still ?? 'alive'}.mp4`), endLen = Math.max(cut.end?.len ?? 4.5, VO && cut.end?.vo ? voLen(cut.end.vo) + 1.2 : 0);
   {
     const n = text('end-name.txt', cut.name ?? 'Golf Manager 2026'), j = text('end-jam.txt', cut.end?.jam ?? 'Made for the Zoud GameLab game jam 2026'), l = text('end-link.txt', opt('link', null) ?? cut.end?.link ?? 'Play free in your browser  ·  itch.io link here');
     const base = existsSync(endSrc) ? ['-ss', '1', '-t', String(endLen), '-i', endSrc] : ['-f', 'lavfi', '-t', String(endLen), '-i', `color=c=0x10202a:s=${W}x${H}:r=${FPS}`];
@@ -73,7 +77,7 @@ export async function edit({ OUT, FPS, opt }) {
       : `[0:v]scale=${W}:${H},fps=${FPS},boxblur=12:2,eq=brightness=-0.18,drawtext=fontfile=fonts/georgiab.ttf:textfile=${n}:fontsize=140:fontcolor=0xFFE7A0:x=(w-tw)/2:y=h*0.32:shadowcolor=black@0.7:shadowx=4:shadowy=5,${words},fade=in:st=0:d=0.5,fade=out:st=${endLen - 0.8}:d=0.8[v]`;
     ff([...base, ...(hasLogo ? ['-loop', '1', '-i', 'logo.png'] : []), '-filter_complex', fc, '-map', '[v]', '-t', String(endLen), '-an', '-c:v', 'libx264', '-crf', String(cut.crf ?? 17), '-pix_fmt', 'yuv420p', '-r', String(FPS), 'end.mp4'], E);
     parts.push({ out: 'end.mp4', len: endLen, shot: 'end card', caption: '', vo: cut.end?.vo ?? null });
-  }
+  } }
   writeFileSync(join(E, 'list.txt'), parts.map(p => `file '${p.out}'`).join('\n') + '\n');
   ff(['-f', 'concat', '-safe', '0', '-i', 'list.txt', '-c', 'copy', 'video.mp4'], E);
   const dur = probe(join(E, 'video.mp4'));
@@ -87,15 +91,17 @@ export async function edit({ OUT, FPS, opt }) {
   const duck = lines.length ? lines.map(win).reduce((a, b) => `max(${a},${b})`) : '0';
   const vin = lines.flatMap(l => ['-i', l.file]);
   const vmix = lines.map((l, k) => `[${k + 2}:a]adelay=${Math.round(l.at * 1000)}|${Math.round(l.at * 1000)}[v${k}]`).join(';');
-  const fc = `[1:a]atrim=0:${dur.toFixed(2)},aresample=48000,afade=t=in:st=0:d=0.4,afade=t=out:st=${(dur - 2.5).toFixed(2)}:d=2.5,volume='${cut.musicVol ?? 0.9}*(1-${duckK.toFixed(3)}*(${duck}))':eval=frame[m]` +
+  const fc = `[1:a]atrim=${(cut.musicFrom ?? 0).toFixed(2)}:${((cut.musicFrom ?? 0) + dur).toFixed(2)},asetpts=PTS-STARTPTS,aresample=48000,afade=t=in:st=0:d=0.4,afade=t=out:st=${(dur - 2.5).toFixed(2)}:d=2.5,volume='${cut.musicVol ?? 0.9}*(1-${duckK.toFixed(3)}*(${duck}))':eval=frame[m]` +
     (lines.length ? `;${vmix};${lines.map((_, k) => `[v${k}]`).join('')}amix=inputs=${lines.length}:normalize=0:duration=longest[vo];[m][vo]amix=inputs=2:normalize=0:duration=first,alimiter=limit=0.95[a]` : ';[m]anull[a]');
   writeFileSync(join(E, 'mix.txt'), fc);
   ff(['-i', 'video.mp4', '-i', music, ...vin, '-/filter_complex', 'mix.txt', '-map', '0:v', '-map', '[a]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-t', dur.toFixed(3), '-movflags', '+faststart', final], E);
   if (lines.length) writeFileSync(join(OUT, (cut.out ?? 'trailer.mp4').replace(/.mp4$/, '-voice.json')), JSON.stringify(lines.map(l => ({ n: l.n, at: +l.at.toFixed(2), secs: l.secs, text: l.text })), null, 1));
+  if (!cut.noPhone) {
   // a 720p copy for a phone, held under 30 MB (two-pass at the bitrate that fits, audio 128k)
   const phone = final.replace(/.mp4$/, '-720p.mp4'), secs = probe(final), vk = Math.max(600, Math.floor((28 * 8 * 1024) / secs - 128));
   ff(['-i', final, '-vf', 'scale=1280:720:flags=lanczos', '-c:v', 'libx264', '-preset', 'medium', '-b:v', `${vk}k`, '-pass', '1', '-passlogfile', 'p720', '-an', '-f', 'mp4', 'NUL'], E);
   ff(['-i', final, '-vf', 'scale=1280:720:flags=lanczos', '-c:v', 'libx264', '-preset', 'medium', '-b:v', `${vk}k`, '-pass', '2', '-passlogfile', 'p720', '-c:a', 'aac', '-b:a', '128k', '-movflags', '+faststart', phone], E);
   console.log('phone copy', phone, +(statSync(phone).size / 1e6).toFixed(1), 'MB');
+  }
   console.log(JSON.stringify({ out: final, secs: +probe(final).toFixed(2), mb: +(statSync(final).size / 1e6).toFixed(1), parts: parts.map(p => `${p.shot} ${p.len.toFixed(1)}s ${p.caption}`) }, null, 1));
 }
